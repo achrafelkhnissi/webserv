@@ -1,6 +1,0 @@
-{
-    "files.associations": {
-        "inet.h": "c",
-        "curl.h": "c"
-    }
-}
