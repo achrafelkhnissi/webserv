@@ -1,63 +1,32 @@
-# **************************************************************************** #
-#                                                                              #
-#                                                         :::      ::::::::    #
-#    Makefile                                           :+:      :+:    :+:    #
-#                                                     +:+ +:+         +:+      #
-#    By: ael-khni <ael-khni@student.1337.ma>        +#+  +:+       +#+         #
-#                                                 +#+#+#+#+#+   +#+            #
-#    Created: 2022/07/24 17:30:02 by ael-khni          #+#    #+#              #
-#    Updated: 2023/01/28 21:53:41 by ael-khni         ###   ########.fr        #
-#                                                                              #
-# **************************************************************************** #
+CC 		= g++
+CFLAGS += #-Wall -Werror -Wextra
+LDFLAGS += -lm
+INCLUDE = -I./inc
 
-NAME		= webserv
+S_DIR	= srcs
+INC_HEADERS = $(shell find inc -name "*.hpp")
+SRC_HEADERS = $(shell find srcs -name "*.hpp")
+FILES 	= $(shell find srcs -name "*.cpp" | cut -d/ -f2-)
+B_DIR	= build
+OBJ		= $(addprefix $(B_DIR)/, $(FILES:.cpp=.o))
+NAME 	= webserve
 
-CC			= c++
-FLAGS		= # -Wall -Wextra -Werror -std=c++98
-RM			= rm -rf
+all: $(NAME) 
 
-OBJDIR		= build
+$(NAME): $(OBJ)
+	$(CC) $^ -o $@ $(LDFLAGS)
 
-CONFIG 		=  $(addprefix ./config/, Configuration)
-SERVER		=  $(addprefix ./server/, Server)
-UTILS		=  $(addprefix ./utils/, )
-
-FILES		= main $(addprefix ./srcs/, $(CONFIG) $(SERVER) $(UTILS) )
-HEADERS		= -I ./srcs/config/ -I ./srcs/server/
-
-SRC			= $(FILES:=.cpp)
-OBJ			= $(addprefix $(OBJDIR)/, $(FILES:=.o))
-
-#Colors:
-GREEN		=	\e[92;5;118m
-YELLOW		=	\e[93;5;226m
-GRAY		=	\e[33;2;37m
-RESET		=	\e[0m
-CURSIVE		=	\e[33;3m
-
-#Debug
-ifeq ($(DEBUG), 1)
-   OPTS = -g
-endif
-
-.PHONY: all clean fclean re
-
-all: $(NAME)
-
-$(NAME): $(OBJ) $(HEADER)
-	@$(CC) $(OBJ) $(OPTS) -o $(NAME)
-	@printf "$(_SUCCESS) $(GREEN)- Executable ready.\n$(RESET)"
-
-$(OBJDIR)/%.o: %.cpp $(HEADER)
-	@mkdir -p $(dir $@)
-	@$(CC) $(FLAGS) $(OPTS) -c $< -o $@
+$(B_DIR)/%.o: $(S_DIR)/%.cpp $(INC_HEADERS) $(SRC_HEADERS)
+	mkdir -p $(@D)
+	$(CC) $(CFLAGS) $(INCLUDE) -o $@ -c $<
 
 clean:
-	@$(RM) $(OBJDIR) $(OBJ)
-	@printf "$(YELLOW)    - Object files removed.$(RESET)\n"
+	rm -f $(OBJ)
+	rm -rf $(B_DIR)
 
 fclean: clean
-	@$(RM) $(NAME)
-	@printf "$(YELLOW)    - Executable removed.$(RESET)\n"
+	rm -f $(NAME)
 
 re: fclean all
+
+.PHONY: all clean fclean re
