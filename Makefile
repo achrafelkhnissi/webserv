@@ -1,5 +1,5 @@
 CC 		= g++
-CFLAGS += #-Wall -Werror -Wextra
+CFLAGS += -Wall -Werror -Wextra
 LDFLAGS += -lm
 INCLUDE = -I./inc
 

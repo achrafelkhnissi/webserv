@@ -7,6 +7,7 @@ using namespace toml;
 
 table *toml::parse_file(std::istream &is)
 {
+	(void) is;
 	table *t = new table();
 
 	return t;
