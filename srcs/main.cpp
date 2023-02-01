@@ -1,28 +1,19 @@
 #include "server/Server.hpp"
 #include "config/Configuration.hpp"
+#include "lib/toml/data/table.hpp"
+#include "lib/toml/toml.hpp"
 
 #include <iostream>
 #include <string>
 
 int main(int ac, char** av) {
 
-    std::string config_file = "default.conf";
+    //std::string config_file = "default.conf";
 
-    if (ac == 2) {
-        config_file = av[1];
-    }
+	toml::table *t = toml::parse_file(std::cin);
+	
+	std::cout << t << std::endl;
 
-    try {
-
-        Configuration config(config_file);
-
-        // Initialise the server.
-        Server server(config.get_port(), config.get_host());
-        server.start();
-
-    } catch (const std::exception& e) {
-        std::cerr << "Exception: " << e.what() << "\n";
-    }
-
+	delete t;
     return 0;
 }
