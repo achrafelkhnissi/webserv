@@ -4,11 +4,15 @@
 #include <iostream>
 #include <string>
 
-int main() {
+int main(int ac, char *av[]) {
 
-    //std::string config_file = "default.conf";
+    std::string config_file = "default.toml";
 
-	toml::table *t = toml::parse_file(std::cin);
+	if (ac == 2) {
+		config_file = av[1];
+	}
+
+	toml::table *t = toml::parse_file(config_file);
 	
 	std::cout << t << std::endl;
 
