@@ -21,7 +21,10 @@ private:
 	char next_char();
 	char current();
 	void next_line();
+	void make_token(Token *t, std::string value, Token::e_token type);
+
+	// 
 
 	// scanners
-	
+	int scan_qoute();
 };
