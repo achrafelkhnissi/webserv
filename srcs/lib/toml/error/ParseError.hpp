@@ -5,7 +5,7 @@
 class ParseError {
 public:
 	ParseError();
-	ParseError(std::string&, int);
+	ParseError(std::string, int);
 
 private:
 	std::string message;
