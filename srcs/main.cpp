@@ -6,23 +6,23 @@
 
 int main(int ac, char** av) {
 
-    std::string config_file = "default.conf";
+	std::string config_file = "default.conf";
 
-    if (ac == 2) {
-        config_file = av[1];
-    }
+	if (ac == 2) {
+		config_file = av[1];
+	}
 
-    try {
+	try {
 
-        Configuration config(config_file);
+		Configuration config(config_file);
 
-        // Initialise the server.
-        Server server(config.get_port(), config.get_host());
-        server.start();
+		// Initialise the server.
+		Server server(config.get_port(), config.get_host());
+		server.start();
 
-    } catch (const std::exception& e) {
-        std::cerr << "Exception: " << e.what() << "\n";
-    }
+	} catch (const std::exception& e) {
+		std::cerr << "Exception: " << e.what() << "\n";
+	}
 
-    return 0;
+	return 0;
 }
