@@ -9,21 +9,21 @@
 class Configuration {
 
 private:
-    int             _port;
-    std::string     _host;
-    std::string     _root;
-    std::string     _log_path;
+	int _port;
+	std::string _host;
+	std::string _root;
+	std::string _log_path;
 
-    void parse_config_file(std::string config_file);
+	void parse_config_file(std::string config_file);
 
 public:
-    Configuration(std::string config_file);
+	Configuration(std::string config_file);
 
-    int get_port();
+	int get_port();
 
-    std::string get_host();
-    std::string get_root();
-    std::string get_log_path();
+	std::string get_host();
+	std::string get_root();
+	std::string get_log_path();
 };
 
 #endif // CONFIGURATION_HPP
