@@ -35,6 +35,7 @@ void Server::start() {
 void Server::handle_connection(int sockfd) {
 	// Accept an incoming connection
 	int new_fd = accept(sockfd, nullptr, nullptr);
+	(void) new_fd;
 }
 
 void Server::handle_request(int fd) {
@@ -68,21 +69,25 @@ void Server::send_response(int fd) {
 void Server::handle_get(int fd) {
 	// Handle the GET request
 	// ...
+	(void) fd;
 }
 
 void Server::handle_post(int fd) {
 	// Handle the POST request
 	// ...
+	(void) fd;
 }
 
 void Server::handle_delete(int fd) {
 	// Handle the DELETE request
 	// ...
+	(void) fd;
 }
 
 void Server::handle_error(int fd) {
 	// Handle the error
 	// ...
+	(void) fd;
 }
 
 Server::~Server() {
