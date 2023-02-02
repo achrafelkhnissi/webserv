@@ -1,5 +1,5 @@
-#include "server/Server.hpp"
 #include "config/Configuration.hpp"
+#include "server/Server.hpp"
 
 #include <iostream>
 #include <string>
