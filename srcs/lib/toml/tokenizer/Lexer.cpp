@@ -1,4 +1,3 @@
-
 #include "Lexer.hpp"
 #include "token/Token.hpp"
 #include <_ctype.h>
@@ -32,7 +31,6 @@ char Lexer::current() {
 
 Result<Token*, ParseError> Lexer::next() {
 	Token* t = new Token();
-	char c = current();
 
 	while (isspace(next_char()))
 		;

@@ -1,6 +1,6 @@
 #pragma once
-#include "../../error/ParseError.hpp"
-#include "../../result/Result.hpp"
+#include "../error/ParseError.hpp"
+#include "../result/Result.hpp"
 #include "token/Token.hpp"
 #include <iostream>
 #include <string>
