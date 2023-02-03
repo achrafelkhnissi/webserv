@@ -6,19 +6,22 @@
 #include <iostream>
 #include <istream>
 #include <string>
+#include <list>
 
 using namespace toml;
 
 table* toml::parse_stream(std::ifstream& in) {
 	Lexer lexer = Lexer(in);
+	std::list<Token *> tks;
 	Result<Token*, ParseError> r;
 	
 	do {
 		r = lexer.next();
 		if (r.is_ok())
-			cout << r.ok()->as_str() << endl;
+			tks.push_back(r.ok());
 		else
 		{
+			// free(list)
 			cerr << r.err().as_str() << endl;
 			break;
 		}
