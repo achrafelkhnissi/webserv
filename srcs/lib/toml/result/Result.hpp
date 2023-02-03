@@ -1,5 +1,7 @@
 
 #include <cstdlib>
+#include <iostream>
+#include <ostream>
 template<typename T, typename E>
 class Result {
 public:
@@ -7,6 +9,10 @@ public:
 	Result(T value) {
 		fine = true;
 		this->value = value;
+	}
+
+	Result() {
+		fine = false;
 	}
 
 	Result(E error)
@@ -17,18 +23,26 @@ public:
 
 	T ok() {
 		if (!fine)
+		{
+			std::cerr << "abort: " << std::endl;
+			std::cerr << this->error.as_str() << std::endl;
 			abort();
+		}
 		return value;
 	}
 	E err()
 	{
 		if (fine)
+		{
+			std::cerr << "abort: " << std::endl;
+			std::cerr << this->value->as_str() << std::endl;
 			abort();
+		}
 		return error;
 	}
 
 	bool is_ok() {
-		return is_ok;
+		return fine;
 	}
 
 
