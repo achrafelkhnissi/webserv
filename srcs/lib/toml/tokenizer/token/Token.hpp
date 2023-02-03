@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdlib>
+#include <iostream>
 #include <string>
 
 class Token {
@@ -8,12 +10,14 @@ public:
 	enum e_token {
 		KEY = 1,
 		ASSIGN = 1 << 1,
-		VALUE = 1 << 2,
+		VALUE = 1 << 9,
+		QOUTED = 1 << 2,
 		DOT = 1 << 3,
-		OpenBracket = 1 << 4,
-		CloseBracket = 1 << 5,
+		OPENBRACKET = 1 << 4,
+		CLOSEBRACKET = 1 << 5,
+		NEWLINE = 1 << 6,
 		COMMENT = 1 << 8,
-		_EOF = 1 << 30,
+		_EOF = 1 << 20,
 	};
 	enum e_token type;
 	std::string value;
