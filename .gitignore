@@ -3,3 +3,7 @@
 build
 webserv
 *.bak
+*.o
+build/
+compile_commands.json
+.cache/
