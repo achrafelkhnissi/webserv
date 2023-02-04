@@ -1,6 +1,8 @@
 #include "Parser.hpp"
 #include <list>
 #include <algorithm>
+#include <numeric>
+#include <string>
 
 
 int is_assign(Token *t) { return t->type == Token::ASSIGN || t->type == Token::COMMENT ; }
@@ -25,7 +27,7 @@ Parser::Parser(TokenList tks) {
 			lastmp->insert(
 				TokenPair(
 					TokenList(b, assign),
-					TokenList(++assign, cur))
+					std::accumulate(++assign, cur, std::string(""), []( std::string &acc, Token *t ) { return acc + t->value;}))
 			);
 		}
 		else if ((*cur)->is(Token::OPENBRACKET))
@@ -60,10 +62,7 @@ void _printKeyValue(TokenMap &mp)
 			std::cout << it->value << " ";
 		}
 		std::cout << " = ";
-		for(auto &it: m.second)
-		{
-			std::cout << it->value;
-		}
+		std::cout << m.second;
 		std::cout << std::endl;
 	}
 }

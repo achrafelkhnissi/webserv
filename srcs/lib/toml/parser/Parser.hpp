@@ -3,12 +3,13 @@
 
 #include <map>
 #include <list>
+#include <string>
 #include <vector>
 #include "../tokenizer/token/Token.hpp"
 
 typedef std::list<Token*> TokenList;
-typedef std::map<TokenList, TokenList> TokenMap ;
-typedef std::pair<TokenList, TokenList> TokenPair ;
+typedef std::map<TokenList, std::string> TokenMap ;
+typedef std::pair<TokenList, std::string> TokenPair ;
 
 struct TomlBlock {
 
@@ -23,11 +24,10 @@ struct TomlBlock {
 };
 
 class Parser {
-private:
+public:
 	TokenMap mp;
 	std::vector<TomlBlock> array;
 	std::vector<TomlBlock> tables;
-public:
 	Parser(TokenList);
 	void print();
 };
