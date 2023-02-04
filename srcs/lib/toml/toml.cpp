@@ -1,5 +1,6 @@
 #include "toml.hpp"
 #include "data/table.hpp"
+#include "parser/Parser.hpp"
 #include "tokenizer/Lexer.hpp"
 #include "tokenizer/token/Token.hpp"
 #include <fstream>
@@ -27,6 +28,9 @@ table* toml::parse_stream(std::ifstream& in) {
 		}
 	}
 	while (!r.ok()->is(Token::_EOF));
+
+	Parser p = Parser(tks);
+	
 	return new toml::table();
 }
 
