@@ -11,6 +11,29 @@
 
 using namespace toml;
 
+table *list2map(TokenList list, table &t) {
+	table *last_t = &t;
+
+	for (TokenList::iterator it = list.begin(); it != list.end(); it++) {
+		Token *node = *it;
+		if (node->type == Token::DOT)
+			continue;
+		t.mp.emplace(node->value, new table(table::TABLE));
+		last_t = (table *) last_t->mp.at(node->value);
+	}
+	return last_t;
+}
+
+table* build(Parser &p) {
+	table *t = new table(table::TABLE);
+	for (TokenMap::iterator it = p.mp.begin(); it != p.mp.end(); it++) {
+		table *last = list2map(it->first, *t);
+		last->type = table::STRING;
+		last->str = it->second;
+	}
+	return t;
+}
+
 table* toml::parse_stream(std::ifstream& in) {
 	Lexer lexer = Lexer(in);
 	std::list<Token *> tks;
@@ -31,7 +54,7 @@ table* toml::parse_stream(std::ifstream& in) {
 
 	Parser p = Parser(tks);
 	
-	return new toml::table();
+	return build(p);
 }
 
 table* toml::parse_file(std::string& filename) {
