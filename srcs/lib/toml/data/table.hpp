@@ -4,9 +4,12 @@
 #include <string>
 #include <vector>
 
-typedef std::map<std::string, void*> TomlMap ;
 
 namespace toml {
+
+class table;
+typedef std::map<std::string, table*> TomlMap ;
+
 class table {
 
 public:
@@ -21,12 +24,13 @@ public:
 	table(std::string &str);
 	void *operator[](std::string &);
 	void push(table);
-	void insert(std::string s, void *t);
+	void insert(std::string s, table *t);
+	void print(int indent = 0);
 	~table();
 
 //private:
 	enum e_toml type;
-	std::map<std::string, void*> mp;
+	TomlMap mp;
 	std::vector<table> vec;
 	std::string str;
 };
