@@ -33,10 +33,10 @@ Parser::Parser(TokenList tks) {
 		else if ((*cur)->is(Token::OPENBRACKET))
 		{
 			cur++;
-			std::vector<TomlBlock> *tm = &this->array;
+			std::vector<TomlBlock> *tm = &this->tables;
 			if ((*cur)->is(Token::OPENBRACKET))
 			{
-				tm = &tables;
+				tm = &array;
 				cur++;
 			}
 		
