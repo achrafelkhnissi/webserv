@@ -13,8 +13,7 @@ int main(int ac, char *av[]) {
 	}
 
 	toml::table *t = toml::parse_file(config_file);
-	
-	std::cout << t << std::endl;
+	t->print();
 
 	delete t;
     return 0;

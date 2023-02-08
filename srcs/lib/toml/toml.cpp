@@ -8,13 +8,15 @@
 #include <istream>
 #include <string>
 #include <list>
+#include <vector>
+#include "utils.h"
 
 using namespace toml;
 
 table *list2map(TokenList list, table &t) {
 	table *last_t = &t;
 
-	for (TokenList::iterator it = list.begin(); it != list.end(); it++) {
+	ITER_FOREACH(TokenList, list, it) {
 		Token *node = *it;
 		if (node->type == Token::DOT)
 			continue;
@@ -24,13 +26,34 @@ table *list2map(TokenList list, table &t) {
 	return last_t;
 }
 
-table* build(Parser &p) {
-	table *t = new table(table::TABLE);
-	for (TokenMap::iterator it = p.mp.begin(); it != p.mp.end(); it++) {
-		table *last = list2map(it->first, *t);
+void fill_map(TokenMap &mp, table &t)
+{
+	ITER_FOREACH(TokenMap, mp, it) {
+		table *last = list2map(it->first, t);
 		last->type = table::STRING;
 		last->str = it->second;
 	}
+}
+
+table* build(Parser &p) {
+	table *t = new table(table::TABLE);
+
+	fill_map(p.mp, *t);
+
+	ITER_FOREACH(std::vector<TomlBlock>, p.array, it) {
+		table tmp = table(table::TABLE);
+		table *last = list2map(it->prefix, *t);
+		last->type = table::ARRAY;
+		fill_map(it->mp, tmp);
+		last->vec.push_back(tmp);
+	}
+
+	ITER_FOREACH(std::vector<TomlBlock>, p.tables, it) {
+		table *last = list2map(it->prefix, *t);
+		last->type = table::TABLE;
+		fill_map(it->mp, *last);
+	}
+
 	return t;
 }
 
