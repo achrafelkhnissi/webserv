@@ -4,11 +4,10 @@
 #include <string>
 #include <vector>
 
-
 namespace toml {
 
 class table;
-typedef std::map<std::string, table*> TomlMap ;
+typedef std::map<std::string, table*> TomlMap;
 
 class table {
 
@@ -20,15 +19,24 @@ public:
 	};
 
 	table(enum e_toml type);
-	table(TomlMap &mp);
-	table(std::string &str);
-	void *operator[](std::string &);
-	void push(table);
-	void insert(std::string s, table *t);
+	table(TomlMap& mp);
+	table(std::string& str);
+	void* operator[](std::string&);
+	void push(table&);
+	void insert(std::string s, table* t);
+	void emplace(std::string& s, table* t);
+	void create(std::string& s);
+	table* get(std::string& s);
 	void print(int indent = 0);
+
+	bool is_type(enum e_toml type);
+	void set_type(enum e_toml type);
+
+	void set_string(std::string& str);
+
 	~table();
 
-//private:
+	//private:
 	enum e_toml type;
 	TomlMap mp;
 	std::vector<table> vec;
