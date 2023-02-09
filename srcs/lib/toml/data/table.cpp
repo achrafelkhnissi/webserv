@@ -69,10 +69,10 @@ void table::print(int indent) {
 
 	switch (type) {
 	case STRING:
-		std::cout << s << "  " << str << std::endl;
+		std::cout << str << std::endl;
 		break;
 	case TABLE:
-		std::cout << s << "{" << std::endl;
+		std::cout << "{" << std::endl;
 		ITER_FOREACH(TomlMap, mp, it) {
 			std::cout << s << "  " << it->first << ": ";
 			it->second->print(indent + 2);
@@ -80,7 +80,7 @@ void table::print(int indent) {
 		std::cout << s << "}" << std::endl;
 		break;
 	case ARRAY:
-		std::cout << s << "[" << std::endl;
+		std::cout << "[" << std::endl;
 		ITER_FOREACH(std::vector<table>, vec, it) {
 			it->print(indent + 2);
 		}
