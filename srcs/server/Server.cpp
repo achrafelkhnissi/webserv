@@ -26,32 +26,39 @@ void Server::start() {
         exit(EXIT_FAILURE);
     }
 
-    handle_connection(sockfd);
+    // handle_connection(sockfd);
+
     handle_request(sockfd);
 }
 
 void Server::handle_connection(int sockfd) {
     // Accept an incoming connection
     int new_fd = accept(sockfd, nullptr, nullptr);
+    std::cout << "Connection accepted." << std::endl;
 }
 
 void Server::handle_request(int fd) {
+
+    int new_fd = accept(fd, nullptr, nullptr); // remove this line later.
+
     // Read the incoming request
     char buffer[1024];
-    int bytes_read = recv(fd, buffer, sizeof(buffer), 0);
+    int bytes_read = recv(new_fd, buffer, sizeof(buffer), 0);
 
     // Parse the request and call the appropriate method
     std::string request(buffer, bytes_read);
     std::string method = request.substr(0, request.find(" "));
 
+    printf("Request:\n\n%s\n", request.c_str());
+
     if (method == "GET") {
-        handle_get(fd);
+        handle_get(new_fd);
     } else if (method == "POST") {
-        handle_post(fd);
+        handle_post(new_fd);
     } else if (method == "DELETE") {
-        handle_delete(fd);
+        handle_delete(new_fd);
     } else {
-        handle_error(fd);
+        handle_error(new_fd);
     }
 }
 
@@ -66,6 +73,7 @@ void Server::send_response(int fd) {
 void Server::handle_get(int fd) {
 // Handle the GET request
 // ...
+    send_response(fd);
 }
 
 void Server::handle_post(int fd) {
