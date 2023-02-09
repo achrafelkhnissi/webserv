@@ -7,18 +7,21 @@
 class Token {
 
 public:
+	// clang-format off
 	enum e_token {
-		KEY = 1,
-		ASSIGN = 1 << 1,
-		VALUE = 1 << 9,
-		QOUTED = 1 << 2,
-		DOT = 1 << 3,
-		OPENBRACKET = 1 << 4,
-		CLOSEBRACKET = 1 << 5,
-		NEWLINE = 1 << 6,
-		COMMENT = 1 << 8,
-		_EOF = 1 << 20,
+		KEY 			= 1,
+		ASSIGN 			= 1 << 1,
+		VALUE 			= 1 << 9,
+		QOUTED 			= 1 << 2,
+		DOT 			= 1 << 3,
+		OPENBRACKET 	= 1 << 4,
+		CLOSEBRACKET 	= 1 << 5,
+		NEWLINE 		= 1 << 6,
+		COMMENT 		= 1 << 8,
+		_EOF 			= 1 << 20,
 	};
+	// clang-format on
+
 	enum e_token type;
 	std::string value;
 	int line;
