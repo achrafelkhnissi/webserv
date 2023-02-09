@@ -19,8 +19,6 @@ table* list2map(TokenList list, table& t) {
 
 	ITER_FOREACH(TokenList, list, it) {
 		Token* node = *it;
-		if (node->type == Token::DOT)
-			continue;
 		t.create(node->value);
 		last_t = last_t->get(node->value);
 	}

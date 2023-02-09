@@ -20,19 +20,37 @@ T ft_next(T it, typename std::iterator_traits<T>::difference_type n = 1) {
 	return it;
 }
 
+TokenList til_ignore(TokenList::iterator& cur, Token::e_token until, Token::e_token ignore) {
+	TokenList res;
+	while (!(*cur)->is(until)) {
+		if (!(*cur)->is(ignore)) {
+			res.push_back(*cur);
+		}
+		cur++;
+	}
+	return res;
+}
+
+TokenList::iterator til(TokenList::iterator& cur, Token::e_token until) {
+	while (!(*cur)->is(until)) {
+		cur++;
+	}
+	return cur;
+}
+
 Parser::Parser(TokenList tks) {
 	TokenList::iterator cur = tks.begin();
 	TokenMap* lastmp = &mp;
 	while (cur != tks.end()) {
 		if ((*cur)->is(Token::KEY)) {
-			auto b = cur;
-			TokenList::iterator assign = find_if(cur, tks.end(), is_assign);
-			cur = find_if(ft_next(assign, 1), tks.end(), is_newline);
+			TokenList res = til_ignore(cur, Token::ASSIGN | Token::COMMENT, Token::DOT);
+			cur++;
 			lastmp->insert(TokenPair(
-				TokenList(b, assign),
-				std::accumulate(++assign, cur, std::string(""), [](std::string& acc, Token* t) {
-					return acc + t->value;
-				})));
+				res,
+				std::accumulate(cur,
+								til(cur, Token::NEWLINE | Token::COMMENT),
+								std::string(""),
+								[](std::string& acc, Token* t) { return acc + t->value; })));
 		} else if ((*cur)->is(Token::OPENBRACKET)) {
 			cur++;
 			std::vector<TomlBlock>* tm = &this->tables;
@@ -40,10 +58,8 @@ Parser::Parser(TokenList tks) {
 				tm = &array;
 				cur++;
 			}
-
-			TokenList::iterator close = find_if(cur, tks.end(), is_close);
-			tm->push_back(TomlBlock(TokenList(cur, close), TokenMap()));
-			cur = close;
+			tm->push_back(TomlBlock(TokenList(cur, til(cur, Token::CLOSEBRACKET | Token::COMMENT)),
+									TokenMap()));
 			lastmp = &tm->rbegin()->mp;
 		}
 		cur++;

@@ -25,7 +25,7 @@ public:
 	int offset;
 
 	bool is(enum e_token type) {
-		return this->type == type;
+		return this->type & type;
 	}
 
 	std::string as_str() {
@@ -67,3 +67,7 @@ public:
 		return s;
 	}
 };
+
+inline Token::e_token operator|(Token::e_token t1, Token::e_token t2) {
+	return (Token::e_token)((int)t1 | (int)t2);
+}
