@@ -19,8 +19,10 @@ table* list2map(TokenList list, table& t) {
 
 	ITER_FOREACH(TokenList, list, it) {
 		Token* node = *it;
-		t.create(node->value);
+		last_t->create(node->value);
 		last_t = last_t->get(node->value);
+		if (last_t == NULL)
+			throw std::runtime_error("Error: list2map: last_t is NULL " + node->value);
 	}
 	return last_t;
 }
