@@ -32,26 +32,36 @@ public:
 		std::string s;
 		s = "TOKEN " + std::to_string(line) + ":" + std::to_string(offset) + " `" + value + "`";
 		switch (type) {
-			case KEY:
-				s += "[KEY]"; break;
-			case VALUE:
-				s += "[VALUE]"; break;
-			case QOUTED:
-				s += "[QOUTED]"; break;
-			case ASSIGN:
-				s += "[ASSIGN]"; break;
-			case DOT:
-				s += "[DOT]"; break;
-			case OPENBRACKET:
-				s += "[OPENBRACKET]"; break;
-			case CLOSEBRACKET:
-				s += "[CLOSEBRACKET]"; break;
-			case NEWLINE:
-				s += "[NEWLINE]"; break;
-			case COMMENT:
-				s += "[COMMENT]"; break;
-			case _EOF:
-				s += "[_EOF]"; break;
+		case KEY:
+			s += "[KEY]";
+			break;
+		case VALUE:
+			s += "[VALUE]";
+			break;
+		case QOUTED:
+			s += "[QOUTED]";
+			break;
+		case ASSIGN:
+			s += "[ASSIGN]";
+			break;
+		case DOT:
+			s += "[DOT]";
+			break;
+		case OPENBRACKET:
+			s += "[OPENBRACKET]";
+			break;
+		case CLOSEBRACKET:
+			s += "[CLOSEBRACKET]";
+			break;
+		case NEWLINE:
+			s += "[NEWLINE]";
+			break;
+		case COMMENT:
+			s += "[COMMENT]";
+			break;
+		case _EOF:
+			s += "[_EOF]";
+			break;
 		}
 		s += '\n';
 		return s;

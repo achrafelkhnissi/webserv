@@ -2,10 +2,9 @@
 #include <cstdlib>
 #include <iostream>
 #include <ostream>
-template<typename T, typename E>
+template <typename T, typename E>
 class Result {
 public:
-
 	Result(T value) {
 		fine = true;
 		this->value = value;
@@ -15,25 +14,21 @@ public:
 		fine = false;
 	}
 
-	Result(E error)
-	{
+	Result(E error) {
 		fine = false;
 		this->error = error;
 	}
 
 	T ok() {
-		if (!fine)
-		{
+		if (!fine) {
 			std::cerr << "abort: " << std::endl;
 			std::cerr << this->error.as_str() << std::endl;
 			abort();
 		}
 		return value;
 	}
-	E err()
-	{
-		if (fine)
-		{
+	E err() {
+		if (fine) {
 			std::cerr << "abort: " << std::endl;
 			std::cerr << this->value->as_str() << std::endl;
 			abort();
@@ -44,7 +39,6 @@ public:
 	bool is_ok() {
 		return fine;
 	}
-
 
 private:
 	bool fine;

@@ -33,52 +33,47 @@ char Lexer::current() {
 	return line[cursor];
 }
 
-ParseResult Lexer::_next(Token *t)
-{
+ParseResult Lexer::_next(Token* t) {
 	switch (current()) {
-		case '.':
-			make_token(t, "", Token::DOT);
-			break;
-		case '[':
-			make_token(t, "", Token::OPENBRACKET);
-			break;
-		case ']':
-			make_token(t, "", Token::CLOSEBRACKET);
-			break;
-		case '=':
-			make_token(t, "", Token::ASSIGN);
-			break;
-		case '\n':
-			make_token(t, "", Token::NEWLINE);
-			break;
-		case '"':
-		case '\'':
-		{
-			int b = cursor;
-			int size = scan_qoute();
-			if (size == -1)
-				return ParseResult(ParseError("unclose quote", nc));
-			make_token(t, line.substr(b, size), Token::QOUTED);
-			break;
-		}
-		case '#':
-		{
-			int size = 0;
-			int b = cursor;
-			while (next_char() != '\n')
-				size++;
-			make_token(t, line.substr(b, size), Token::COMMENT);
-			break;
-		}
-		default:
-			if (isalnum(current()) || strchr("_-", current()) )
-			{
-				make_token(t, line.substr(cursor, scan_word()), Token::KEY);
-				cursor--;
-			}
-			else
-				return ParseResult(ParseError("unexpected token `" + line + "`" , nc));
-			break;
+	case '.':
+		make_token(t, "", Token::DOT);
+		break;
+	case '[':
+		make_token(t, "", Token::OPENBRACKET);
+		break;
+	case ']':
+		make_token(t, "", Token::CLOSEBRACKET);
+		break;
+	case '=':
+		make_token(t, "", Token::ASSIGN);
+		break;
+	case '\n':
+		make_token(t, "", Token::NEWLINE);
+		break;
+	case '"':
+	case '\'': {
+		int b = cursor;
+		int size = scan_qoute();
+		if (size == -1)
+			return ParseResult(ParseError("unclose quote", nc));
+		make_token(t, line.substr(b, size), Token::QOUTED);
+		break;
+	}
+	case '#': {
+		int size = 0;
+		int b = cursor;
+		while (next_char() != '\n')
+			size++;
+		make_token(t, line.substr(b, size), Token::COMMENT);
+		break;
+	}
+	default:
+		if (isalnum(current()) || strchr("_-", current())) {
+			make_token(t, line.substr(cursor, scan_word()), Token::KEY);
+			cursor--;
+		} else
+			return ParseResult(ParseError("unexpected token `" + line + "`", nc));
+		break;
 	}
 	next_char();
 	return ParseResult(t);
@@ -89,8 +84,7 @@ ParseResult Lexer::next() {
 
 	while (current() == ' ')
 		next_char();
-	if (last_token && last_token->type == Token::ASSIGN && current() != '"')
-	{
+	if (last_token && last_token->type == Token::ASSIGN && current() != '"') {
 		int b = cursor;
 		int size = 1;
 		while (next_char() != '\n')
@@ -102,17 +96,15 @@ ParseResult Lexer::next() {
 
 	if (in->eof())
 		return (make_token(t, "", Token::_EOF), ParseResult(t));
-	else if (in->fail())
-	{
+	else if (in->fail()) {
 		delete t;
 		return ParseResult(ParseError("broken input", nc));
 	}
-	
+
 	ParseResult res = _next(t);
 	if (res.is_ok())
 		last_token = res.ok();
-	else
-	{
+	else {
 		delete t;
 		last_token = NULL;
 	}
@@ -126,25 +118,23 @@ void Lexer::make_token(Token* t, std::string value, Token::e_token type) {
 	t->offset = cursor;
 }
 
-int Lexer::scan_qoute()
-{
+int Lexer::scan_qoute() {
 	char q = current();
 	int i = 1;
 
 	while (next_char() != q) {
- 		if (current() == '\0')
+		if (current() == '\0')
 			return -1;
 		i++;
 	}
-	return i+1;
+	return i + 1;
 }
 
-int Lexer::scan_word()
-{
+int Lexer::scan_word() {
 	int i = 0;
 
-	while (isalnum(current()) || strchr("_-", current()) ) {
- 		if (next_char() == '\0')
+	while (isalnum(current()) || strchr("_-", current())) {
+		if (next_char() == '\0')
 			return i;
 		i++;
 	}

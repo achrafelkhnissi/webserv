@@ -14,21 +14,21 @@ public:
 	ParseResult next();
 
 private:
-	std::istream *in;
+	std::istream* in;
 	std::string line;
 	int cursor;
 	int nc;
-	Token *last_token;
+	Token* last_token;
 
 	// utils
-	
-	ParseResult _next(Token *t);
+
+	ParseResult _next(Token* t);
 
 	// cursor
 	char next_char();
 	char current();
 	void next_line();
-	void make_token(Token *t, std::string value, Token::e_token type);
+	void make_token(Token* t, std::string value, Token::e_token type);
 
 	// scanners
 	int scan_qoute();
