@@ -13,7 +13,8 @@ int main(int ac, char* av[]) {
 	}
 
 	toml::table* t = toml::parse_file(config_file);
-	t->print();
+
+	(*t)["server"][0]["ip"].print();
 
 	delete t;
 	return 0;

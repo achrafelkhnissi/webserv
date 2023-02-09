@@ -19,13 +19,6 @@ table::table(std::string& str)
 	: type(STRING)
 	, str(str) { }
 
-void* table::operator[](std::string& idx) {
-	TomlMap::iterator f = mp.find(idx);
-	if (f == mp.end())
-		return NULL;
-	return f->second;
-}
-
 void table::push(table& t) {
 	vec.push_back(t);
 }
@@ -34,17 +27,12 @@ void table::insert(std::string s, table* t) {
 	mp.insert(std::make_pair(s, t));
 }
 
-table* table::get(std::string& s) {
-	TomlMap::iterator f = mp.find(s);
-	if (f == mp.end())
-		return NULL;
-	return f->second;
-}
-
 void table::create(std::string& s) {
-	if (get(s) != NULL)
-		return;
-	mp.insert(std::make_pair(s, new table(TABLE)));
+	try {
+		get(s);
+	} catch (std::runtime_error& e) {
+		mp.insert(std::make_pair(s, new table(TABLE)));
+	}
 }
 
 void table::emplace(std::string& s, table* t) {
@@ -87,6 +75,33 @@ void table::print(int indent) {
 		std::cout << s << "]" << std::endl;
 		break;
 	}
+}
+
+table& table::operator[](std::string idx) {
+	return get(idx);
+}
+
+table& table::operator[](int idx) {
+	return get(idx);
+}
+
+std::string& table::as_str() {
+	return str;
+}
+
+table& table::get(std::string s) {
+	TomlMap::iterator f = mp.find(s);
+	if (type != TABLE || f == mp.end())
+		throw std::runtime_error("table::get: " + s + " not found"); // Option
+	//print(0);
+	return *f->second;
+}
+
+table& table::get(int idx) {
+	if (type != ARRAY)
+		throw std::runtime_error("table::get: not an array"); // Option
+	//print(0);
+	return vec[idx];
 }
 
 table::~table() { }

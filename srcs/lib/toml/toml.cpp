@@ -14,24 +14,22 @@
 
 using namespace toml;
 
-table* list2map(TokenList list, table& t) {
+table& list2map(TokenList list, table& t) {
 	table* last_t = &t;
 
 	ITER_FOREACH(TokenList, list, it) {
 		Token* node = *it;
 		last_t->create(node->value);
-		last_t = last_t->get(node->value);
-		if (last_t == NULL)
-			throw std::runtime_error("Error: list2map: last_t is NULL " + node->value);
+		last_t = &last_t->get(node->value);
 	}
-	return last_t;
+	return *last_t;
 }
 
 void fill_map(TokenMap& mp, table& t) {
 	ITER_FOREACH(TokenMap, mp, it) {
-		table* last = list2map(it->first, t);
-		last->set_type(table::STRING);
-		last->set_string(it->second);
+		table& last = list2map(it->first, t);
+		last.set_type(table::STRING);
+		last.set_string(it->second);
 	}
 }
 
@@ -42,16 +40,16 @@ table* build(Parser& p) {
 
 	ITER_FOREACH(std::vector<TomlBlock>, p.array, it) {
 		table tmp = table(table::TABLE);
-		table* last = list2map(it->prefix, *t);
-		last->set_type(table::ARRAY);
+		table& last = list2map(it->prefix, *t);
+		last.set_type(table::ARRAY);
 		fill_map(it->mp, tmp);
-		last->push(tmp);
+		last.push(tmp);
 	}
 
 	ITER_FOREACH(std::vector<TomlBlock>, p.tables, it) {
-		table* last = list2map(it->prefix, *t);
-		last->set_type(table::TABLE);
-		fill_map(it->mp, *last);
+		table& last = list2map(it->prefix, *t);
+		last.set_type(table::TABLE);
+		fill_map(it->mp, last);
 	}
 
 	return t;

@@ -21,18 +21,23 @@ public:
 	table(enum e_toml type);
 	table(TomlMap& mp);
 	table(std::string& str);
-	void* operator[](std::string&);
 	void push(table&);
 	void insert(std::string s, table* t);
 	void emplace(std::string& s, table* t);
 	void create(std::string& s);
-	table* get(std::string& s);
 	void print(int indent = 0);
 
 	bool is_type(enum e_toml type);
 	void set_type(enum e_toml type);
 
 	void set_string(std::string& str);
+
+	table& operator[](std::string idx);
+	table& operator[](int idx);
+	table& get(std::string s);
+	table& get(int idx);
+
+	std::string& as_str();
 
 	~table();
 
