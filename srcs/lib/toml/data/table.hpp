@@ -23,7 +23,6 @@ public:
 	table(std::string& str);
 	void push(table&);
 	void insert(std::string s, table* t);
-	void emplace(std::string& s, table* t);
 	void create(std::string& s);
 	void print(int indent = 0);
 

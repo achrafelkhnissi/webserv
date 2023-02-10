@@ -1,4 +1,5 @@
 #include "Parser.hpp"
+#include "utils.h"
 #include <algorithm>
 #include <list>
 #include <numeric>
@@ -38,6 +39,10 @@ TokenList::iterator til(TokenList::iterator& cur, Token::e_token until) {
 	return cur;
 }
 
+std::string accum(std::string& acc, Token* t) {
+	return acc + t->value;
+};
+
 Parser::Parser(TokenList tks) {
 	TokenList::iterator cur = tks.begin();
 	TokenMap* lastmp = &mp;
@@ -47,10 +52,8 @@ Parser::Parser(TokenList tks) {
 			cur++;
 			lastmp->insert(TokenPair(
 				res,
-				std::accumulate(cur,
-								til(cur, Token::NEWLINE | Token::COMMENT),
-								std::string(""),
-								[](std::string& acc, Token* t) { return acc + t->value; })));
+				std::accumulate(
+					cur, til(cur, Token::NEWLINE | Token::COMMENT), std::string(""), accum)));
 		} else if ((*cur)->is(Token::OPENBRACKET)) {
 			cur++;
 			std::vector<TomlBlock>* tm = &this->tables;
@@ -67,19 +70,18 @@ Parser::Parser(TokenList tks) {
 }
 
 void _printKeyValue(TokenMap& mp) {
-	for (auto& m : mp) {
-		//auto m = mp.begin();
-		for (auto& it : m.first) {
-			std::cout << it->value << " ";
+	ITER_FOREACH(TokenMap, mp, m) {
+		ITER_FOREACH_CONST(TokenList, m->first, it) {
+			std::cout << (*it)->value << " ";
 		}
 		std::cout << " = ";
-		std::cout << m.second;
+		std::cout << m->second;
 		std::cout << std::endl;
 	}
 }
 
 void _print_list(TokenList& list) {
-	auto begin = list.begin();
+	TokenList::iterator begin = list.begin();
 	while (begin != list.end()) {
 		std::cout << (*begin)->value << ">";
 		begin++;
@@ -90,9 +92,9 @@ void _print_list(TokenList& list) {
 void _print_block(std::vector<TomlBlock>& vec) {
 
 	std::cout << "================================================" << std::endl;
-	for (auto& block : vec) {
-		_print_list(block.prefix);
-		_printKeyValue(block.mp);
+	ITER_FOREACH(std::vector<TomlBlock>, vec, block) {
+		_print_list(block->prefix);
+		_printKeyValue(block->mp);
 	}
 }
 

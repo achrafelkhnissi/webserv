@@ -35,10 +35,6 @@ void table::create(std::string& s) {
 	}
 }
 
-void table::emplace(std::string& s, table* t) {
-	mp.emplace(s, t); // TODO: C++11
-}
-
 bool table::is_type(enum e_toml type) {
 	return this->type == type;
 }
