@@ -9,7 +9,7 @@ SRC_HEADERS = $(shell find srcs -name "*.hpp")
 FILES 	= $(shell find srcs -name "*.cpp" | cut -d/ -f2-)
 B_DIR	= build
 OBJ		= $(addprefix $(B_DIR)/, $(FILES:.cpp=.o))
-NAME 	= webserve
+NAME 	= webserv
 
 all: $(NAME) 
 
