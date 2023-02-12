@@ -7,11 +7,18 @@ void Server::set_up() {
 
     pollfd listner_fd;
     _end_server = FALSE;
+    int optval = 1;
 
     // Create a socket
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
+    //make the socket non blocking
     fcntl(sockfd, F_SETFL, O_NONBLOCK);
+
+    if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) < 0) {
+        strerror(errno);
+        exit(EXIT_FAILURE);
+    }
 
     // Bind the socket to a port and host
     struct sockaddr_in server_address = {};
