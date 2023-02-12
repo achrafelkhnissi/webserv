@@ -1,6 +1,7 @@
 #include "Server.hpp"
 
 
+
 Server::Server(int port, const std::string &host): _port(port), _host(host) { }
 
 void Server::set_up() {
@@ -15,6 +16,7 @@ void Server::set_up() {
     //make the socket non blocking
     fcntl(sockfd, F_SETFL, O_NONBLOCK);
 
+    //SO_REUSEADDR 	Allows the socket to be bound to an address that is already in use.
     if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) < 0) {
         strerror(errno);
         exit(EXIT_FAILURE);
@@ -85,7 +87,8 @@ void Server::start_polling(int listener_socket) {
                 handle_request(it);
         }
     } while (_end_server == FALSE);
-
+    // Clean up all of the sockets that are open
+    clear_pollfds();
 }
 
 void Server::handle_connections(int sockfd) {
@@ -126,7 +129,7 @@ void Server::handle_request(std::vector<pollfd>::iterator it) {
 
         if (bytes_read < 0)
         {
-            if (errno != EWOULDBLOCK)
+            if (errno != EWOULDBLOCK) //check if it's allowed later
                 close_conn = TRUE;
             perror("recv failed!");
             break;
@@ -158,6 +161,15 @@ void Server::handle_request(std::vector<pollfd>::iterator it) {
         close(it->fd);
         _fds.erase(it);
     }
+}
+
+void Server::clear_pollfds() {
+    std::vector<pollfd>::iterator it = _fds.begin();
+    std::vector<pollfd>::iterator end = _fds.end();
+
+    for(; it != end; it++)
+        close(it->fd);
+    _fds.clear();
 }
 
 void Server::send_response(int fd) {

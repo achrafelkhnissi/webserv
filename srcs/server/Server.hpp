@@ -27,6 +27,7 @@ public:
 
     void set_up(); // method to start the server, it will listen for incoming connections
     void start_polling(int listener_socket); // waiting for any I/O operation on the _fds using the poll function
+    void clear_pollfds();
 
     void handle_connections(int fd); // method to handle incoming connections, it will accept new connections and add them to the poll list
     void handle_request(std::vector<pollfd>::iterator it); // method to handle incoming requests, it will read the request, parse it and call the appropriate method
