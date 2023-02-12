@@ -1,17 +1,13 @@
 #include "Server.hpp"
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <unistd.h>
-#include <poll.h>
-#include <fcntl.h>
 
-#define  FALSE 1
-#define  TRUE 0
+
 Server::Server(int port, const std::string &host): _port(port), _host(host) { }
 
 void Server::set_up() {
 
     pollfd listner_fd;
+    _end_server = FALSE;
+
     // Create a socket
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -24,22 +20,20 @@ void Server::set_up() {
     server_address.sin_addr.s_addr = INADDR_ANY;
 
     if (bind(sockfd, (struct sockaddr *)&server_address, sizeof(server_address)) == -1) {
-        perror("[ERROR]: webserv");
+        strerror(errno);
         exit(EXIT_FAILURE);
     }
 
     // Listen for incoming connections
     if (listen(sockfd, 10) == -1) {
-        perror("[ERROR]: webserv");
+        strerror(errno);
         exit(EXIT_FAILURE);
     }
 
     listner_fd.fd = sockfd;
     listner_fd.events = POLLIN;
     _fds.push_back(listner_fd);
-    // handle_connection(sockfd);
 
-//    handle_request(sockfd);
     start_polling(sockfd);
 }
 
@@ -51,50 +45,57 @@ void Server::start_polling(int listener_socket) {
         r = poll(_fds.data(), _fds.size(), timeout);
 
         if (r < 0){
-            perror(" poll system call failed");
+            strerror(errno);
             break;
         }
         if (r == 0){
             std::cout << "poll() timed out.";
             break;
         }
-        //loop through to find the descriptors that returned
 
+        //loop through to find the descriptors that returned
         std::vector<pollfd>::iterator it = _fds.begin();
         std::vector<pollfd>::iterator end = _fds.end();
-//        std::vector<pollfd>::iterator it;
+
         for(; it != end; it++){
             if (it->revents == 0)
                 continue;
             if (it->revents != POLLIN){
                 perror(" Error! revents ");
+                _end_server = TRUE;
                 break;
             }
             if (it->fd == listener_socket){
                 std::cout << "listener socket is readable" << std::endl;
-                //call the handle_connections() to accept all the incoming connections queued up in the listening socket then call pall again
+
+                /* call the handle_connections() to accept all the incoming connections
+                queued up in the listening socket then call pall again */
                 handle_connections( listener_socket);
             }
             else
-                // This is not the listening socket, therefore an
-                // existing connection must be readable
+                /* This is not the listening socket, therefore an
+                 existing connection must be readable */
                 handle_request(it);
         }
-    } while (true);
+    } while (_end_server == FALSE);
 
 }
 
 void Server::handle_connections(int sockfd) {
+
     // Accept an incoming connection
     int new_fd;
     do {
-        new_fd = accept(sockfd, nullptr, nullptr);
         /* accept each incomming connection if accept fails with EWOULDBLOCK, then
-         * we have accepted all of them, else we need to end the server ( to do later) */
+        we have accepted all of them, else we need to end the server ( to do later) */
+        new_fd = accept(sockfd, nullptr, nullptr);
 
         if (new_fd < 0)
         {
-            perror("accept failed!");
+            if (errno != EWOULDBLOCK){
+                perror("accept failed!");
+                _end_server = TRUE;
+            }
             break;
         }
         std::cout << "Connection accepted." << std::endl;
@@ -107,7 +108,6 @@ void Server::handle_connections(int sockfd) {
 
 void Server::handle_request(std::vector<pollfd>::iterator it) {
 
-//    int new_fd = accept(fd, nullptr, nullptr); // remove this line later.
 
     // Read the incoming request
     int close_conn = FALSE;
@@ -115,16 +115,17 @@ void Server::handle_request(std::vector<pollfd>::iterator it) {
     do {
         /* receive data in this connection until the rcv fails with EWOULDBLOCK
          * if any other failure occurs, we will close the connetion*/
-
         int bytes_read = recv(it->fd, buffer, sizeof(buffer), 0);
+
         if (bytes_read < 0)
         {
             if (errno != EWOULDBLOCK)
                 close_conn = TRUE;
             perror("recv failed!");
             break;
-        }
-        if (bytes_read == 0){ // check to see if the connection has been closed by the client
+
+        }// check to see if the connection has been closed by the client
+        if (bytes_read == 0){
             std::cout << "Connection closed!";
             close_conn = TRUE;
             break;
