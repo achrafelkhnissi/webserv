@@ -13,19 +13,22 @@ typedef std::pair<TokenList, std::string> TokenPair;
 
 struct TomlBlock {
 
-	TomlBlock(TokenList prefix, TokenMap mp) {
+	enum blockType { ARRAY, TABLE };
+
+	TomlBlock(TokenList prefix, TokenMap mp, enum blockType type) {
 		this->mp = mp;
 		this->prefix = prefix;
+		this->type = type;
 	}
 
 	TokenList prefix;
 	TokenMap mp;
+	blockType type;
 };
 
 class Parser {
 public:
 	TokenMap mp;
-	std::vector<TomlBlock> array;
 	std::vector<TomlBlock> tables;
 	Parser(TokenList);
 	void print();

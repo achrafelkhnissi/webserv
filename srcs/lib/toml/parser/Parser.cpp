@@ -57,12 +57,13 @@ Parser::Parser(TokenList tks) {
 		} else if ((*cur)->is(Token::OPENBRACKET)) {
 			cur++;
 			std::vector<TomlBlock>* tm = &this->tables;
+			TomlBlock::blockType type = TomlBlock::TABLE;
 			if ((*cur)->is(Token::OPENBRACKET)) {
-				tm = &array;
+				type = TomlBlock::ARRAY;
 				cur++;
 			}
-			tm->push_back(TomlBlock(TokenList(cur, til(cur, Token::CLOSEBRACKET | Token::COMMENT)),
-									TokenMap()));
+			TokenList res = til_ignore(cur, Token::CLOSEBRACKET | Token::COMMENT, Token::DOT);
+			tm->push_back(TomlBlock(res, TokenMap(), type));
 			lastmp = &tm->rbegin()->mp;
 		}
 		cur++;
@@ -100,6 +101,5 @@ void _print_block(std::vector<TomlBlock>& vec) {
 
 void Parser::print() {
 	_printKeyValue(mp);
-	_print_block(array);
 	_print_block(tables);
 }

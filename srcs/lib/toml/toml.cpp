@@ -14,6 +14,11 @@
 
 using namespace toml;
 
+template <typename Iter>
+Iter next_it(Iter iter) {
+	return ++iter;
+}
+
 table& list2map(TokenList list, table& t) {
 	table* last_t = &t;
 
@@ -21,6 +26,9 @@ table& list2map(TokenList list, table& t) {
 		Token* node = *it;
 		last_t->create(node->value);
 		last_t = &last_t->get(node->value);
+		if (next_it(it) != list.end() && last_t->type == table::ARRAY) {
+			last_t = &last_t->get(last_t->vec.size() - 1);
+		}
 	}
 	return *last_t;
 }
@@ -38,18 +46,20 @@ table* build(Parser& p) {
 
 	fill_map(p.mp, *t);
 
-	ITER_FOREACH(std::vector<TomlBlock>, p.array, it) {
+	ITER_FOREACH(std::vector<TomlBlock>, p.tables, it) {
+		if (it->type == TomlBlock::TABLE) {
+			table& last = list2map(it->prefix, *t);
+			if (last.type == table::ARRAY) {
+				last = last.get(last.vec.size() - 1);
+			}
+			fill_map(it->mp, last);
+			continue;
+		}
 		table tmp = table(table::TABLE);
 		table& last = list2map(it->prefix, *t);
 		last.set_type(table::ARRAY);
 		fill_map(it->mp, tmp);
 		last.push(tmp);
-	}
-
-	ITER_FOREACH(std::vector<TomlBlock>, p.tables, it) {
-		table& last = list2map(it->prefix, *t);
-		last.set_type(table::TABLE);
-		fill_map(it->mp, last);
 	}
 
 	return t;

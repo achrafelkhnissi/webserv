@@ -24,14 +24,21 @@ void table::push(table& t) {
 }
 
 void table::insert(std::string s, table* t) {
-	mp.insert(std::make_pair(s, t));
+	if (t->is_type(ARRAY))
+		get(vec.size() - 1).insert(s, t);
+	else
+		mp.insert(std::make_pair(s, t));
 }
 
 void table::create(std::string& s) {
+	table& t = *this;
+	if (t.is_type(ARRAY)) {
+		t = t.get(t.vec.size() - 1);
+	}
 	try {
-		get(s);
+		t.get(s);
 	} catch (std::runtime_error& e) {
-		mp.insert(std::make_pair(s, new table(TABLE)));
+		insert(s, new table(TABLE));
 	}
 }
 
@@ -56,7 +63,7 @@ void table::print(int indent) {
 		std::cout << str << std::endl;
 		break;
 	case TABLE:
-		std::cout << "{" << std::endl;
+		std::cout << s << "{" << std::endl;
 		ITER_FOREACH(TomlMap, mp, it) {
 			std::cout << s << "  " << it->first << ": ";
 			it->second->print(indent + 2);
@@ -64,7 +71,7 @@ void table::print(int indent) {
 		std::cout << s << "}" << std::endl;
 		break;
 	case ARRAY:
-		std::cout << "[" << std::endl;
+		std::cout << s << "[" << std::endl;
 		ITER_FOREACH(std::vector<table>, vec, it) {
 			it->print(indent + 2);
 		}
