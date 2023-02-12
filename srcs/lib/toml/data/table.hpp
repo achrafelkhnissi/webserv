@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <map>
 #include <string>
 #include <vector>
@@ -16,7 +17,9 @@ public:
 		TABLE,
 		ARRAY,
 		STRING,
+		NONE,
 	};
+	static table* empty_;
 
 	table(enum e_toml type);
 	table(TomlMap& mp);
@@ -32,9 +35,11 @@ public:
 	void set_string(std::string& str);
 
 	table& operator[](std::string idx);
-	table& operator[](int idx);
+	table& operator[](size_t idx);
 	table& get(std::string s);
-	table& get(int idx);
+	table& get(size_t idx);
+
+	table& last();
 
 	std::string& as_str();
 

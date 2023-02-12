@@ -1,10 +1,13 @@
 #include "table.hpp"
 #include "utils.h"
+#include <cstddef>
 #include <iostream>
 #include <string>
 #include <utility>
 
 using namespace toml;
+
+table* table::empty_ = new table(NONE);
 
 table::table(enum e_toml type) {
 	this->type = type;
@@ -35,10 +38,8 @@ void table::create(std::string& s) {
 	if (t.is_type(ARRAY)) {
 		t = t.get(t.vec.size() - 1);
 	}
-	try {
-		t.get(s);
-	} catch (std::runtime_error& e) {
-		insert(s, new table(TABLE));
+	if (t.get(s).is_type(NONE)) {
+		t.insert(s, new table(TABLE));
 	}
 }
 
@@ -52,6 +53,14 @@ void table::set_type(enum e_toml type) {
 
 void table::set_string(std::string& str) {
 	this->str = str;
+}
+
+table& table::last() {
+	if (type != ARRAY)
+		abort();
+	if (vec.size() == 0)
+		vec.push_back(table(TABLE));
+	return this->vec.back();
 }
 
 void table::print(int indent) {
@@ -77,6 +86,9 @@ void table::print(int indent) {
 		}
 		std::cout << s << "]" << std::endl;
 		break;
+	case NONE:
+		std::cout << s << "NONE" << std::endl;
+		break;
 	}
 }
 
@@ -84,7 +96,7 @@ table& table::operator[](std::string idx) {
 	return get(idx);
 }
 
-table& table::operator[](int idx) {
+table& table::operator[](size_t idx) {
 	return get(idx);
 }
 
@@ -95,15 +107,13 @@ std::string& table::as_str() {
 table& table::get(std::string s) {
 	TomlMap::iterator f = mp.find(s);
 	if (type != TABLE || f == mp.end())
-		throw std::runtime_error("table::get: " + s + " not found"); // Option
-	//print(0);
+		return *empty_;
 	return *f->second;
 }
 
-table& table::get(int idx) {
-	if (type != ARRAY)
-		throw std::runtime_error("table::get: not an array"); // Option
-	//print(0);
+table& table::get(size_t idx) {
+	if (type != ARRAY || idx >= vec.size())
+		return *empty_;
 	return vec[idx];
 }
 
