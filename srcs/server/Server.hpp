@@ -3,12 +3,21 @@
 
 #include <iostream>
 #include <vector>
+#include "Server.hpp"
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <unistd.h>
 #include <poll.h>
+#include <fcntl.h>
+#include <errno.h>
+#define  FALSE 1
+#define  TRUE 0
 
 class Server {
 
 private:
     int         _port; // port number
+    int         _end_server;
     std::string _host; // hostname
     std::vector<pollfd> _fds; // vector to store file descriptor information
 
