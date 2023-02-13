@@ -4,7 +4,7 @@ title1 = "TOML Example"
 
 [owner]
 name.user.mamak = "Tom Preston-Werner"
-dob = 1979-05-27T07:32:00-08:00
+dob = 
 
 [database]
 enabled = true

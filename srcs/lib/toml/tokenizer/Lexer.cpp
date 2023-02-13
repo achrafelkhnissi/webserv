@@ -87,7 +87,7 @@ ParseResult Lexer::next() {
 	if (last_token && last_token->type == Token::ASSIGN && current() != '"') {
 		int b = cursor;
 		int size = 1;
-		while (next_char() != '\n')
+		while (current() != '\n' && next_char() != '\n')
 			size++;
 		make_token(t, line.substr(b, size), Token::VALUE);
 		last_token = t;
