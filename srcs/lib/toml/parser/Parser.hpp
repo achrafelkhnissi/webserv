@@ -1,6 +1,9 @@
 #ifndef PARSER_HPP
 #define PARSER_HPP
 
+#include "../data/table.hpp"
+#include "../error/ParseError.hpp"
+#include "../result/Result.hpp"
 #include "../tokenizer/token/Token.hpp"
 #include <list>
 #include <map>
@@ -33,4 +36,10 @@ public:
 	Parser(TokenList);
 	void print();
 };
+
+TokenList til_ignore(TokenList::iterator& cur, Token::e_token until, Token::e_token ignore);
+
+TokenList::iterator til(TokenList::iterator& cur, Token::e_token until);
+typedef Result<toml::table*, ParseError> ChekerResult;
+ChekerResult syntax_checker(TokenList& tokens);
 #endif
