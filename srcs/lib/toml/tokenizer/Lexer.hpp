@@ -3,6 +3,7 @@
 #include "../result/Result.hpp"
 #include "token/Token.hpp"
 #include <iostream>
+#include <stddef.h>
 #include <string>
 
 typedef Result<Token*, ParseError> ParseResult;
@@ -16,8 +17,8 @@ public:
 private:
 	std::istream* in;
 	std::string line;
-	int cursor;
-	int nc;
+	size_t cursor;
+	size_t nc;
 	Token* last_token;
 
 	// utils
