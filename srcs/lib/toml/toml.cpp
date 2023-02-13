@@ -77,10 +77,15 @@ table* toml::parse_stream(std::ifstream& in) {
 		else {
 			// free(list)
 			cerr << r.err().as_str() << endl;
-			break;
+			return NULL;
 		}
 	} while (!r.ok()->is(Token::_EOF));
 
+	ChekerResult res = syntax_checker(tks);
+	if (!res.is_ok()) {
+		cerr << res.err().as_str() << endl;
+		return NULL;
+	}
 	Parser p = Parser(tks);
 
 	return build(p);

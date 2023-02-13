@@ -1,0 +1,40 @@
+# This is a TOML document
+title0 = "TOML Example"
+title1 = "TOML Example"
+
+[owner]
+name.user.mamak = "Tom Preston-Werner"
+dob = 1979-05-27T07:32:00-08:00
+
+[database]
+enabled = true
+
+[[a]]
+
+[[a.b]]
+name = "ismail"
+
+[[a.b]]
+name = "mamak"
+
+
+[[server]]
+ip = "10.0.0.1"
+role = "frontend"
+
+# 10.0.0.2/index.html => /var/www/html/index.html 
+[[server]]
+ip = "10.0.0.2" #ma
+role = "backend"
+
+[[server.location]]
+path = "/"
+root = "/var/www/html"
+
+[[server.location]]
+path = "1"
+root = "2/var/www/html"
+
+[[lkiks]]
+name="ismail"
+
