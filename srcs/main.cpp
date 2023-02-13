@@ -13,8 +13,13 @@ int main(int ac, char* av[]) {
 	}
 
 	toml::table* t = toml::parse_file(config_file);
+	if (t == NULL) {
+		std::cerr << "Error parsing file" << std::endl;
+		return 1;
+	}
 
-	(*t)["server"][0]["ip"].print();
+	(*t)["server"][1].print();
+	//t->print();
 
 	delete t;
 	return 0;
