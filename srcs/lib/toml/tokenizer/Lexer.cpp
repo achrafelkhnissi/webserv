@@ -64,6 +64,7 @@ ParseResult Lexer::_next(Token* t) {
 		while (next_char() != '\n')
 			size++;
 		make_token(t, line.substr(b, size), Token::COMMENT);
+		return ParseResult(t);
 		break;
 	}
 	default:
