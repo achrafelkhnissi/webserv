@@ -5,21 +5,6 @@
 #include <numeric>
 #include <string>
 
-int is_assign(Token* t) {
-	return t->type == Token::ASSIGN || t->type == Token::COMMENT;
-}
-int is_newline(Token* t) {
-	return t->type == Token::NEWLINE || t->type == Token::COMMENT;
-}
-int is_close(Token* t) {
-	return t->type == Token::CLOSEBRACKET || t->type == Token::COMMENT;
-}
-
-template <class T>
-T ft_next(T it, typename std::iterator_traits<T>::difference_type n = 1) {
-	std::advance(it, n);
-	return it;
-}
 
 TokenList til_ignore(TokenList::iterator& cur, Token::e_token until, Token::e_token ignore) {
 	TokenList res;

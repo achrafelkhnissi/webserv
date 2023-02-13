@@ -1,6 +1,5 @@
 #include "Lexer.hpp"
 #include "token/Token.hpp"
-#include <_ctype.h>
 #include <cstring>
 #include <iostream>
 #include <istream>
