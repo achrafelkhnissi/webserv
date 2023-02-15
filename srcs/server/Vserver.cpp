@@ -148,7 +148,7 @@ void Vserver::_handle_request(pollfds_it it) {
 
     do {
         /* receive data in this connection until the rcv fails with EWOULDBLOCK
-         * if any other failure occurs, we will close the connetion*/
+         * if any other failure occurs, we will close the connection*/
         ssize_t bytes_read = recv(it->fd, buffer, sizeof(buffer), 0);
 
         //
@@ -227,7 +227,7 @@ Vserver::~Vserver() {
 
 /* ------------------------ HELPER FUNCTIONS ----------------------------------
  *
- * _errror() - prints an error message and exits the program with EXIT_FAILURE
+ * _error() - prints an error message and exits the program with EXIT_FAILURE
  *
  * @param msg: the error message to print
  *
