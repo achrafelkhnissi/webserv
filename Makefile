@@ -13,13 +13,13 @@
 NAME		= webserv
 
 CC			= c++
-FLAGS		= # -Wall -Wextra -Werror -std=c++98
+#FLAGS		= -Wall -Wextra -Werror -std=c++98
 RM			= rm -rf
 
 OBJDIR		= build
 
 CONFIG 		=  $(addprefix ./config/, Configuration)
-SERVER		=  $(addprefix ./server/, Server)
+SERVER		=  $(addprefix ./server/, Server Vserver)
 UTILS		=  $(addprefix ./utils/, )
 
 FILES		= main $(addprefix ./srcs/, $(CONFIG) $(SERVER) $(UTILS) )
