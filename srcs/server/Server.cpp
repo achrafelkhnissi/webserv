@@ -7,6 +7,13 @@
  */
 Server::Server(Configuration config): _config(config) {
     _vserver.push_back(Vserver(config.get_port(), config.get_host()));
+    _vserver[0].start();
+}
+
+void Server::start() {
+    for (std::vector<Vserver>::iterator it = _vserver.begin(); it != _vserver.end(); ++it) {
+        it->start();
+    }
 }
 
 Server::~Server() { }

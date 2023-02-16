@@ -14,10 +14,10 @@ private:
     std::string     _root;
     std::string     _log_path;
 
-    void parse_config_file(std::string config_file);
+    void parse_config_file(const std::string& config_file);
 
 public:
-    Configuration(std::string config_file);
+    Configuration(const std::string& config_file);
 
     int get_port();
 

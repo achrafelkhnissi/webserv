@@ -1,6 +1,6 @@
 #include "Configuration.hpp"
 
-Configuration::Configuration(std::string config_file) {
+Configuration::Configuration(const std::string& config_file) {
     parse_config_file(config_file);
 
     _port = 1337;
@@ -23,6 +23,7 @@ std::string Configuration::get_log_path() {
     return _log_path;
 }
 
-void Configuration::parse_config_file(std::string config_file) {
+void Configuration::parse_config_file(const std::string& config_file) {
     // TODO: parse config file
+    (void)config_file;
 }

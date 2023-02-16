@@ -4,13 +4,14 @@
 
 #include "Vserver.hpp"
 
+
 /*
  * Vserver class - This class is responsible for creating a virtual server object and start the server
  *
  * @param port - port number
  * @param host - hostname
  */
-Vserver::Vserver(int port, const std::string &host): _port(port), _end_server(), _host(host) {
+Vserver::Vserver(int port, const std::string &host): _port(port), _host(host) {
     std::cout << "\nCreating a virtual server on "
               << "port '" << port
               << "' and host '"<< host << "'\n" << std::endl;
@@ -22,165 +23,131 @@ Vserver::Vserver(int port, const std::string &host): _port(port), _end_server(),
  *              and host and listening for incoming connections
  */
 void Vserver::_setup() {
-
-    pollfd listener_fd = {};
-    _end_server = false;
-    int optval = 1; // used for setsockopt (option value)
-
     // Create a socket
-    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    int _server_socket = socket(AF_INET, SOCK_STREAM, 0);
+    if (_server_socket == -1)
+        _error("socket");
 
-    //make the socket non-blocking
-    fcntl(sockfd, F_SETFL, O_NONBLOCK);
+    // Set the server socket to non-blocking mode
+    if (fcntl(_server_socket, F_SETFL, O_NONBLOCK) < 0)
+        _error("fcntl");
 
-    // SO_REUSEADDR 	Allows the socket to be bound to an address that is already in use.
-    if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) < 0) {
+    // Set the server socket to reuse the address
+    int optval = 1;
+    if (setsockopt(_server_socket, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) < 0)
+        _error("setsockopt");
+
+    // Bind the socket to the port and host
+    struct sockaddr_in server_addr = {};
+    memset(&server_addr, 0, sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_addr.s_addr = INADDR_ANY;
+    server_addr.sin_port = htons(_port);
+
+    if (bind(_server_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1)
         strerror(errno);
-        exit(EXIT_FAILURE);
-    }
-
-    // Bind the socket to a port and host
-    struct sockaddr_in server_address = {};
-    server_address.sin_family = AF_INET;
-    server_address.sin_port = htons(_port);
-    server_address.sin_addr.s_addr = INADDR_ANY;
-
-    if (bind(sockfd, (struct sockaddr *)&server_address, sizeof(server_address)) == -1) {
-        strerror(errno);
-        exit(EXIT_FAILURE);
-    }
 
     // Listen for incoming connections
-    if (listen(sockfd, 10) == -1) {
-        strerror(errno);
-        exit(EXIT_FAILURE);
-    }
+    if (listen(_server_socket, SOMAXCONN) == -1)
+        _error("listen");
 
-    listener_fd.fd = sockfd;
-    listener_fd.events = POLLIN;
-    _fds.push_back(listener_fd);
-
-    _start_polling(sockfd);
+    // Add the server socket to the pollfds list
+    struct pollfd server_fd = {};
+    server_fd.fd = _server_socket;
+    server_fd.events = POLLIN;
+    _fds.push_back(server_fd);
 }
 
-/*
- *
- * Start polling method - This method is responsible for waiting for any I/O operation on the _fds using the poll function
- *
- * @param listener_socket - socket that will be used to listen for incoming connections
- *
- */
-void Vserver::_start_polling(int listener_socket) {
-    int timeout = 60 * 1000; // 1 min for now
-    int r;
-    do {
-        std::cout << "waiting on poll..." << std::endl;
-        r = poll(_fds.data(), _fds.size(), timeout);
+void Vserver::start() {
 
-        if (r < 0){
-            strerror(errno);
-            break;
-        }
-        if (r == 0){
-            std::cout << "poll() timed out." << std::endl;
-            break;
-        }
+    int timeout = 60 * 1000; // 60 seconds
 
-        //loop through to find the descriptors that returned
-        pollfds_it it = _fds.begin();
-        pollfds_it end = _fds.end();
+    // Setting up the server
+    _setup();
 
-        // Loop through the pollfd list and check which ones have revents set
-        for(; it != end; it++){
-            if (it->revents == 0)
-                continue;
-            if (it->revents != POLLIN) {
-                strerror(errno);
-                _end_server = true;
-                break;
+    // Start the server
+    while (true) {
+        int ready = poll(_fds.data(), _fds.size(), timeout);
+        if (ready == -1)
+            _error("poll");
+
+        if (ready == 0)
+            _error("poll timeout");
+
+        if ( _fds[0].revents & POLLIN ) {
+            struct sockaddr_in client_addr = {};
+            socklen_t client_len = sizeof(client_addr);
+            int client_socket = accept(_fds[0].fd, (struct sockaddr*)&client_addr, &client_len);
+            if (client_socket == -1) {
+                perror("accept");
             }
-            if (it->fd == listener_socket){
-                std::cout << "listener socket is readable" << std::endl;
+            struct pollfd client = {};
+            client.fd = client_socket;
+            client.events = POLLIN;
+            _fds.push_back(client);
+//            _handle_connections(_fds[0].fd);
+        }
 
-                /* call the handle_connections() to accept all the incoming connections
-                queued up in the listening socket then call pall again */
-                _handle_connections( listener_socket);
-            }
-            else
-                /* This is not the listening socket, therefore an
-                 existing connection must be readable */
+        for (pollfds_it it = _fds.begin() + 1; it != _fds.end(); ++it) {
+            if (it->revents & POLLIN) {
                 _handle_request(it);
+            }
         }
-    } while (_end_server == false);
-    // Clean up all the sockets that are open
-    _clear_pollfds();
+
+    }
+
+//    _clear_pollfds();
 }
 
 void Vserver::_handle_connections(int sockfd) {
     // Accept an incoming connection
-    int new_fd;
-    do {
-        /* accept each incoming connection if accept fails with EWOULDBLOCK, then
-        we have accepted all of them, else we need to end the server ( to do later) */
-        new_fd = accept(sockfd, nullptr, nullptr);
-
-        if (new_fd < 0)
-        {
-            if (errno != EWOULDBLOCK){
-                strerror(errno);
-                _end_server = true;
+    while (true) {
+        struct sockaddr_in client_addr = {};
+        socklen_t client_len = sizeof(client_addr);
+        int client_fd = accept(sockfd, (struct sockaddr*)&client_addr, &client_len);
+        if (client_fd == -1) {
+            if (errno == EWOULDBLOCK || errno == EAGAIN) {
+                break;
+            } else {
+                _error("accept");
             }
-            break;
         }
-        std::cout << "Connection accepted." << std::endl;
-        pollfd connection = {};
-        connection.fd = new_fd;
-        connection.events = POLLIN;
-        _fds.push_back(connection);
-    } while (true);
+
+        // Add the client socket to the pollfds list
+        struct pollfd client = {};
+        client.fd = client_fd;
+        client.events = POLLIN;
+        _fds.push_back(client);
+
+        std::cout << "Accepted connection on fd " << client_fd << std::endl;
+    }
 }
 
 void Vserver::_handle_request(pollfds_it it) {
+    // Handle the request
+    char buffer[BUFFER_SIZE];
+    ssize_t bytes_read = recv(it->fd, buffer, BUFFER_SIZE, 0);
 
+    if (bytes_read == -1)
+        _error("recv");
 
-    // Read the incoming request
-    char buffer[1024] = {};
+    if (bytes_read == 0) {
+        std::cout << "Closed connection on fd " << it->fd << std::endl;
+        close(it->fd);
+        _fds.erase(it);
+        return;
+    }
 
-    do {
-        /* receive data in this connection until the rcv fails with EWOULDBLOCK
-         * if any other failure occurs, we will close the connection*/
-        ssize_t bytes_read = recv(it->fd, buffer, sizeof(buffer), 0);
+    buffer[bytes_read] = '\0';
+    std::cout << "Received " << bytes_read << " bytes on fd " << it->fd << std::endl;
+    std::cout << buffer << std::endl;
 
-        //
-        if (bytes_read < 0) {
-            strerror(errno);
-            break;
-        }
-        if (bytes_read == 0) {
-            std::cout << "Connection closed!" << std::endl;
-            break;
-        }
+    const char* report = "HTTP/1.1 200 OK\r\n"
+                         "Content-Type: text/html\r\n\r\n"
+                         "<h1>Hello World!</h1>";
 
-        // Parse the request and call the appropriate method
-        std::string request(buffer, bytes_read);
-        std::string method = request.substr(0, request.find(' '));
-
-        printf("Request:\n\n%s\n", request.c_str());
-
-        if (method == "GET") {
-            _handle_get(it->fd);
-        } else if (method == "POST") {
-            _handle_post(it->fd);
-        } else if (method == "DELETE") {
-            _handle_delete(it->fd);
-        } else {
-            _handle_error(it->fd);
-        }
-    } while(true);
-
-    // Close the connection
+    send(it->fd, report, strlen(report), 0);
     close(it->fd);
-    _fds.erase(it);
 }
 
 void Vserver::_clear_pollfds() {
@@ -209,16 +176,19 @@ void Vserver::_handle_get(int fd) {
 void Vserver::_handle_post(int fd) {
     // Handle the POST request
     // ...
+    (void)fd;
 }
 
 void Vserver::_handle_delete(int fd) {
     // Handle the DELETE request
     // ...
+    (void)fd;
 }
 
 void Vserver::_handle_error(int fd) {
     // Handle the error
     // ...
+    (void)fd;
 }
 
 Vserver::~Vserver() {

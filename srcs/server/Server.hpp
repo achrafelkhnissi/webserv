@@ -27,6 +27,8 @@ private:
 public:
     explicit Server(Configuration config);
     ~Server();
+
+    void start();
 };
 
 #endif

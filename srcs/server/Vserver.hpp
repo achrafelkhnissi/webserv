@@ -14,6 +14,9 @@
 #include <fcntl.h>
 #include <cerrno>
 #include <string>
+#include <arpa/inet.h>
+
+#define BUFFER_SIZE 1024
 
 /*
  * Vserver class - This class is responsible for creating a virtual server object
@@ -44,13 +47,11 @@ private:
 
 private:
     int                 _port;
-    int                 _end_server;
     std::string         _host;
     pollfds             _fds;
 
 private:
     void _setup();
-    void _start_polling(int listener_socket);
     void _clear_pollfds();
     void _error(const std::string& msg);
 
@@ -65,6 +66,8 @@ private:
 public:
     Vserver(int port, const std::string& host);
     ~Vserver();
+
+    void start();
 };
 
 
