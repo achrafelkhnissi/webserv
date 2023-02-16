@@ -13,7 +13,7 @@
 NAME		= webserv
 
 CC			= c++
-#FLAGS		= -Wall -Wextra -Werror -std=c++98
+FLAGS		= -g #-Wall -Wextra -Werror -std=c++98
 RM			= rm -rf
 
 OBJDIR		= build
@@ -23,7 +23,7 @@ SERVER		=  $(addprefix ./server/, Server Vserver)
 UTILS		=  $(addprefix ./utils/, )
 
 FILES		= main $(addprefix ./srcs/, $(CONFIG) $(SERVER) $(UTILS) )
-HEADERS		= -I ./srcs/config/ -I ./srcs/server/
+INC		= -I ./srcs/config/ -I ./srcs/server/
 
 SRC			= $(FILES:=.cpp)
 OBJ			= $(addprefix $(OBJDIR)/, $(FILES:=.o))
@@ -45,12 +45,12 @@ endif
 all: $(NAME)
 
 $(NAME): $(OBJ) $(HEADER)
-	@$(CC) $(OBJ) $(OPTS) -o $(NAME)
-	@printf "$(_SUCCESS) $(GREEN)- Executable ready.\n$(RESET)"
+	@$(CC) $(INC) $(OBJ) $(OPTS) -o $(NAME)
+	@printf "$(_SUCCESS) $(GREEN) - Executable ready.\n$(RESET)"
 
 $(OBJDIR)/%.o: %.cpp $(HEADER)
 	@mkdir -p $(dir $@)
-	@$(CC) $(FLAGS) $(OPTS) -c $< -o $@
+	@$(CC) $(INC) $(FLAGS) $(OPTS) -c $< -o $@
 
 clean:
 	@$(RM) $(OBJDIR) $(OBJ)
