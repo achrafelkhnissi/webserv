@@ -18,7 +18,7 @@ int main(int ac, char** av) {
 
         // Initialise the server.
         Server server(config);
-//        server.set_up();
+        server.start();
 
     } catch (const std::exception& e) {
         std::cerr << "Exception: " << e.what() << "\n";
