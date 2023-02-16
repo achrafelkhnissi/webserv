@@ -70,5 +70,4 @@ public:
     void start();
 };
 
-
 #endif //WEBSERV_VSERVER_HPP

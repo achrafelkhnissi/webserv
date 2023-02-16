@@ -13,6 +13,7 @@
  *
  * @method Server - constructor that takes a Configuration object as an argument
  * @method ~Server - destructor
+ * @method start - method to start the server
  */
 class Server {
 

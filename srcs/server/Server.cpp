@@ -10,8 +10,11 @@ Server::Server(Configuration config): _config(config) {
     _vserver[0].start();
 }
 
+/*
+ * start - method to start the server
+ */
 void Server::start() {
-    for (std::vector<Vserver>::iterator it = _vserver.begin(); it != _vserver.end(); ++it) {
+    for (vserver_it it = _vserver.begin(); it != _vserver.end(); ++it) {
         it->start();
     }
 }

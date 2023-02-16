@@ -4,7 +4,6 @@
 
 #include "Vserver.hpp"
 
-
 /*
  * Vserver class - This class is responsible for creating a virtual server object and start the server
  *
@@ -58,6 +57,10 @@ void Vserver::_setup() {
     _fds.push_back(server_fd);
 }
 
+/*
+ * Start method - This method is responsible for starting the server and waiting for incoming connections and requests
+ * 				using the poll function
+ */
 void Vserver::start() {
 
     int timeout = 60 * 1000; // 60 seconds
@@ -90,6 +93,10 @@ void Vserver::start() {
 //    _clear_pollfds();
 }
 
+/*
+ * Handle connections method - This method is responsible for handling incoming connections
+ * 							and adding them to the pollfds list
+ */
 void Vserver::_handle_connections(int sockfd) {
     // Accept an incoming connection
 
@@ -115,6 +122,10 @@ void Vserver::_handle_connections(int sockfd) {
     }
 }
 
+/*
+ * Handle request method - This method is responsible for handling incoming requests
+ * 							and sending a response to the client
+ */
 void Vserver::_handle_request(pollfds_it it) {
     // Handle the request
     char buffer[BUFFER_SIZE];
@@ -142,6 +153,10 @@ void Vserver::_handle_request(pollfds_it it) {
     close(it->fd);
 }
 
+/*
+ * _clear_pollfds method - This method is responsible for clearing the pollfds list
+ * 							and closing all the sockets
+ */
 void Vserver::_clear_pollfds() {
     pollfds_it it = _fds.begin();
     pollfds_it end = _fds.end();
@@ -151,6 +166,10 @@ void Vserver::_clear_pollfds() {
     _fds.clear();
 }
 
+/*
+ * _send_response method - This method is responsible for sending a response to the client
+ * 							after handling the request
+ */
 void Vserver::_send_response(int fd) {
 // Send the response to the client
     std::string response = "HTTP/1.1 200 OK\r\n"
@@ -159,24 +178,42 @@ void Vserver::_send_response(int fd) {
     send(fd, response.c_str(), response.length(), 0);
 }
 
+/*
+ * _handle_get method - This method is responsible for handling GET requests
+ * 							and sending a response to the client
+ */
 void Vserver::_handle_get(int fd) {
     // Handle the GET request
     // ...
     _send_response(fd);
 }
 
+/*
+ *  @disc _handle_post method - This method is responsible for handling POST requests
+ * 							and sending a response to the client
+ * 	@param fd: the file descriptor of the client socket
+ */
 void Vserver::_handle_post(int fd) {
     // Handle the POST request
     // ...
     (void)fd;
 }
 
+/*
+ * @disc _handle_delete method - This method is responsible for handling DELETE requests
+ * @param fd: the file descriptor of the client socket
+ */
 void Vserver::_handle_delete(int fd) {
     // Handle the DELETE request
     // ...
     (void)fd;
 }
 
+/*
+ * @disc _handle_error method - This method is responsible for handling errors
+ *
+ * @param fd: the file descriptor of the client socket
+ */
 void Vserver::_handle_error(int fd) {
     // Handle the error
     // ...
@@ -187,13 +224,11 @@ Vserver::~Vserver() {
     // Close all open file descriptors
 }
 
-/* ------------------------ HELPER FUNCTIONS ----------------------------------
- *
+/*
  * _error() - prints an error message and exits the program with EXIT_FAILURE
  *
  * @param msg: the error message to print
- *
- * ----------------------------------------------------------------------------*/
+ */
 void Vserver::_error(const std::string &msg) {
 //    strerror(errno);
     std::cerr << msg << std::endl;
