@@ -75,17 +75,8 @@ void Vserver::start() {
             _error("poll timeout");
 
         if ( _fds[0].revents & POLLIN ) {
-            struct sockaddr_in client_addr = {};
-            socklen_t client_len = sizeof(client_addr);
-            int client_socket = accept(_fds[0].fd, (struct sockaddr*)&client_addr, &client_len);
-            if (client_socket == -1) {
-                perror("accept");
-            }
-            struct pollfd client = {};
-            client.fd = client_socket;
-            client.events = POLLIN;
-            _fds.push_back(client);
-//            _handle_connections(_fds[0].fd);
+
+            _handle_connections(_fds[0].fd);
         }
 
         for (pollfds_it it = _fds.begin() + 1; it != _fds.end(); ++it) {
@@ -101,6 +92,7 @@ void Vserver::start() {
 
 void Vserver::_handle_connections(int sockfd) {
     // Accept an incoming connection
+
     while (true) {
         struct sockaddr_in client_addr = {};
         socklen_t client_len = sizeof(client_addr);
