@@ -257,6 +257,31 @@ void Vserver::_handle_error(int fd) {
     // Handle the error
     // ...
     (void)fd;
+
+	// TODO: Structure to handle errors (not completed yet)
+	int status_code = 200;
+	switch (status_code) {
+	case 200:
+		std::cout << "HTTP/1.1 200 OK\r\n\r\n";
+		std::cout << "<html><body><h1>Hello, world!</h1></body></html>";
+		break;
+	case 403:
+		std::cout << "HTTP/1.1 403 Forbidden\r\n\r\n";
+		std::cout << "<html><body><h1>403 Forbidden</h1></body></html>";
+		break;
+	case 404:
+		std::cout << "HTTP/1.1 404 Not Found\r\n\r\n";
+		std::cout << "<html><body><h1>404 Not Found</h1></body></html>";
+		break;
+	case 500:
+		std::cout << "HTTP/1.1 500 Internal Server Error\r\n\r\n";
+		std::cout << "<html><body><h1>500 Internal Server Error</h1></body></html>";
+		break;
+	default:
+		std::cout << "HTTP/1.1 400 Bad Request\r\n\r\n";
+		std::cout << "<html><body><h1>400 Bad Request</h1></body></html>";
+		break;
+    }
 }
 
 Vserver::~Vserver() {
