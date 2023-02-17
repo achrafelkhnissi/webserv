@@ -89,7 +89,6 @@ void Vserver::start() {
         }
 
     }
-
 //    _clear_pollfds();
 }
 
@@ -118,7 +117,7 @@ void Vserver::_handle_connections(int sockfd) {
         client.events = POLLIN;
         _fds.push_back(client);
 
-        std::cout << "Accepted connection on fd " << client_fd << std::endl;
+		std::cout << "Accepted connection on fd " << client_fd << std::endl;
     }
 }
 
@@ -145,12 +144,8 @@ void Vserver::_handle_request(pollfds_it it) {
     std::cout << "Received " << bytes_read << " bytes on fd " << it->fd << std::endl;
     std::cout << buffer << std::endl;
 
-    const char* report = "HTTP/1.1 200 OK\r\n"
-                         "Content-Type: text/html\r\n\r\n"
-                         "<h1>Hello World!</h1>";
-
-    send(it->fd, report, strlen(report), 0);
-    close(it->fd);
+	// Send the response to the client
+	_handle_get(it->fd);
 }
 
 /*
@@ -183,9 +178,53 @@ void Vserver::_send_response(int fd) {
  * 							and sending a response to the client
  */
 void Vserver::_handle_get(int fd) {
-    // Handle the GET request
-    // ...
-    _send_response(fd);
+
+	_root = "www/";
+	_resource = "index.html";
+
+	std::string resource_path = _root + _resource;
+
+	std::ifstream resource_file;
+	std::stringstream response_header_stream;
+	std::string response_header;
+	std::string response_body;
+	int content_length, response_size, bytes_sent;
+
+	// open the requested resource file
+	resource_file.open(resource_path, std::ios::binary);
+	if (!resource_file.is_open()) {
+		// if the file does not exist, send a 404 response
+		response_header_stream << "HTTP/1.1 404 Not Found\r\n\r\n";
+		response_header = response_header_stream.str();
+		send(fd, response_header.c_str(), response_header.length(), 0);
+		return;
+	}
+
+	// determine the size of the resource file
+	resource_file.seekg(0, std::ios::end);
+	content_length = resource_file.tellg();
+	resource_file.seekg(0, std::ios::beg);
+
+	// allocate memory for the response body and read the resource file contents into it
+	response_body.resize(content_length);
+	resource_file.read(&response_body[0], content_length);
+
+	// construct the response header with the content length and send it to the client
+	response_header_stream << "HTTP/1.1 200 OK\r\nContent-Length: " << content_length << "\r\n\r\n";
+	response_header = response_header_stream.str();
+	send(fd, response_header.c_str(), response_header.length(), 0);
+
+	// send the response body to the client in chunks
+	bytes_sent = 0;
+	while (bytes_sent < content_length) {
+		response_size = send(fd, &response_body[bytes_sent], content_length - bytes_sent, 0);
+		if (response_size < 0) {
+			// error sending response to client
+			break;
+		}
+		bytes_sent += response_size;
+	}
+//    _send_response(fd);
 }
 
 /*

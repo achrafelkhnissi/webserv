@@ -14,9 +14,20 @@
 #include <fcntl.h>
 #include <cerrno>
 #include <string>
-#include <arpa/inet.h>
+#include <fstream>
+#include <sstream>
 
 #define BUFFER_SIZE 1024
+
+// TODO: handle multiple virtual servers
+typedef struct {
+
+	std::string server_name;
+	std::string root;
+	std::string index;
+	std::string error_page;
+
+} sub_server;
 
 /*
  * Vserver class - This class is responsible for creating a virtual server object
@@ -44,11 +55,22 @@ class Vserver {
 private:
     typedef std::vector<pollfd>                 pollfds;
     typedef std::vector<pollfd>::iterator       pollfds_it;
+	typedef std::pair<std::string, int>			listener;
 
 private:
+
+	listener			_listener; // for handling multiple virtual servers
+
+
     int                 _port;
     std::string         _host;
     pollfds             _fds;
+
+	std::string			_root;
+	std::string			_resource;
+
+	std::vector<sub_server>	_sub_servers;	// for handling multiple virtual servers
+
 
 private:
     void _setup();
