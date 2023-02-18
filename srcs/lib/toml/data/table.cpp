@@ -104,6 +104,12 @@ std::string& table::as_str() {
 	return str;
 }
 
+std::string& table::as_str(std::string& s) {
+	if (type != STRING)
+		return s;
+	return str;
+}
+
 table& table::get(std::string s) {
 	TomlMap::iterator f = mp.find(s);
 	if (type != TABLE || f == mp.end())
