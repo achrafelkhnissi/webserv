@@ -6,7 +6,7 @@
  * @param config: Configuration object that contains all the information from the config file
  */
 Server::Server(Configuration config): _config(config) {
-    _vserver.push_back(Vserver(config.get_port(), config.get_host()));
+    _vserver.push_back(Vserver(std::pair<std::string, int>("localhost", 1337)));
     _vserver[0].start();
 }
 
