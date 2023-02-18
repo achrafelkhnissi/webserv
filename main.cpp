@@ -1,5 +1,4 @@
 #include "./srcs/server/Server.hpp"
-#include "./srcs/config/Configuration.hpp"
 
 #include <iostream>
 #include <string>
