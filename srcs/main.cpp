@@ -1,3 +1,4 @@
+#include "config/Configuration.hpp"
 #include "lib/toml/data/table.hpp"
 #include "lib/toml/toml.hpp"
 
@@ -18,7 +19,7 @@ int main(int ac, char* av[]) {
 		return 1;
 	}
 
-	(*t)["server"][1].print();
+	Configuration c(*t);
 	//t->print();
 
 	delete t;
