@@ -22,6 +22,8 @@
 ### TODO:
 - Test with a host other than `localhost`
 - If the `server_name` is not set, the server must answer to any host.
+- If `listener IP:PORT` is specified, the server must answer to this IP:PORT only.
+- If `listener *:PORT` is specified, the server must answer to any IP on this PORT.
 
 ### Useful links
 * [HTTP/1.1: Status Code Definitions](https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html)
