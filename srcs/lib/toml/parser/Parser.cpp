@@ -1,10 +1,10 @@
 #include "Parser.hpp"
 #include "utils.h"
 #include <algorithm>
+#include <iostream>
 #include <list>
 #include <numeric>
 #include <string>
-
 
 TokenList til_ignore(TokenList::iterator& cur, Token::e_token until, Token::e_token ignore) {
 	TokenList res;
@@ -31,6 +31,20 @@ std::string accum(std::string& acc, Token* t) {
 Parser::Parser(TokenList tks) {
 	TokenList::iterator cur = tks.begin();
 	TokenMap* lastmp = &mp;
+
+	while (cur != tks.end()) {
+		if ((*cur)->is(Token::QOUTED)) {
+			std::string& s = (*cur)->value;
+			(*cur)->value = s.substr(1, s.size() - 2);
+		} else if ((*cur)->is(Token::VALUE)) {
+			std::string& s = (*cur)->value;
+			if (s[0] == '"' || s[0] == '\'')
+				(*cur)->value = s.substr(1, s.size() - 2);
+		}
+		cur++;
+	}
+
+	cur = tks.begin();
 	while (cur != tks.end()) {
 		if ((*cur)->is(Token::KEY)) {
 			TokenList res = til_ignore(cur, Token::ASSIGN | Token::COMMENT, Token::DOT);
