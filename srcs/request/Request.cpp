@@ -5,6 +5,8 @@
 
 Request::Request() { }
 
+void Request::push(std::string) { }
+
 const std::string& Request::getProtocol() const {
 	return protocol;
 }

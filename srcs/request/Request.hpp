@@ -3,9 +3,25 @@
 
 #include <string>
 
+struct RequestTokenParser {
+	std::string token;
+	void (*done)(std::string);
+};
+
 class Request {
 public:
+	enum Method { GET, POST, PUT, DELETE, HEAD, OPTIONS, TRACE, CONNECT };
+
+	enum Status {
+		DONE,
+		FAILED,
+		CONTINUE,
+
+	};
+
 	Request();
+	void push(std::string);
+
 	const std::string& getProtocol() const;
 	const std::string& getVersion() const;
 	const std::string& getMethod() const;
@@ -24,5 +40,8 @@ private:
 	std::string method;
 	std::string uri;
 	std::string body;
+	//Status status;
+	//int index;
+	//RequestTokenParser token_parser[6];
 };
 #endif
