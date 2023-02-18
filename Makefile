@@ -19,7 +19,7 @@ RM			= rm -rf
 OBJDIR		= build
 
 CONFIG 		=  $(addprefix ./config/, Configuration)
-SERVER		=  $(addprefix ./server/, Server Vserver)
+SERVER		=  $(addprefix ./server/, Server Vserver SubServer)
 UTILS		=  $(addprefix ./utils/, )
 
 FILES		= main $(addprefix ./srcs/, $(CONFIG) $(SERVER) $(UTILS) )
