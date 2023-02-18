@@ -10,10 +10,10 @@
  * @param port - port number
  * @param host - hostname
  */
-Vserver::Vserver(int port, const std::string &host): _port(port), _host(host) {
+Vserver::Vserver(const std::pair<std::string , int >&  host_port): _host_port(host_port) {
     std::cout << "\nCreating a virtual server on "
-              << "port '" << port
-              << "' and host '"<< host << "'\n" << std::endl;
+              << "port '" << _host_port.second
+              << "' and host '"<< _host_port.first << "'\n" << std::endl;
     _setup();
 }
 
@@ -41,7 +41,7 @@ void Vserver::_setup() {
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
     server_addr.sin_addr.s_addr = INADDR_ANY;
-    server_addr.sin_port = htons(_port);
+    server_addr.sin_port = htons(_host_port.second);
 
     if (bind(_server_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1)
         strerror(errno);
@@ -179,8 +179,8 @@ void Vserver::_send_response(int fd) {
  */
 void Vserver::_handle_get(int fd) {
 
-	_root = "www/";
-	_resource = "index.html";
+	std::string _root = "www/";
+	std::string _resource = "index.html";
 
 	std::string resource_path = _root + _resource;
 

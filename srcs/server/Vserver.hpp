@@ -17,17 +17,14 @@
 #include <fstream>
 #include <sstream>
 
+#include "SubServer.h"
+
 #define BUFFER_SIZE 1024
 
-// TODO: handle multiple virtual servers
-typedef struct {
-
-	std::string server_name;
-	std::string root;
-	std::string index;
-	std::string error_page;
-
-} sub_server;
+/*
+ * TODO:
+ * 	1. Modify the vsever class to stop only the default server with the IP:PORT and a vector of sub-servers
+ */
 
 /*
  * Vserver class - This class is responsible for creating a virtual server object
@@ -55,21 +52,14 @@ class Vserver {
 private:
     typedef std::vector<pollfd>                 pollfds;
     typedef std::vector<pollfd>::iterator       pollfds_it;
-	typedef std::pair<std::string, int>			listener;
+	typedef std::pair<std::string, int>			host_port;
 
 private:
 
-	listener			_listener; // for handling multiple virtual servers
+	host_port 			_host_port;
 
-
-    int                 _port;
-    std::string         _host;
     pollfds             _fds;
-
-	std::string			_root;
-	std::string			_resource;
-
-	std::vector<sub_server>	_sub_servers;	// for handling multiple virtual servers
+	SubServer           _sub_servers;	// for handling multiple virtual servers
 
 
 private:
@@ -86,7 +76,7 @@ private:
     void _handle_error(int fd);
 
 public:
-    Vserver(int port, const std::string& host);
+   Vserver(const std::pair<std::string , int >&  host_port);
     ~Vserver();
 
     void start();
