@@ -8,6 +8,7 @@
 #include <string>
 
 typedef Result<Token*, ParseError> ParseResult;
+typedef Result<std::list<Token>, ParseError> TokenListResult;
 
 class Lexer {
 
@@ -20,22 +21,26 @@ private:
 	std::string line;
 	size_t cursor;
 	size_t nc;
-	Token* last_token;
+	Token::e_token last_token;
 
 	// utils
 
+	void skip_space();
 	ParseResult _next(Token* t);
-	ParseResult next_value();
+	Result<std::list<Token*>, ParseError> next_value();
 	ParseResult next();
 
 	// cursor
 	char next_char();
 	char current();
-	void next_line();
+	bool getnextline(std::string& line);
 	void make_token(Token* t, std::string value, Token::e_token type);
-	void into(std::list<Token*>& list);
+	Token::e_token expect();
 
-	// scanners
-	int scan_qoute();
-	int scan_word();
+	// new
+	TokenListResult parse();
+	// tokenizer
+	bool tokenize(std::string& line, Token& tk, size_t& pos);
+	// validation
+	//bool expected(Token::e_token type);
 };

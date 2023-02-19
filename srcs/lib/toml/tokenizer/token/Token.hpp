@@ -9,15 +9,17 @@ class Token {
 public:
 	// clang-format off
 	enum e_token {
+		UNINTILIASED 	= 0,
 		KEY 			= 1,
 		ASSIGN 			= 1 << 1,
-		VALUE 			= 1 << 9,
 		QOUTED 			= 1 << 2,
 		DOT 			= 1 << 3,
 		OPENBRACKET 	= 1 << 4,
 		CLOSEBRACKET 	= 1 << 5,
 		NEWLINE 		= 1 << 6,
+		COMMA 			= 1 << 7,
 		COMMENT 		= 1 << 8,
+		VALUE 			= 1 << 9,
 		_EOF 			= 1 << 20,
 	};
 	// clang-format on
