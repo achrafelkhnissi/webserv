@@ -118,7 +118,7 @@ TokenListResult Lexer::parse() {
 	while (getnextline(line)) {
 		pos = 0;
 		while (tokenize(line, t, pos)) {
-			if (last_token->type == Token::ASSIGN) {
+			if (last_token == Token::ASSIGN) {
 				break;
 			}
 			if (!(t.type & expect()))
