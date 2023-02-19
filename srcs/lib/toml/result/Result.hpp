@@ -30,8 +30,7 @@ public:
 	}
 	E err() {
 		if (fine) {
-			std::cerr << "abort: " << std::endl;
-			std::cerr << this->value->as_str() << std::endl;
+			std::cerr << "abort: access Result err while Result is VALUE" << std::endl;
 			abort();
 		}
 		return error;
