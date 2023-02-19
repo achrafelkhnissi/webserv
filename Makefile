@@ -6,7 +6,7 @@
 #    By: ael-khni <ael-khni@student.1337.ma>        +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/07/24 17:30:02 by ael-khni          #+#    #+#              #
-#    Updated: 2023/01/28 21:53:41 by ael-khni         ###   ########.fr        #
+#    Updated: 2023/02/19 09:33:57 by fathjami         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -40,9 +40,15 @@ ifeq ($(DEBUG), 1)
    OPTS = -g
 endif
 
-.PHONY: all clean fclean re
+S_DIR	= srcs
+INC_HEADERS = $(shell find inc -name "*.hpp")
+SRC_HEADERS = $(shell find srcs -name "*.hpp")
+FILES 	= $(shell find srcs -name "*.cpp" | cut -d/ -f2-)
+B_DIR	= build
+OBJ		= $(addprefix $(B_DIR)/, $(FILES:.cpp=.o))
+NAME 	= webserv
 
-all: $(NAME)
+all: $(NAME) 
 
 $(NAME): $(OBJ) $(HEADER)
 	@$(CC) $(INC) $(OBJ) $(OPTS) -o $(NAME)
@@ -53,11 +59,12 @@ $(OBJDIR)/%.o: %.cpp $(HEADER)
 	@$(CC) $(INC) $(FLAGS) $(OPTS) -c $< -o $@
 
 clean:
-	@$(RM) $(OBJDIR) $(OBJ)
-	@printf "$(YELLOW)    - Object files removed.$(RESET)\n"
+	rm -f $(OBJ)
+	rm -rf $(B_DIR)
 
 fclean: clean
-	@$(RM) $(NAME)
-	@printf "$(YELLOW)    - Executable removed.$(RESET)\n"
+	rm -f $(NAME)
 
 re: fclean all
+
+.PHONY: all clean fclean re

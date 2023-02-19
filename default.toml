@@ -1,0 +1,29 @@
+
+[[server]]
+listen = "80"
+host = "10.0.0.1"
+server_name = "example.com"
+root = "/var/www/html"
+error_page = "404 /404.html"
+client_max_body_size = "10m"
+
+[[server.location]]
+path = "/"
+root = "/var/www/html"
+index = "index.html index.htm"
+try_files = "$uri $uri/ =404"
+accepted_methods = "GET HEAD"
+error_page = "404 /404.html"
+prefix=""
+redirect = "http://example.com"
+autoindex = "on"
+client_max_body_size = "10m"
+
+[server.location.location]
+path = "/1"
+
+[[server]]
+listen = "80"
+host = "10.0.0.1"
+server_name = "sub.example.com"
+root = "/var/www/html/sub"
