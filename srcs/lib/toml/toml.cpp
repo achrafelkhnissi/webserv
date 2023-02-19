@@ -1,5 +1,6 @@
 #include "toml.hpp"
 #include "data/table.hpp"
+#include "error/ParseError.hpp"
 #include "parser/Parser.hpp"
 #include "tokenizer/Lexer.hpp"
 #include "tokenizer/token/Token.hpp"
@@ -67,26 +68,19 @@ table* build(Parser& p) {
 
 table* toml::parse_stream(std::ifstream& in) {
 	Lexer lexer = Lexer(in);
-	std::list<Token*> tks;
-	Result<Token*, ParseError> r;
+	Result<TokenList, ParseError> resToken = lexer.into();
+	if (!resToken.is_ok()) {
+		cerr << resToken.err().as_str() << endl;
+		return NULL;
+	}
 
-	do {
-		r = lexer.next();
-		if (r.is_ok())
-			tks.push_back(r.ok());
-		else {
-			// free(list)
-			cerr << r.err().as_str() << endl;
-			return NULL;
-		}
-	} while (!r.ok()->is(Token::_EOF));
-
-	ChekerResult res = syntax_checker(tks);
+	TokenList tokens = resToken.ok();
+	ChekerResult res = syntax_checker(tokens);
 	if (!res.is_ok()) {
 		cerr << res.err().as_str() << endl;
 		return NULL;
 	}
-	Parser p = Parser(tks);
+	Parser p = Parser(tokens);
 
 	return build(p);
 }

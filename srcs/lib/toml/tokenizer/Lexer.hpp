@@ -3,6 +3,7 @@
 #include "../result/Result.hpp"
 #include "token/Token.hpp"
 #include <iostream>
+#include <list>
 #include <stddef.h>
 #include <string>
 
@@ -12,7 +13,7 @@ class Lexer {
 
 public:
 	Lexer(std::istream&);
-	ParseResult next();
+	Result<std::list<Token*>, ParseError> into();
 
 private:
 	std::istream* in;
@@ -24,12 +25,15 @@ private:
 	// utils
 
 	ParseResult _next(Token* t);
+	ParseResult next_value();
+	ParseResult next();
 
 	// cursor
 	char next_char();
 	char current();
 	void next_line();
 	void make_token(Token* t, std::string value, Token::e_token type);
+	void into(std::list<Token*>& list);
 
 	// scanners
 	int scan_qoute();

@@ -111,6 +111,22 @@ ParseResult Lexer::next() {
 	return res;
 }
 
+Result<std::list<Token*>, ParseError> Lexer::into() {
+	std::list<Token*> list;
+
+	Result<Token*, ParseError> r;
+
+	do {
+		r = next();
+		if (r.is_ok()) {
+			list.push_back(r.ok());
+		} else {
+			return Result<std::list<Token*>, ParseError>(r.err());
+		}
+	} while (!r.ok()->is(Token::_EOF));
+	return Result<std::list<Token*>, ParseError>(list);
+}
+
 void Lexer::make_token(Token* t, std::string value, Token::e_token type) {
 	t->value = value;
 	t->type = type;
