@@ -10,7 +10,7 @@
 #include <string>
 
 Lexer::Lexer(std::istream& in) {
-	last_token = NULL;
+	last_token = Token::UNINTILIASED;
 	this->in = &in;
 	nc = 0;
 }
