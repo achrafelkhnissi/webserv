@@ -10,9 +10,11 @@
 #include <string>
 #include <vector>
 
-typedef std::list<Token*> TokenList;
-typedef std::map<TokenList, std::string> TokenMap;
+// clang-format off
+typedef std::list<Token> TokenList;
+typedef std::vector<std::pair<TokenList, std::string> > TokenMap;
 typedef std::pair<TokenList, std::string> TokenPair;
+// clang-format on
 
 struct TomlBlock {
 

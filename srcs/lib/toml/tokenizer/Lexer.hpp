@@ -14,21 +14,18 @@ class Lexer {
 
 public:
 	Lexer(std::istream&);
-	Result<std::list<Token*>, ParseError> into();
+	TokenListResult parse();
 
 private:
 	std::istream* in;
 	std::string line;
-	size_t cursor;
+	size_t pos;
 	size_t nc;
 	Token::e_token last_token;
 
 	// utils
 
-	void skip_space();
-	ParseResult _next(Token* t);
-	Result<std::list<Token*>, ParseError> next_value();
-	ParseResult next();
+	bool skip_space(std::string& line);
 
 	// cursor
 	char next_char();
@@ -36,11 +33,13 @@ private:
 	bool getnextline(std::string& line);
 	void make_token(Token* t, std::string value, Token::e_token type);
 	Token::e_token expect();
+	Token::e_token expect_value();
 
 	// new
-	TokenListResult parse();
+	TokenListResult parse_value(std::string& line);
 	// tokenizer
-	bool tokenize(std::string& line, Token& tk, size_t& pos);
+	bool tokenize(std::string& line, Token& tk);
+	bool tokenize_value(std::string& line, Token& tk);
 	// validation
 	//bool expected(Token::e_token type);
 };

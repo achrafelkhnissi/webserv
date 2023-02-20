@@ -20,7 +20,7 @@ public:
 		this->error = error;
 	}
 
-	T ok() {
+	T& ok() {
 		if (!fine) {
 			std::cerr << "abort: " << std::endl;
 			std::cerr << this->error.as_str() << std::endl;

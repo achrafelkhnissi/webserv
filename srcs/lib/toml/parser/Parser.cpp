@@ -8,8 +8,8 @@
 
 TokenList til_ignore(TokenList::iterator& cur, Token::e_token until, Token::e_token ignore) {
 	TokenList res;
-	while (!(*cur)->is(until)) {
-		if (!(*cur)->is(ignore)) {
+	while (!cur->is(until)) {
+		if (!cur->is(ignore)) {
 			res.push_back(*cur);
 		}
 		cur++;
@@ -18,46 +18,34 @@ TokenList til_ignore(TokenList::iterator& cur, Token::e_token until, Token::e_to
 }
 
 TokenList::iterator til(TokenList::iterator& cur, Token::e_token until) {
-	while (!(*cur)->is(until)) {
+	while (!cur->is(until)) {
 		cur++;
 	}
 	return cur;
 }
 
-std::string accum(std::string& acc, Token* t) {
-	return acc + t->value;
+std::string accum(std::string& acc, Token& t) {
+	return acc + t.value;
 };
 
 Parser::Parser(TokenList tks) {
 	TokenList::iterator cur = tks.begin();
 	TokenMap* lastmp = &mp;
 
-	while (cur != tks.end()) {
-		if ((*cur)->is(Token::QOUTED)) {
-			std::string& s = (*cur)->value;
-			(*cur)->value = s.substr(1, s.size() - 2);
-		} else if ((*cur)->is(Token::VALUE)) {
-			std::string& s = (*cur)->value;
-			if (s[0] == '"' || s[0] == '\'')
-				(*cur)->value = s.substr(1, s.size() - 2);
-		}
-		cur++;
-	}
-
 	cur = tks.begin();
 	while (cur != tks.end()) {
-		if ((*cur)->is(Token::KEY)) {
+		if (cur->is(Token::KEY)) {
 			TokenList res = til_ignore(cur, Token::ASSIGN | Token::COMMENT, Token::DOT);
 			cur++;
-			lastmp->insert(TokenPair(
+			lastmp->push_back(TokenPair(
 				res,
 				std::accumulate(
 					cur, til(cur, Token::NEWLINE | Token::COMMENT), std::string(""), accum)));
-		} else if ((*cur)->is(Token::OPENBRACKET)) {
+		} else if (cur->is(Token::OPENBRACKET)) {
 			cur++;
 			std::vector<TomlBlock>* tm = &this->tables;
 			TomlBlock::blockType type = TomlBlock::TABLE;
-			if ((*cur)->is(Token::OPENBRACKET)) {
+			if (cur->is(Token::OPENBRACKET)) {
 				type = TomlBlock::ARRAY;
 				cur++;
 			}
@@ -72,7 +60,7 @@ Parser::Parser(TokenList tks) {
 void _printKeyValue(TokenMap& mp) {
 	ITER_FOREACH(TokenMap, mp, m) {
 		ITER_FOREACH_CONST(TokenList, m->first, it) {
-			std::cout << (*it)->value << " ";
+			std::cout << it->value << " ";
 		}
 		std::cout << " = ";
 		std::cout << m->second;
@@ -83,7 +71,7 @@ void _printKeyValue(TokenMap& mp) {
 void _print_list(TokenList& list) {
 	TokenList::iterator begin = list.begin();
 	while (begin != list.end()) {
-		std::cout << (*begin)->value << ">";
+		std::cout << begin->value << ">";
 		begin++;
 	}
 	std::cout << std::endl;

@@ -24,9 +24,8 @@ table& list2map(TokenList list, table& t) {
 	table* last_t = &t;
 
 	ITER_FOREACH(TokenList, list, it) {
-		Token* node = *it;
-		last_t->create(node->value);
-		last_t = &last_t->get(node->value);
+		last_t->create(it->value);
+		last_t = &last_t->get(it->value);
 		if (next_it(it) != list.end() && last_t->type == table::ARRAY) {
 			last_t = &last_t->get(last_t->vec.size() - 1);
 		}
@@ -68,7 +67,7 @@ table* build(Parser& p) {
 
 table* toml::parse_stream(std::ifstream& in) {
 	Lexer lexer = Lexer(in);
-	Result<TokenList, ParseError> resToken = lexer.into();
+	TokenListResult resToken = lexer.parse();
 	if (!resToken.is_ok()) {
 		cerr << resToken.err().as_str() << endl;
 		return NULL;
