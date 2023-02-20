@@ -41,7 +41,7 @@ struct LocationConfig {
 
 struct ServerConfig {
 
-	std::string listen;
+	unsigned short listen;
 	std::string host;
 	std::string server_name;
 	std::string root;
