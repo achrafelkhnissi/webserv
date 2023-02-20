@@ -48,9 +48,8 @@ ServerConfig fill_server(toml::table& server) {
 	s.client_max_body_size = server["client_max_body_size"].as_str(s.client_max_body_size);
 
 	toml::table& t = server["location"];
-	std::cout << t.vec.size() << std::endl;
 	for (size_t i = 0; i < t.vec.size(); i++) {
-		s.locations.push_back(fill_location(server["location"]));
+		s.locations.push_back(fill_location(t[i]));
 	}
 	return s;
 }

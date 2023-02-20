@@ -20,7 +20,6 @@ int main(int ac, char* av[]) {
 	}
 
 	Configuration c(*t);
-	//t->print();
 
 	delete t;
 	return 0;
