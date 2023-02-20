@@ -32,38 +32,87 @@ Parser::Parser(TokenList tks) {
 	TokenList::iterator cur = tks.begin();
 	TokenMap* lastmp = &mp;
 
-	cur = tks.begin();
 	while (cur != tks.end()) {
-		if (cur->is(Token::KEY)) {
-			TokenList res = til_ignore(cur, Token::ASSIGN | Token::COMMENT, Token::DOT);
+		switch (cur->type) {
+		case Token::KEY: {
+			TokenList res = til_ignore(cur, Token::ASSIGN, Token::DOT);
+			cur++; // skip assign
+			bool is_array = cur->is(Token::OPENBRACKET);
+			TokenList values = til_ignore(cur,
+										  Token::NEWLINE | Token::COMMENT,
+										  Token::COMMA | Token::CLOSEBRACKET | Token::OPENBRACKET);
+			lastmp->push_back(TokenPair(res, values, is_array));
+			break;
+		}
+		case Token::OPENBRACKET: {
 			cur++;
-			lastmp->push_back(TokenPair(
-				res,
-				std::accumulate(
-					cur, til(cur, Token::NEWLINE | Token::COMMENT), std::string(""), accum)));
-		} else if (cur->is(Token::OPENBRACKET)) {
-			cur++;
+			bool is_array = cur->is(Token::OPENBRACKET);
 			std::vector<TomlBlock>* tm = &this->tables;
 			TomlBlock::blockType type = TomlBlock::TABLE;
-			if (cur->is(Token::OPENBRACKET)) {
+			if (is_array) {
 				type = TomlBlock::ARRAY;
 				cur++;
 			}
 			TokenList res = til_ignore(cur, Token::CLOSEBRACKET | Token::COMMENT, Token::DOT);
 			tm->push_back(TomlBlock(res, TokenMap(), type));
-			lastmp = &tm->rbegin()->mp;
+			lastmp = &tm->back().mp;
+			break;
+		}
+		default:
+			break;
 		}
 		cur++;
 	}
 }
 
+// Parser::Parser(TokenList tks) {
+// 	TokenList::iterator cur = tks.begin();
+// 	TokenMap* lastmp = &mp;
+//
+// 	cur = tks.begin();
+// 	while (cur != tks.end()) {
+// 		if (cur->is(Token::KEY)) {
+// 			TokenList res = til_ignore(cur, Token::ASSIGN | Token::COMMENT, Token::DOT);
+// 			cur++;
+// 			if (cur->is(Token::OPENBRACKET)) {
+// 				cur++;
+// 				TokenList values = til_ignore(cur, Token::CLOSEBRACKET, Token::COMMA);
+// 			}
+// 			lastmp->push_back(TokenPair(
+// 				res,
+// 				std::accumulate(
+// 					cur, til(cur, Token::NEWLINE | Token::COMMENT), std::string(""), accum)));
+// 		} else if (cur->is(Token::OPENBRACKET)) {
+// 			cur++;
+// 			std::vector<TomlBlock>* tm = &this->tables;
+// 			TomlBlock::blockType type = TomlBlock::TABLE;
+// 			if (cur->is(Token::OPENBRACKET)) {
+// 				type = TomlBlock::ARRAY;
+// 				cur++;
+// 			}
+// 			TokenList res = til_ignore(cur, Token::CLOSEBRACKET | Token::COMMENT, Token::DOT);
+// 			tm->push_back(TomlBlock(res, TokenMap(), type));
+// 			lastmp = &tm->rbegin()->mp;
+// 		}
+// 		cur++;
+// 	}
+// }
+
 void _printKeyValue(TokenMap& mp) {
 	ITER_FOREACH(TokenMap, mp, m) {
-		ITER_FOREACH_CONST(TokenList, m->first, it) {
+		ITER_FOREACH_CONST(TokenList, m->key, it) {
 			std::cout << it->value << " ";
 		}
 		std::cout << " = ";
-		std::cout << m->second;
+		if (m->is_array) {
+			std::cout << "[";
+			ITER_FOREACH_CONST(TokenList, m->value, it) {
+				std::cout << it->value << ", ";
+			}
+			std::cout << "]";
+			continue;
+		}
+		std::cout << m->value.front().value;
 		std::cout << std::endl;
 	}
 }

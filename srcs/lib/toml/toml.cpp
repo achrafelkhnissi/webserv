@@ -35,9 +35,16 @@ table& list2map(TokenList list, table& t) {
 
 void fill_map(TokenMap& mp, table& t) {
 	ITER_FOREACH(TokenMap, mp, it) {
-		table& last = list2map(it->first, t);
+		table& last = list2map(it->key, t);
+		if (it->is_array) {
+			last.set_type(table::ARRAY);
+			ITER_FOREACH(TokenList, it->value, it2) {
+				last.vec.push_back(it2->value);
+			}
+			continue;
+		}
 		last.set_type(table::STRING);
-		last.set_string(it->second);
+		last.set_string(it->value.front().value);
 	}
 }
 

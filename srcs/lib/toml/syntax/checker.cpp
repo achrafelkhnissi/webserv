@@ -20,6 +20,30 @@ bool is_key(TokenList::iterator& it, TokenList::iterator end) {
 	return true;
 }
 
+bool is_array(TokenList::iterator& it, TokenList::iterator end) {
+	if (!it->is(Token::OPENBRACKET))
+		return false;
+	while (it != end) {
+		switch (it->type) {
+		case Token::VALUE:
+		case Token::QOUTED:
+		case Token::KEY:
+			it++;
+			if (it->type == Token::COMMA)
+				it++;
+			break;
+		case Token::CLOSEBRACKET:
+			return it != end && it->is(Token::CLOSEBRACKET);
+			break;
+		default:
+			return false;
+			break;
+		}
+	}
+	abort(); // should never reach here
+	return false;
+}
+
 ChekerResult syntax_checker(TokenList& tokens) {
 	TokenList::iterator it = tokens.begin();
 	TokenList::iterator end = tokens.end();
@@ -43,9 +67,9 @@ ChekerResult syntax_checker(TokenList& tokens) {
 			if (!(is_key(it, end) && it->is(Token::ASSIGN)))
 				return ChekerResult(ParseError("Invalid key [1001] ", it->line));
 			it++; // skip ASSIGN
-			if (!it->is(Token::VALUE) && !it->is(Token::QOUTED))
+			if (!it->is(Token::VALUE) && !it->is(Token::QOUTED) && !is_array(it, end))
 				return ChekerResult(ParseError("Invalid key [1002] ", it->line));
-			it++; // skip VALUE
+			it++; // skip VALUE QOUTED or CLOSEBRACKET
 			break;
 		}
 		case Token::NEWLINE:
