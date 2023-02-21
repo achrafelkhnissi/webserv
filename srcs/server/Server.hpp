@@ -18,19 +18,33 @@
 class Server {
 
 private:
-    typedef std::vector<Vserver>                vserver;
-    typedef std::vector<Vserver>::iterator      vserver_it;
-
+    typedef std::vector<pollfd>                 pollfds;
+    typedef std::vector<pollfd>::iterator       pollfds_it;
+    typedef std::vector<pollfd>::const_iterator       const_pollfds_it;
+    typedef std::map<int, Vserver>              vserver;
+    typedef vserver::iterator                   vserver_it;
+    typedef vserver::const_iterator             const_vserver_it;
 private:
     vserver                 _vserver;
     Configuration           _config;
+    pollfds                 _fds;
 
 public:
-    explicit Server(Configuration config);
+    Server(Configuration config);
     ~Server();
 
     void start();
+    void _handle_connections(int fd);
+    void _handle_request(pollfds_it it);
+    void _send_response(int fd);
+    void _handle_get(int fd, std::pair<std::string, int> host_port);
+    void _handle_post(int fd);
+    void _handle_delete(int fd);
+    void _handle_error(int fd);
+    void _clear_pollfds();
+    void _error(const std::string& msg);
+    void _setup_vserver(Vserver& vserver);
+    void print_data() const;
 };
 
 #endif
-
