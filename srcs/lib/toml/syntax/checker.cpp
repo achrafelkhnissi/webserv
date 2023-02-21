@@ -23,6 +23,7 @@ bool is_key(TokenList::iterator& it, TokenList::iterator end) {
 bool is_array(TokenList::iterator& it, TokenList::iterator end) {
 	if (!it->is(Token::OPENBRACKET))
 		return false;
+	it++;
 	while (it != end) {
 		switch (it->type) {
 		case Token::VALUE:

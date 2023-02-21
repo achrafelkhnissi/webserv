@@ -33,9 +33,15 @@ bool Lexer::tokenize_value(std::string& line, Token& tk) {
 	switch (line[pos]) {
 	case '[':
 		make_token(&tk, "[", Token::OPENBRACKET);
+		pos++;
+		break;
+	case ',':
+		make_token(&tk, ",", Token::COMMA);
+		pos++;
 		break;
 	case ']':
 		make_token(&tk, "]", Token::CLOSEBRACKET);
+		pos++;
 		break;
 	case '"':
 	case '\'': {
@@ -159,7 +165,7 @@ bool Lexer::getnextline(std::string& line) {
 Token::e_token Lexer::expect_value() {
 	switch (last_token) {
 	case Token::QOUTED:
-		return Token::NEWLINE | Token::COMMA | Token::COMMENT;
+		return Token::NEWLINE | Token::COMMA | Token::COMMENT | Token::CLOSEBRACKET;
 	case Token::OPENBRACKET:
 		return Token::KEY | Token::QOUTED;
 	case Token::CLOSEBRACKET:

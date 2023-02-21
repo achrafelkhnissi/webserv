@@ -1,4 +1,5 @@
 #include "Configuration.hpp"
+#include "utils.h"
 #include <iostream>
 #include <sys/_types/_size_t.h>
 
@@ -22,9 +23,11 @@ LocationConfig fill_location(toml::table& location) {
 
 ServerConfig fill_server(toml::table& server) {
 	ServerConfig s;
-	s.listen = server["listen"].as_int(s.listen);
+	s.port = server["port"].as_int(s.port);
 	s.host = server["host"].as_str("127.0.0.1");
-	s.server_name = server["server_name"].as_str("example.com");
+	ITER_FOREACH(vector<toml::table>, server["server_name"].vec, it) {
+		s.server_name.push_back(it->as_str("default.com"));
+	}
 	s.root = server["root"].as_str("/var/www/html");
 	s.error_page = server["error_page"].as_str("404 /404.html");
 	s.client_max_body_size = server["client_max_body_size"].as_str("10m");
