@@ -1,6 +1,7 @@
 #include "table.hpp"
 #include "utils.hpp"
 #include <cstddef>
+#include <cstdlib>
 #include <iostream>
 #include <string>
 #include <utility>
@@ -100,14 +101,28 @@ table& table::operator[](size_t idx) {
 	return get(idx);
 }
 
-std::string& table::as_str() {
-	return str;
-}
-
-std::string& table::as_str(std::string& s) {
+const std::string& table::as_str(const std::string& s) {
 	if (type != STRING)
 		return s;
 	return str;
+}
+
+int table::as_int(int i) {
+	char* end;
+	long res = strtol(str.c_str(), &end, 10);
+	if (type != STRING || (*end != '\0'))
+		return i;
+	return res;
+}
+
+bool table::as_bool(bool b) {
+	if (type != STRING)
+		return b;
+	if (str == "true" || str == "on" || str == "yes")
+		return true;
+	else if (str == "false" || str == "off" || str == "no")
+		return false;
+	return b;
 }
 
 int table::as_int(int s) {

@@ -1,5 +1,6 @@
 #include "toml.hpp"
 #include "data/table.hpp"
+#include "error/ParseError.hpp"
 #include "parser/Parser.hpp"
 #include "tokenizer/Lexer.hpp"
 #include "tokenizer/token/Token.hpp"
@@ -23,9 +24,8 @@ table& list2map(TokenList list, table& t) {
 	table* last_t = &t;
 
 	ITER_FOREACH(TokenList, list, it) {
-		Token* node = *it;
-		last_t->create(node->value);
-		last_t = &last_t->get(node->value);
+		last_t->create(it->value);
+		last_t = &last_t->get(it->value);
 		if (next_it(it) != list.end() && last_t->type == table::ARRAY) {
 			last_t = &last_t->get(last_t->vec.size() - 1);
 		}
@@ -35,9 +35,16 @@ table& list2map(TokenList list, table& t) {
 
 void fill_map(TokenMap& mp, table& t) {
 	ITER_FOREACH(TokenMap, mp, it) {
-		table& last = list2map(it->first, t);
+		table& last = list2map(it->key, t);
+		if (it->is_array) {
+			last.set_type(table::ARRAY);
+			ITER_FOREACH(TokenList, it->value, it2) {
+				last.vec.push_back(it2->value);
+			}
+			continue;
+		}
 		last.set_type(table::STRING);
-		last.set_string(it->second);
+		last.set_string(it->value.front().value);
 	}
 }
 
@@ -67,26 +74,19 @@ table* build(Parser& p) {
 
 table* toml::parse_stream(std::ifstream& in) {
 	Lexer lexer = Lexer(in);
-	std::list<Token*> tks;
-	Result<Token*, ParseError> r;
+	TokenListResult resToken = lexer.parse();
+	if (!resToken.is_ok()) {
+		cerr << resToken.err().as_str() << endl;
+		return NULL;
+	}
 
-	do {
-		r = lexer.next();
-		if (r.is_ok())
-			tks.push_back(r.ok());
-		else {
-			// free(list)
-			cerr << r.err().as_str() << endl;
-			return NULL;
-		}
-	} while (!r.ok()->is(Token::_EOF));
-
-	ChekerResult res = syntax_checker(tks);
+	TokenList tokens = resToken.ok();
+	ChekerResult res = syntax_checker(tokens);
 	if (!res.is_ok()) {
 		cerr << res.err().as_str() << endl;
 		return NULL;
 	}
-	Parser p = Parser(tks);
+	Parser p = Parser(tokens);
 
 	return build(p);
 }

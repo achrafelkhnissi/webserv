@@ -9,15 +9,17 @@ class Token {
 public:
 	// clang-format off
 	enum e_token {
-		KEY 			= 1,
-		ASSIGN 			= 1 << 1,
-		VALUE 			= 1 << 9,
-		QOUTED 			= 1 << 2,
-		DOT 			= 1 << 3,
-		OPENBRACKET 	= 1 << 4,
-		CLOSEBRACKET 	= 1 << 5,
-		NEWLINE 		= 1 << 6,
-		COMMENT 		= 1 << 8,
+		UNINTILIASED 	= 1,
+		KEY 			= 1 << 1,
+		ASSIGN 			= 1 << 2,
+		QOUTED 			= 1 << 3,
+		DOT 			= 1 << 4,
+		OPENBRACKET 	= 1 << 5,
+		CLOSEBRACKET 	= 1 << 6,
+		NEWLINE 		= 1 << 7,
+		COMMA 			= 1 << 8,
+		COMMENT 		= 1 << 9,
+		VALUE 			= 1 << 10,
 		_EOF 			= 1 << 20,
 	};
 	// clang-format on
@@ -65,6 +67,11 @@ public:
 		case _EOF:
 			s += "[_EOF]";
 			break;
+		case COMMA:
+			s += "[COMMA]";
+			break;
+		case UNINTILIASED:
+			abort();
 		}
 		s += '\n';
 		return s;

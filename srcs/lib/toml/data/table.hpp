@@ -41,9 +41,11 @@ public:
 
 	table& last();
 
-	std::string& as_str();
-    int as_int(int);
-	std::string& as_str(std::string& s);
+	const std::string& as_str(const std::string& s = "");
+
+	int as_int(int i = 0);
+
+	bool as_bool(bool b = false);
 
 	~table();
 
