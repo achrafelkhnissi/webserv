@@ -3,7 +3,7 @@
 #include "parser/Parser.hpp"
 #include "tokenizer/Lexer.hpp"
 #include "tokenizer/token/Token.hpp"
-#include "utils.h"
+#include "utils.hpp"
 #include <cstdio>
 #include <fstream>
 #include <iostream>

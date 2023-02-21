@@ -20,7 +20,7 @@ struct LocationConfig {
 	std::string cgi_extension;
 	std::string cgi_pass;
 	std::string client_max_body_size;
-	std::string error_page;
+	std::string error_page; // error_page can be a list of pages
 
 	void print(int indent = 0) {
 		std::string s(indent, ' ');
@@ -41,17 +41,17 @@ struct LocationConfig {
 
 struct ServerConfig {
 
-	std::string listen;
+	int         port;
 	std::string host;
-	std::string server_name;
+	std::string server_name; // server_name can be a list of names
 	std::string root;
-	std::string error_page;
+	std::string error_page; // error_page can be a list of pages
 	std::string client_max_body_size;
 
 	std::vector<LocationConfig> locations;
 
 	void print() {
-		std::cout << "listen: " << listen << std::endl;
+		std::cout << "port: " << port << std::endl;
 		std::cout << "host: " << host << std::endl;
 		std::cout << "server_name: " << server_name << std::endl;
 		std::cout << "root: " << root << std::endl;
@@ -68,22 +68,13 @@ struct ServerConfig {
 class Configuration {
 
 private:
-	vector<ServerConfig> servers;
-	int _port;
-	std::string _host;
-	std::string _root;
-	std::string _log_path;
-
-	void parse_config_file(std::string config_file);
+	vector<ServerConfig> _servers;
 
 public:
 	Configuration(toml::table& config);
+    ~Configuration();
 
-	int get_port();
-
-	std::string get_host();
-	std::string get_root();
-	std::string get_log_path();
+    const vector<ServerConfig>& getServers() const;
 };
 
 #endif // CONFIGURATION_HPP

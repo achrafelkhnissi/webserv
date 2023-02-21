@@ -42,6 +42,7 @@ public:
 	table& last();
 
 	std::string& as_str();
+    int as_int(int);
 	std::string& as_str(std::string& s);
 
 	~table();

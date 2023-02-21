@@ -33,14 +33,14 @@ LocationConfig fill_location(toml::table& location) {
 
 ServerConfig fill_server(toml::table& server) {
 	ServerConfig s;
-	s.listen = "80";
+	s.port = 80;
 	s.host = "10.0.0.1";
 	s.server_name = "example.com";
 	s.root = "/var/www/html";
 	s.error_page = "404 /404.html";
 	s.client_max_body_size = "10m";
 
-	s.listen = server["listen"].as_str(s.listen);
+	s.port = server["listen"].as_int(s.port);
 	s.host = server["host"].as_str(s.host);
 	s.server_name = server["server_name"].as_str(s.server_name);
 	s.root = server["root"].as_str(s.root);
@@ -61,28 +61,15 @@ Configuration::Configuration(toml::table& config) {
 	if (t.is_type(toml::table::NONE))
 		return;
 	for (size_t i = 0; i < t.vec.size(); i++) {
-		servers.push_back(fill_server(t[i]));
-		servers.back().print();
+		_servers.push_back(fill_server(t[i]));
+//		_servers.back().print();
 	}
 }
 
-int Configuration::get_port() {
-	return _port;
+Configuration::~Configuration() {
+
 }
 
-std::string Configuration::get_host() {
-	return _host;
-}
-
-std::string Configuration::get_root() {
-	return _root;
-}
-
-std::string Configuration::get_log_path() {
-	return _log_path;
-}
-
-void Configuration::parse_config_file(const std::string& config_file) {
-    // TODO: parse config file
-    (void)config_file;
+const vector<ServerConfig> &Configuration::getServers() const {
+    return _servers;
 }

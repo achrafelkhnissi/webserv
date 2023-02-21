@@ -1,5 +1,5 @@
 #include "table.hpp"
-#include "utils.h"
+#include "utils.hpp"
 #include <cstddef>
 #include <iostream>
 #include <string>
@@ -108,6 +108,12 @@ std::string& table::as_str(std::string& s) {
 	if (type != STRING)
 		return s;
 	return str;
+}
+
+int table::as_int(int s) {
+    if (type != STRING)
+        return s;
+    return std::stoi(str);
 }
 
 table& table::get(std::string s) {
