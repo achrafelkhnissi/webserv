@@ -23,7 +23,7 @@ LocationConfig fill_location(toml::table& location) {
 ServerConfig fill_server(toml::table& server) {
 	ServerConfig s;
 
-	s.listen = server["listen"].as_int(s.listen);
+	s.port = server["listen"].as_int(s.port);
 	s.host = server["host"].as_str("127.0.0.1");
 	s.server_name = server["server_name"].as_str("example.com");
 	s.root = server["root"].as_str("/var/www/html");

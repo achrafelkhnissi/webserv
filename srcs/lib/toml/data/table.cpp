@@ -125,11 +125,11 @@ bool table::as_bool(bool b) {
 	return b;
 }
 
-int table::as_int(int s) {
-    if (type != STRING)
-        return s;
-    return std::stoi(str);
-}
+//int table::as_int(int s) {
+//    if (type != STRING)
+//        return s;
+//    return std::stoi(str);
+//}
 
 table& table::get(std::string s) {
 	TomlMap::iterator f = mp.find(s);

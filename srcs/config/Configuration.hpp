@@ -41,7 +41,7 @@ struct LocationConfig {
 
 struct ServerConfig {
 
-	unsigned short listen;
+	unsigned short port;
 	std::string host;
 	std::string server_name; // server_name can be a list of names
 	std::string root;
@@ -51,7 +51,7 @@ struct ServerConfig {
 	std::vector<LocationConfig> locations;
 
 	void print() {
-		std::cout << "port: " << listen << std::endl;
+		std::cout << "port: " << port << std::endl;
 		std::cout << "host: " << host << std::endl;
 		std::cout << "server_name: " << server_name << std::endl;
 		std::cout << "root: " << root << std::endl;

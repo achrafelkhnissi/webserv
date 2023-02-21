@@ -192,19 +192,13 @@ void Server::_send_response(int fd) {
 void Server::_handle_get(int fd, std::pair<std::string, int> host_port) {
 
 
-//    std::string _root = _vserver[host_port.second].getRoot(); // + "/";
+    std::string _root = _vserver[host_port.second].getRoot();
 //
-//    std::cout << "root: " << _root << std::endl;
-////    std::string _root = "www/";
-//    std::string _resource = "index.html";
+    std::cout << "root: " << _root << std::endl;
+//    std::string _root = "www/";
+    std::string _resource = "index.html";
 
-//    std::string resource_path = _root + _resource;
-
-    std::string resource_path;
-    if (host_port.second == 1337)
-        resource_path = "www/html/index.html";
-    else if (host_port.second == 13     38)
-        resource_path = "www/html3/index.html";
+    std::string resource_path = _root + _resource;
 
     std::cout << "resource_path: " << resource_path << std::endl;
 
