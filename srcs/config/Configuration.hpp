@@ -3,11 +3,14 @@
 
 #include "../lib/toml/data/table.hpp"
 #include "../lib/toml/toml.hpp"
+#include "utils.hpp"
 #include <fstream>
 #include <iostream>
 #include <map>
 #include <string>
+#include <vector>
 
+typedef std::vector<std::string> string_vector;
 struct LocationConfig {
 
 	std::string path;
@@ -43,7 +46,7 @@ struct ServerConfig {
 
 	unsigned short port;
 	std::string host;
-	std::string server_name; // server_name can be a list of names
+	std::vector<std::string> server_name;
 	std::string root;
 	std::string error_page; // error_page can be a list of pages
 	std::string client_max_body_size;
@@ -53,7 +56,11 @@ struct ServerConfig {
 	void print() {
 		std::cout << "port: " << port << std::endl;
 		std::cout << "host: " << host << std::endl;
-		std::cout << "server_name: " << server_name << std::endl;
+		std::cout << "server_name: ";
+		ITER_FOREACH(string_vector, server_name, it) {
+			std::cout << *it << " ";
+		}
+		std::cout << std::endl;
 		std::cout << "root: " << root << std::endl;
 		std::cout << "error_page: " << error_page << std::endl;
 		std::cout << "client_max_body_size: " << client_max_body_size << std::endl;
