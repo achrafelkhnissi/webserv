@@ -3,7 +3,14 @@
 #include "Request.hpp"
 #include <string>
 
-Request::Request() { }
+Request::Request() {
+	protocol = "HTTP";
+	version = "1.1";
+	method = "GET";
+	uri = "/users/me";
+	query = "name=ismail&age=23";
+	body = "Hello World";
+}
 
 void Request::push(std::string) { }
 
