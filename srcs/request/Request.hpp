@@ -45,7 +45,7 @@ private:
 	string uri;
 	string body;
 	string query;
-	vector<pair<string, string>> headers;
+	vector<pair<string, string> > headers;
 	//Status status;
 	//int index;
 	//RequestTokenParser token_parser[6];

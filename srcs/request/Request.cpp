@@ -7,7 +7,7 @@ Request::Request() {
 	protocol = "HTTP";
 	version = "1.1";
 	method = "GET";
-	uri = "/users/me";
+	uri = "/";
 	query = "name=ismail&age=23";
 	body = "Hello World";
 }
