@@ -70,7 +70,7 @@
 #.PHONY: all clean fclean re
 
 CC 		= g++
-CFLAGS += -Wall -Werror -Wextra
+CFLAGS += -Wall -Werror -Wextra -std=c++98 -g
 LDFLAGS += -lm
 INCLUDE = -I./inc
 
