@@ -7,6 +7,13 @@
  */
  Server::Server(Configuration config): _config(config) {
 
+	 _error_pages[400] = "www/errors/error-400.html";
+	 _error_pages[401] = "www/errors/error-401.html";
+	 _error_pages[403] = "www/errors/error-403.html";
+	 _error_pages[404] = "www/errors/error-404.html";
+	 _error_pages[405] = "www/errors/error-405.html";
+	 _error_pages[500] = "www/errors/error-500.html";
+
     vector<ServerConfig> servers = _config.getServers();
     for (vector<ServerConfig>::iterator it = servers.begin(); it != servers.end(); ++it) {
         if (_vserver.find(it->port) != _vserver.end()) {
