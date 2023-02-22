@@ -18,13 +18,13 @@
 class Server {
 
 private:
-    typedef std::vector<pollfd>                 pollfds;
-    typedef std::vector<pollfd>::iterator       pollfds_it;
-    typedef std::vector<pollfd>::const_iterator       const_pollfds_it;
-    typedef std::map<int, Vserver>              vserver;
-    typedef vserver::iterator                   vserver_it;
-    typedef vserver::const_iterator             const_vserver_it;
-	typedef std::map<int, std::string>			error_pages;
+    typedef std::vector<pollfd>                     pollfds;
+    typedef std::vector<pollfd>::iterator           pollfds_it;
+    typedef std::vector<pollfd>::const_iterator     const_pollfds_it;
+    typedef std::map<int, Vserver>                  vserver;
+    typedef vserver::iterator                       vserver_it;
+    typedef vserver::const_iterator                 const_vserver_it;
+	typedef std::map<int, std::string>			    error_pages;
 
 private:
     vserver                 _vserver;
