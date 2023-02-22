@@ -1,5 +1,5 @@
 #include "Configuration.hpp"
-#include "utils.h"
+#include "utils.hpp"
 #include <iostream>
 #include <sys/_types/_size_t.h>
 
@@ -46,7 +46,7 @@ Configuration::Configuration(toml::table& config) {
 		return;
 	for (size_t i = 0; i < t.vec.size(); i++) {
 		_servers.push_back(fill_server(t[i]));
-//		_servers.back().print();
+		_servers.back().print();
 	}
 }
 
