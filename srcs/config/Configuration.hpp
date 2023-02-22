@@ -10,12 +10,13 @@
 #include <string>
 #include <vector>
 
+using namespace std;
+
 typedef std::vector<std::string> string_vector;
 struct LocationConfig {
 
 	std::string path;
 	std::string root;
-	std::string index;
 	std::string autoindex;
 	std::string upload_path;
 	std::string upload_store;
@@ -24,12 +25,17 @@ struct LocationConfig {
 	std::string cgi_pass;
 	std::string client_max_body_size;
 	std::string error_page;
+	vector<string> index;
 
 	void print(int indent = 0) {
 		std::string s(indent, ' ');
 		std::cout << s << "path: " << path << std::endl;
 		std::cout << s << "root: " << root << std::endl;
-		std::cout << s << "index: " << index << std::endl;
+		std::cout << s << "index: ";
+		ITER_FOREACH(vector<string>, index, it) {
+			std::cout << *it << " ";
+		}
+		std::cout << std::endl;
 		std::cout << s << "autoindex: " << autoindex << std::endl;
 		std::cout << s << "upload_path: " << upload_path << std::endl;
 		std::cout << s << "upload_store: " << upload_store << std::endl;

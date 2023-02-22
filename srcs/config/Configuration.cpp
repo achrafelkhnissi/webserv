@@ -9,7 +9,9 @@ LocationConfig fill_location(toml::table& location) {
 
 	l.path = location["path"].as_str("/");
 	l.root = location["root"].as_str("/var/www/html");
-	l.index = location["index"].as_str("index.html");
+	ITER_FOREACH(vector<toml::table>, location["index"].vec, it) {
+		l.index.push_back(it->as_str("default.com"));
+	}
 	l.autoindex = location["autoindex"].as_str("off");
 	l.upload_path = location["upload_path"].as_str("/var/www/html/upload");
 	l.upload_store = location["upload_store"].as_str("on");
