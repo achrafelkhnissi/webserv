@@ -12,69 +12,69 @@
 
 using namespace std;
 
-typedef std::vector<std::string> string_vector;
+typedef vector<string> string_vector;
 struct LocationConfig {
 
-	std::string path;
-	std::string root;
-	std::string autoindex;
-	std::string upload_path;
-	std::string upload_store;
-	std::string cgi_path;
-	std::string cgi_extension;
-	std::string cgi_pass;
-	std::string client_max_body_size;
-	std::string error_page;
+	string path;
+	string root;
+	string autoindex;
+	string upload_path;
+	string upload_store;
+	string cgi_path;
+	string cgi_extension;
+	string cgi_pass;
+	string client_max_body_size;
+	string error_page;
 	vector<string> index;
 
 	void print(int indent = 0) {
-		std::string s(indent, ' ');
-		std::cout << s << "path: " << path << std::endl;
-		std::cout << s << "root: " << root << std::endl;
-		std::cout << s << "index: ";
+		string s(indent, ' ');
+		cout << s << "path: " << path << endl;
+		cout << s << "root: " << root << endl;
+		cout << s << "index: ";
 		ITER_FOREACH(vector<string>, index, it) {
-			std::cout << *it << " ";
+			cout << *it << " ";
 		}
-		std::cout << std::endl;
-		std::cout << s << "autoindex: " << autoindex << std::endl;
-		std::cout << s << "upload_path: " << upload_path << std::endl;
-		std::cout << s << "upload_store: " << upload_store << std::endl;
-		std::cout << s << "cgi_path: " << cgi_path << std::endl;
-		std::cout << s << "cgi_extension: " << cgi_extension << std::endl;
-		std::cout << s << "cgi_pass: " << cgi_pass << std::endl;
-		std::cout << s << "client_max_body_size: " << client_max_body_size << std::endl;
-		std::cout << s << "error_page: " << error_page << std::endl;
-		std::cout << std::endl;
+		cout << endl;
+		cout << s << "autoindex: " << autoindex << endl;
+		cout << s << "upload_path: " << upload_path << endl;
+		cout << s << "upload_store: " << upload_store << endl;
+		cout << s << "cgi_path: " << cgi_path << endl;
+		cout << s << "cgi_extension: " << cgi_extension << endl;
+		cout << s << "cgi_pass: " << cgi_pass << endl;
+		cout << s << "client_max_body_size: " << client_max_body_size << endl;
+		cout << s << "error_page: " << error_page << endl;
+		cout << endl;
 	}
 };
 
 struct ServerConfig {
 
 	unsigned short port;
-	std::string host;
-	std::vector<std::string> server_name;
-	std::string root;
-	std::string error_page;
-	std::string client_max_body_size;
+	string host;
+	vector<string> server_name;
+	string root;
+	string error_page;
+	string client_max_body_size;
 
-	std::vector<LocationConfig> locations;
+	vector<LocationConfig> locations;
 
 	void print() {
-		std::cout << "listen: " << port << std::endl;
-		std::cout << "host: " << host << std::endl;
-		std::cout << "server_name: ";
+		cout << "listen: " << port << endl;
+		cout << "host: " << host << endl;
+		cout << "server_name: ";
 		ITER_FOREACH(string_vector, server_name, it) {
-			std::cout << *it << " ";
+			cout << *it << " ";
 		}
-		std::cout << std::endl;
-		std::cout << "root: " << root << std::endl;
-		std::cout << "error_page: " << error_page << std::endl;
-		std::cout << "client_max_body_size: " << client_max_body_size << std::endl;
+		cout << endl;
+		cout << "root: " << root << endl;
+		cout << "error_page: " << error_page << endl;
+		cout << "client_max_body_size: " << client_max_body_size << endl;
 		for (size_t i = 0; i < locations.size(); i++) {
-			std::cout << "location " << i << ":" << std::endl;
+			cout << "location " << i << ":" << endl;
 			locations[i].print(1);
 		}
-		std::cout << std::endl;
+		cout << endl;
 	}
 };
 
@@ -83,20 +83,20 @@ class Configuration {
 private:
 	vector<ServerConfig> servers;
 	int _port;
-	std::string _host;
-	std::string _root;
-	std::string _log_path;
+	string _host;
+	string _root;
+	string _log_path;
 
-	void parse_config_file(std::string config_file);
+	void parse_config_file(string config_file);
 
 public:
 	Configuration(toml::table& config);
 
 	int get_port();
 
-	std::string get_host();
-	std::string get_root();
-	std::string get_log_path();
+	string get_host();
+	string get_root();
+	string get_log_path();
 };
 
 #endif // CONFIGURATION_HPP

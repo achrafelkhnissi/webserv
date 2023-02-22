@@ -28,7 +28,7 @@ ServerConfig fill_server(toml::table& server) {
 	s.port = server["port"].as_int(s.port);
 	s.host = server["host"].as_str("127.0.0.1");
 	ITER_FOREACH(vector<toml::table>, server["server_name"].vec, it) {
-		s.server_name.push_back(it->as_str("default.com"));
+		s.server_name.push_back(it->as_str());
 	}
 	s.root = server["root"].as_str("/var/www/html");
 	s.error_page = server["error_page"].as_str("404 /404.html");
