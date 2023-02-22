@@ -34,4 +34,3 @@ CGI (Common Gateway Interface) is a protocol that enables web servers to execute
 - Verify the web server configuration settings and permissions.
 - Check the network connection and firewall settings.
 - Test the web server with various clients and browsers.
-
