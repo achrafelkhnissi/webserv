@@ -2,6 +2,10 @@
 #define REQUEST_HPP
 
 #include <string>
+#include <utility>
+#include <vector>
+
+using namespace std;
 
 struct RequestTokenParser {
 	std::string token;
@@ -22,11 +26,11 @@ public:
 	Request();
 	void push(std::string);
 
-	const std::string& getProtocol() const;
-	const std::string& getVersion() const;
-	const std::string& getMethod() const;
-	const std::string& getUri() const;
-	const std::string& getBody() const;
+	const string& getProtocol() const;
+	const string& getVersion() const;
+	const string& getMethod() const;
+	const string& getUri() const;
+	const string& getBody() const;
 	void setProtocol(const std::string& protocol);
 	void setVersion(int major_version);
 	void setMethod(const std::string& method);
@@ -35,11 +39,13 @@ public:
 	~Request();
 
 private:
-	std::string protocol;
-	std::string version;
-	std::string method;
-	std::string uri;
-	std::string body;
+	string protocol;
+	string version;
+	string method;
+	string uri;
+	string body;
+	string query;
+	vector<pair<string, string>> headers;
 	//Status status;
 	//int index;
 	//RequestTokenParser token_parser[6];
