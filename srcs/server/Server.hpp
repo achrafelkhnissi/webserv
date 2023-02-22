@@ -24,10 +24,14 @@ private:
     typedef std::map<int, Vserver>              vserver;
     typedef vserver::iterator                   vserver_it;
     typedef vserver::const_iterator             const_vserver_it;
+	typedef std::map<int, std::string>			error_pages;
+
 private:
     vserver                 _vserver;
     Configuration           _config;
     pollfds                 _fds;
+	error_pages 			_error_pages;
+
 
 public:
     Server(Configuration config);
