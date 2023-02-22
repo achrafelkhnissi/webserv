@@ -25,6 +25,14 @@
 - If `listener IP:PORT` is specified, the server must answer to this IP:PORT only.
 - If `listener *:PORT` is specified, the server must answer to any IP on this PORT.
 
+### 23-02-2023
+- Match the request with the appropriate virtual server
+- If the request is not matched with any virtual server, the default server must answer with the appropriate response.
+  - Match the location with the request
+  - If no match is found respond with 404 ?
+  - Maybe we should check if the client has the right to access the resource before sending the response (check how?)
+- If the request is matched with a virtual server, the server must answer with the appropriate response.
+
 ### Useful links
 * [HTTP/1.1: Status Code Definitions](https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html)
 * [HTTP/1.1: Message Syntax and Routing](https://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html)
