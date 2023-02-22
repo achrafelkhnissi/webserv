@@ -4,6 +4,7 @@
 #include "Vserver.hpp"                  // Vserver class
 #include "../config/Configuration.hpp"  // Configuration class
 #include <vector>                       // std::vector
+#include "../request/Request.hpp"       // Request class
 
 /*
  * Server class - This class is responsible for creating a server object
@@ -31,6 +32,7 @@ private:
     Configuration           _config;
     pollfds                 _fds;
 	error_pages 			_error_pages;
+    Request                 _request;
 
 
 public:

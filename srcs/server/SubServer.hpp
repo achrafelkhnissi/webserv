@@ -12,7 +12,8 @@
 typedef struct {
 
 	std::vector<std::string>    allowed_methods;
-    std::vector<std::string>    index;
+//    std::vector<std::string>    index;
+    std::string                 index;
 	std::string                 redirection; // 301, 302, 307
 	std::string                 root;
 	std::string                 client_max_body_size;
@@ -26,6 +27,9 @@ typedef struct {
 
 class SubServer {
 
+private:
+    typedef  std::vector<std::string>::const_iterator  cstr_it;
+    typedef std::vector<location>::const_iterator     cloc_it;
 private:
 	std::vector<std::string>    _server_name;
 	std::string                 _root;

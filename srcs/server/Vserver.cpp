@@ -37,7 +37,7 @@ int Vserver::getServerFd() const {
 }
 
 void Vserver::print_data() const {
-    std::cout << "--------------------------------------------" << std::endl;
+    std::cout << "--- Virtual Server Data ---" << std::endl;
     std::cout << "Server fd: " << _server_fd << std::endl;
     std::cout << "Host: " << _host_port.first << std::endl;
     std::cout << "Port: " << _host_port.second << std::endl;
@@ -46,7 +46,7 @@ void Vserver::print_data() const {
     for (vector<SubServer>::const_iterator it = _sub_servers.begin(); it != _sub_servers.end(); ++it) {
         it->print_data();
     }
-    std::cout << "--------------------------------------------" << std::endl;
+    std::cout << "--- End Virtual Server ---" << std::endl;
     std::cout << std::endl;
 }
 

@@ -15,6 +15,7 @@
 	 _error_pages[500] = "www/errors/error-500.html";
 
     vector<ServerConfig> servers = _config.getServers();
+
     for (vector<ServerConfig>::iterator it = servers.begin(); it != servers.end(); ++it) {
         if (_vserver.find(it->port) != _vserver.end()) {
             _vserver[it->port].addSubServer(*it);
@@ -153,6 +154,9 @@ std::pair<std::string, int> getHostPortFromRequest(const std::string& request) {
 void Server::_handle_request(pollfds_it it) {
     // Handle the request
 
+    std::string method = _request.getMethod();
+
+
     char buffer[BUFFER_SIZE];
     ssize_t bytes_read = recv(it->fd, buffer, BUFFER_SIZE, 0);
 
@@ -173,7 +177,8 @@ void Server::_handle_request(pollfds_it it) {
     std::cout << buffer << std::endl;
 
     // Send the response to the client
-    _handle_get(it->fd, host_port);
+    if (method == "GET")
+        _handle_get(it->fd, host_port);
 }
 
 void Server::_clear_pollfds() {
@@ -200,14 +205,14 @@ void Server::_handle_get(int fd, std::pair<std::string, int> host_port) {
 
 
     std::string _root = _vserver[host_port.second].getRoot();
-//
+    std::string _uri = _request.getUri();
     std::cout << "root: " << _root << std::endl;
 //    std::string _root = "www/";
-    std::string _resource = "index.html";
+    std::string _index = "index.html";
 
-    std::string resource_path = _root + _resource;
+    std::string resource_path = _root + _uri +  _index;
 
-    std::cout << "resource_path: " << resource_path << std::endl;
+    std::cout << "index_path: " << resource_path << std::endl;
 
     std::ifstream resource_file;
     std::stringstream response_header_stream;
@@ -352,4 +357,4 @@ a Host header field, the host is determined by the Host header
 
 3. If the host as determined by rule 1 or 2 is not a valid host on
 the server, the response MUST be a 400 (Bad Request) error message.
-/*
+*/
