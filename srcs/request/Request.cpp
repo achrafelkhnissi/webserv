@@ -5,20 +5,14 @@
 
 Request::Request() {
 	protocol = "HTTP";
-	version = "1.1";
-	method = "GET";
-	uri = "/users/me";
-	query = "name=ismail&age=23";
-	body = "Hello World";
+	version = 1;
 }
-
-void Request::push(std::string) { }
 
 const std::string& Request::getProtocol() const {
 	return protocol;
 }
 
-const std::string& Request::getVersion() const {
+int Request::getVersion() const {
 	return version;
 }
 

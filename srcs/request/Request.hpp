@@ -1,33 +1,18 @@
 #ifndef REQUEST_HPP
 #define REQUEST_HPP
 
+#include <iostream>
 #include <string>
 #include <utility>
 #include <vector>
 
 using namespace std;
 
-struct RequestTokenParser {
-	std::string token;
-	void (*done)(std::string);
-};
-
 class Request {
 public:
-	enum Method { GET, POST, PUT, DELETE, HEAD, OPTIONS, TRACE, CONNECT };
-
-	enum Status {
-		DONE,
-		FAILED,
-		CONTINUE,
-
-	};
-
 	Request();
-	void push(std::string);
-
 	const string& getProtocol() const;
-	const string& getVersion() const;
+	int getVersion() const;
 	const string& getMethod() const;
 	const string& getUri() const;
 	const string& getBody() const;
@@ -38,16 +23,20 @@ public:
 	void setBody(const std::string& body);
 	~Request();
 
+	void print() {
+		cout << "Method: " << method << endl;
+		cout << "URI: " << uri << endl;
+		cout << "Version: " << version << endl;
+		cout << "Query: " << query << endl;
+	}
+
 private:
 	string protocol;
-	string version;
 	string method;
 	string uri;
 	string body;
 	string query;
-	vector<pair<string, string>> headers;
-	//Status status;
-	//int index;
-	//RequestTokenParser token_parser[6];
+	int version;
 };
+
 #endif
