@@ -17,31 +17,27 @@
 #include <fstream>
 #include <sstream>
 
-#include "SubServer.hpp"
-#include "../config/Configuration.hpp"  // Configuration class
+//#include "SubServer.hpp"
+#include "typedefs.hpp"
+#include "Configuration.hpp"  // Configuration class
 
 
 #define BUFFER_SIZE 1024
+
 
 class Vserver {
 
 private:
 
-	typedef std::pair<std::string, int>			host_port;
-    typedef std::vector<SubServer>              subServers;
-    typedef subServers::iterator                subServers_it;
+    subServerVector_t         _sub_servers;	// for handling multiple virtual servers
+    hostPortPair_t 			_host_port;
+    int                     _server_fd;
 
-private:
-
-    host_port 			_host_port;
-    int                 _server_fd;
-
-	subServers          _sub_servers;	// for handling multiple virtual servers
 
 
 public:
     void _setup();
-    void _error(const std::string& msg);
+    void _error(const string& msg);
     void start();
 
 
@@ -56,8 +52,8 @@ public:
     int getPort() const;
 //    const std::string& getRoot() const;
 
-    const std::vector<SubServer>::iterator matchSubServer(const std::string& host);
-    const location matchLocation(const std::vector<SubServer>& );
+    const subServersIterator_t matchSubServer(const string& host);
+    const location_t matchLocation(const subServerVector_t& );
 
 };
 

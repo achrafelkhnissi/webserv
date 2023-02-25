@@ -15,7 +15,7 @@ SubServer::SubServer(const ServerConfig &config) {
     std::vector<LocationConfig>::const_iterator ite = config.locations.end();
 
     for (; it != ite; ++it) {
-        location location;
+        location_t location;
         fill_location(*it, location);
         _locations.push_back(location);
     }
@@ -25,33 +25,33 @@ SubServer::~SubServer() {
 
 }
 
-const std::vector<std::string>& SubServer::getServerName() const {
+const stringVector_t & SubServer::getServerName() const {
     return _server_name;
 }
 
-const std::string& SubServer::getRoot() const {
+const string& SubServer::getRoot() const {
     return _root;
 }
 
-const std::string& SubServer::getIndex() const {
+const string& SubServer::getIndex() const {
     return _index;
 }
 
-const std::string& SubServer::getErrorPages() const {
+const string& SubServer::getErrorPages() const {
     return _error_pages;
 }
 
-const std::string& SubServer::getClientMaxBodySize() const {
+const string& SubServer::getClientMaxBodySize() const {
     return _client_max_body_size;
 }
 
-const std::vector<location>& SubServer::getLocation() const {
+const locationVector_t& SubServer::getLocation() const {
     return _locations;
 }
 
 
 
-void SubServer::fill_location(const  LocationConfig& location_config, location& location) {
+void SubServer::fill_location(const  LocationConfig& location_config, location_t& location) {
 
 //    _location.allowed_methods = ft::split(location_config.methods, ' ');
     location.root = location_config.root;
@@ -65,8 +65,8 @@ void SubServer::fill_location(const  LocationConfig& location_config, location& 
 void SubServer::print_data() const {
     std::cout << "\t--- Sub server ---" << std::endl;
     std::cout << "\t- server_name: ";
-    std::vector<std::string>::const_iterator itt = _server_name.begin();
-    std::vector<std::string>::const_iterator itte = _server_name.end();
+    stringVectorConstIterator_t itt = _server_name.begin();
+    stringVectorConstIterator_t itte = _server_name.end();
     while (itt != itte) {
         std::cout << *itt << ", ";
         ++itt;
@@ -77,8 +77,8 @@ void SubServer::print_data() const {
     std::cout << "\t- error_pages: " << _error_pages << std::endl;
     std::cout << "\t- client_max_body_size: " << _client_max_body_size << std::endl;
     std::cout << "\t- location: " << std::endl;
-    std::vector<location>::const_iterator it = _locations.begin();
-    std::vector<location>::const_iterator ite = _locations.end();
+    locationVectorConstIterator_t it = _locations.begin();
+    locationVectorConstIterator_t ite = _locations.end();
     while (it != ite) {
         std::cout << "\t\tprefix: " << it->prefix << std::endl;
         std::cout << "\t\troot: " << it->root << std::endl;
@@ -92,13 +92,3 @@ void SubServer::print_data() const {
     std::cout << std::endl;
 }
 
-std::string SubServer::matchLocation(const string &path) const {
-    std::vector<location>::const_iterator it = _locations.begin();
-    std::vector<location>::const_iterator ite = _locations.end();
-    for (; it != ite; ++it) {
-        if (path.find(it->prefix) != std::string::npos) {
-            return it->prefix;
-        }
-    }
-    return "";
-}

@@ -14,7 +14,7 @@ Vserver::Vserver(ServerConfig server_config) {
 }
 
 
-void Vserver::_error(const std::string &msg) {
+void Vserver::_error(const string &msg) {
 //    strerror(errno);
     std::cerr << msg << std::endl;
     exit(EXIT_FAILURE);
@@ -43,7 +43,7 @@ void Vserver::print_data() const {
     std::cout << "Port: " << _host_port.second << std::endl;
     // print sub servers
     std::cout << "Sub servers: " << std::endl;
-    for (vector<SubServer>::const_iterator it = _sub_servers.begin(); it != _sub_servers.end(); ++it) {
+    for (subServersConstIterator_t it = _sub_servers.begin(); it != _sub_servers.end(); ++it) {
         it->print_data();
     }
     std::cout << "--- End Virtual Server ---" << std::endl;
@@ -54,10 +54,10 @@ int Vserver::getPort() const {
     return _host_port.second;
 }
 
-const std::vector<SubServer>::iterator Vserver::matchSubServer(const std::string& host) {
+const subServersIterator_t Vserver::matchSubServer(const string& host) {
 
-    for (subServers_it it = _sub_servers.begin(); it != _sub_servers.end(); ++it) {
-        for (std::vector<std::string>::const_iterator it2 = it->getServerName().begin();
+    for (subServersIterator_t it = _sub_servers.begin(); it != _sub_servers.end(); ++it) {
+        for (stringVectorConstIterator_t it2 = it->getServerName().begin();
              it2 != it->getServerName().end(); ++it2) {
             if (host == *it2)
                 return it;

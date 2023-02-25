@@ -6,52 +6,47 @@
 #define WEBSERV_SUBSERVER_H
 
 #include <iostream>
-#include <vector>
-#include "../config/Configuration.hpp"  // Configuration class
+//#include <vector>
+#include "Configuration.hpp"  // Configuration class
+#include "typedefs.hpp"
 
-typedef struct {
+struct location_s{
 
-	std::vector<std::string>    allowed_methods;
-//    std::vector<std::string>    index;
-    std::string                 index;
-	std::string                 redirection; // 301, 302, 307
-	std::string                 root;
-	std::string                 client_max_body_size;
-	std::string                 error_pages;
-	std::string                 prefix;
-	bool                        auto_index;
+	stringVector_t          allowed_methods;
+    string                  index;
+	string                  redirection; // 301, 302, 307
+	string                  root;
+	string                  client_max_body_size;
+	string                  error_pages;
+	string                  prefix;
+	bool                    auto_index;
     // TODO: add Cgi
 
-} location;
+};
 
 class SubServer {
 
 private:
-    typedef  std::vector<std::string>::const_iterator  cstr_it;
-    typedef std::vector<location>::const_iterator     cloc_it;
-private:
-	std::vector<std::string>    _server_name;
-	std::string                 _root;
-	std::string                 _index;
-	std::string                 _error_pages;
-	std::string                 _client_max_body_size;
-    std::vector<location>       _locations;
+	stringVector_t          _server_name;
+    locationVector_t        _locations;
+	string                 _root;
+	string                 _index;
+	string                 _error_pages;
+	string                 _client_max_body_size;
     // TODO: add Cgi
 
 public:
     explicit SubServer(const ServerConfig& config);
     ~SubServer();
 
-    const std::vector<std::string>&    getServerName() const;
-    const std::string&                 getRoot() const;
-    const std::string&                 getIndex() const;
-    const std::string&                 getErrorPages() const;
-    const std::string&                 getClientMaxBodySize() const;
-    const vector<location>&            getLocation() const;
-    void    fill_location(const LocationConfig& location_config, location& location);
+    const stringVector_t&    getServerName() const;
+    const string&                 getRoot() const;
+    const string&                 getIndex() const;
+    const string&                 getErrorPages() const;
+    const string&                 getClientMaxBodySize() const;
+    const locationVector_t &            getLocation() const;
+    void    fill_location(const LocationConfig& location_config, location_t& location);
     void    print_data() const;
-
-    std::string matchLocation(const std::string& path) const;
 
 };
 

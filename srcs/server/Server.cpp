@@ -23,11 +23,11 @@
             _vserver[it->port] = Vserver(*it);
         }
     }
-    for (vserver_it it = _vserver.begin(); it != _vserver.end(); ++it) {
+    for (virtualServerMapIterator_t it = _vserver.begin(); it != _vserver.end(); ++it) {
         _setup_vserver(it->second);
     }
 
-    for (vserver_it it = _vserver.begin(); it != _vserver.end(); ++it) {
+    for (virtualServerMapIterator_t it = _vserver.begin(); it != _vserver.end(); ++it) {
         it->second.print_data();
     }
 
@@ -91,7 +91,7 @@ void Server::start() {
         }
 
         // Loop through the client fds and handle requests
-        for (pollfds_it it = _fds.begin() + _vserver.size(); it != _fds.end(); ++it) {
+        for (pollfdsVectorIterator_t it = _fds.begin() + _vserver.size(); it != _fds.end(); ++it) {
             if (it->revents & POLLIN) {
                 _handle_request(it);
             }
@@ -127,23 +127,23 @@ void Server::_handle_connections(int sockfd) {
     }
 }
 
-std::pair<std::string, int> getHostPortFromRequest(const std::string& request) {
+hostPortPair_t getHostPortFromRequest(const string& request) {
     std::string host;
     int port = 80; // default HTTP port
 
     // Find the Host header in the request
     size_t hostPos = request.find("Host:");
-    if (hostPos != std::string::npos) {
+    if (hostPos != string::npos) {
         hostPos += 6; // move to the start of the host string
         size_t hostEndPos = request.find("\r\n", hostPos);
-        if (hostEndPos != std::string::npos) {
+        if (hostEndPos != string::npos) {
             host = request.substr(hostPos, hostEndPos - hostPos);
         }
     }
 
     // Find the port number in the host string, if specified
     size_t portPos = host.find(':');
-    if (portPos != std::string::npos) {
+    if (portPos != string::npos) {
         port = std::stoi(host.substr(portPos + 1));
         host = host.substr(0, portPos);
     }
@@ -151,16 +151,17 @@ std::pair<std::string, int> getHostPortFromRequest(const std::string& request) {
     return std::make_pair(host, port);
 }
 
-void Server::_handle_request(pollfds_it it) {
+void Server::_handle_request(pollfdsVectorIterator_t it) {
     // Handle the request
 
-    std::string method = _request.getMethod();
+    string method = _request.getMethod();
 
 
     char buffer[BUFFER_SIZE];
     ssize_t bytes_read = recv(it->fd, buffer, BUFFER_SIZE, 0);
 
-    std::pair<std::string, int> host_port = getHostPortFromRequest(buffer);
+     hostPortPair_t host_port = getHostPortFromRequest(buffer);
+
 
     if (bytes_read == -1)
         _error("recv");
@@ -181,9 +182,9 @@ void Server::_handle_request(pollfds_it it) {
     std::cout << "=== END OF REQUEST ===" << std::endl;
 
     // Match the port and host to the correct server
-    vserver_it vserver_iter = _vserver.find(_request.getPort());
+    virtualServerMapIterator_t vserver_iter = _vserver.find(_request.getPort());
 
-    subServers_it subserv_it = vserver_iter->second.matchSubServer(_request.getHost());
+    subServersIterator_t subserv_it = vserver_iter->second.matchSubServer(_request.getHost());
 
     subserv_it->print_data();
 
@@ -195,8 +196,8 @@ void Server::_handle_request(pollfds_it it) {
 }
 
 void Server::_clear_pollfds() {
-    pollfds_it it = _fds.begin();
-    pollfds_it end = _fds.end();
+    pollfdsVectorIterator_t it = _fds.begin();
+    pollfdsVectorIterator_t end = _fds.end();
 
     for(; it != end; it++)
         close(it->fd);
@@ -205,7 +206,7 @@ void Server::_clear_pollfds() {
 
 void Server::_send_response(int fd) {
 // Send the response to the client
-    std::string response = "HTTP/1.1 200 OK\r\n"
+    string response = "HTTP/1.1 200 OK\r\n"
                            "Content-Type: text/html\r\n\r\n"
                            "<h1>Hello World!</h1>";
     send(fd, response.c_str(), response.length(), 0);
@@ -214,17 +215,31 @@ void Server::_send_response(int fd) {
 
 
 
-void Server::_handle_get(int fd, const subServers_it& sbsrv_it, const Request& _request) {
+void Server::_handle_get(int fd, const subServersIterator_t & sbsrv_it, const Request& _request) {
 
 
     (void) sbsrv_it;
-    std::string _root = sbsrv_it->getRoot();
-    std::string _uri = sbsrv_it->matchLocation(_request.getUri());
-    std::cout << "root: " << _root << std::endl;
+    std::string root_ = sbsrv_it->getRoot();
+    std::string uri_ = _request.getUri();
+    location_t    location_;
+
+    // Match the uri to the correct location
+    std::vector<location_t>::const_iterator loc_it = sbsrv_it->getLocation().begin();
+    std::vector<location_t>::const_iterator loc_end = sbsrv_it->getLocation().end();
+    for (; loc_it != loc_end; ++loc_it) {
+        if (loc_it->prefix == uri_) {
+            location_ = *loc_it;
+            break;
+        }
+    }
+
+
+    root_ = location_.root;
+    std::cout << "root: " << root_ << std::endl;
 //    std::string _root = "www/";
     std::string _index = "index.html";
 
-    std::string resource_path = _root + _uri +  _index;
+    std::string resource_path = root_ + uri_ + "/" + _index;
 
     std::cout << "index_path: " << resource_path << std::endl;
 
@@ -251,6 +266,7 @@ void Server::_handle_get(int fd, const subServers_it& sbsrv_it, const Request& _
     resource_file.seekg(0, std::ios::end);
     content_length = resource_file.tellg();
     resource_file.seekg(0, std::ios::beg);
+
 
     // allocate memory for the response body and read the resource file contents into it
     response_body.resize(content_length);
@@ -350,12 +366,12 @@ void Server::print_data() const {
     std::cout << "Server data:" << std::endl;
     std::cout << "----------------------------------------" << std::endl;
     std::cout << "fds: " << std::endl;
-    for (const_pollfds_it it = _fds.begin(); it != _fds.end(); it++) {
+    for (pollfdsVectorConstIterator_t it = _fds.begin(); it != _fds.end(); it++) {
         std::cout << "fd: " << it->fd << std::endl;
         std::cout << "events: " << it->events << std::endl;
         std::cout << "revents: " << it->revents << std::endl;
     }
-    for (const_vserver_it it = _vserver.begin(); it != _vserver.end(); it++) {
+    for (virtualServerMapConstIterator_t it = _vserver.begin(); it != _vserver.end(); it++) {
         it->second.print_data();
     }
     std::cout << "----------------------------------------" << std::endl;

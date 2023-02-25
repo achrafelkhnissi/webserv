@@ -1,10 +1,13 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
-#include "Vserver.hpp"                  // Vserver class
-#include "../config/Configuration.hpp"  // Configuration class
 #include <vector>                       // std::vector
-#include "../request/Request.hpp"       // Request class
+
+#include "Vserver.hpp"                  // Vserver class
+#include "SubServer.hpp"                // SubServer class
+#include "Configuration.hpp"  // Configuration class
+#include "Request.hpp"       // Request class
+#include "typedefs.hpp"
 
 #include <sstream>
 
@@ -20,21 +23,16 @@
  */
 class Server {
 
-private:
-    typedef std::vector<pollfd>                     pollfds;
-    typedef std::vector<pollfd>::iterator           pollfds_it;
-    typedef std::vector<pollfd>::const_iterator     const_pollfds_it;
-    typedef std::map<int, Vserver>                  vserver;
-    typedef vserver::iterator                       vserver_it;
-    typedef vserver::const_iterator                 const_vserver_it;
-	typedef std::map<int, std::string>			    error_pages;
-    typedef std::vector<SubServer>::iterator        subServers_it;
+//private:
+//    typedef std::vector<pollfd>                         pollfdsVector_t;
+//    typedef std::vector<pollfd>::iterator               pollfdsVectorIterator_t;
+//    typedef std::vector<pollfd>::const_iterator         pollfdsVectorConstIterator_t;
 
 private:
-    vserver                 _vserver;
+    virtualServerMap_t      _vserver;
     Configuration           _config;
-    pollfds                 _fds;
-	error_pages 			_error_pages;
+    pollfdsVector_t         _fds;
+	errorPagesMap_t 	    _error_pages;
     Request                 _request;
 
 
@@ -44,18 +42,18 @@ public:
 
     void start();
     void _handle_connections(int fd);
-    void _handle_request(pollfds_it it);
+    void _handle_request(pollfdsVectorIterator_t it);
     void _send_response(int fd);
-    void _handle_get(int fd, const subServers_it&, const Request&);
+    void _handle_get(int fd, const subServersIterator_t&, const Request&);
     void _handle_post(int fd);
     void _handle_delete(int fd);
     void _handle_error(int fd);
     void _clear_pollfds();
-    void _error(const std::string& msg);
+    void _error(const string& msg);
     void _setup_vserver(Vserver& vserver);
     void print_data() const;
 
-    std::string getFileContent(const std::string& path) const;
+    string getFileContent(const string& path) const;
 
 };
 
