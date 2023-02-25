@@ -29,6 +29,7 @@ private:
 
 	typedef std::pair<std::string, int>			host_port;
     typedef std::vector<SubServer>              subServers;
+    typedef subServers::iterator                subServers_it;
 
 private:
 
@@ -54,6 +55,9 @@ public:
     void print_data() const;
     int getPort() const;
     const std::string& getRoot() const;
+
+    const std::vector<SubServer>::iterator matchSubServer(const std::string& host) ;
+
 
 };
 
