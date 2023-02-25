@@ -46,7 +46,7 @@ public:
     void _handle_connections(int fd);
     void _handle_request(pollfds_it it);
     void _send_response(int fd);
-    void _handle_get(int fd, subServers_it subServer, Request& request);
+    void _handle_get(int fd, const subServers_it&, const Request&);
     void _handle_post(int fd);
     void _handle_delete(int fd);
     void _handle_error(int fd);

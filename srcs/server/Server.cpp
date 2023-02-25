@@ -214,11 +214,11 @@ void Server::_send_response(int fd) {
 
 
 
-void Server::_handle_get(int fd, subServers_it sbsrv_it, Request _request) {
+void Server::_handle_get(int fd, const subServers_it& sbsrv_it, const Request& _request) {
 
 
-
-    std::string _root = _vserver[host_port.second].getRoot();
+    (void) sbsrv_it;
+    std::string _root = sbsrv_it->getRoot();
     std::string _uri = _request.getUri();
     std::cout << "root: " << _root << std::endl;
 //    std::string _root = "www/";

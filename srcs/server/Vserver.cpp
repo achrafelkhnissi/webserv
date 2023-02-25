@@ -54,16 +54,19 @@ int Vserver::getPort() const {
     return _host_port.second;
 }
 
-const std::string& Vserver::getRoot() const {
-    return _sub_servers[0].getRoot();
-}
+//const std::string& Vserver::getRoot() const {
+//    return _sub_servers[0].getRoot();
+//}
 
 const std::vector<SubServer>::iterator Vserver::matchSubServer(const std::string& host) {
 
     for (subServers_it it = _sub_servers.begin(); it != _sub_servers.end(); ++it) {
-        if (host == *(it->getServerName().begin())) {
-            std::cout << "Matched host: " << host << std::endl;
-            return it;
+        for (std::vector<std::string>::const_iterator it2 = it->getServerName().begin();
+             it2 != it->getServerName().end(); ++it2) {
+            if (host == *it2) {
+                std::cout << "Matched host: " << host << std::endl;
+                return it;
+            }
         }
     }
     return _sub_servers.begin();

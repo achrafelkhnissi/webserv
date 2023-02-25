@@ -54,7 +54,7 @@ public:
     void addSubServer(ServerConfig &config);
     void print_data() const;
     int getPort() const;
-    const std::string& getRoot() const;
+//    const std::string& getRoot() const;
 
     const std::vector<SubServer>::iterator matchSubServer(const std::string& host) ;
 
