@@ -91,3 +91,14 @@ void SubServer::print_data() const {
     std::cout << "\t--- End Sub server ---" << std::endl;
     std::cout << std::endl;
 }
+
+std::string SubServer::matchLocation(const string &path) const {
+    std::vector<location>::const_iterator it = _locations.begin();
+    std::vector<location>::const_iterator ite = _locations.end();
+    for (; it != ite; ++it) {
+        if (path.find(it->prefix) != std::string::npos) {
+            return it->prefix;
+        }
+    }
+    return "";
+}

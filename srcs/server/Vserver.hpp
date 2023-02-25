@@ -56,8 +56,8 @@ public:
     int getPort() const;
 //    const std::string& getRoot() const;
 
-    const std::vector<SubServer>::iterator matchSubServer(const std::string& host) ;
-
+    const std::vector<SubServer>::iterator matchSubServer(const std::string& host);
+    const location matchLocation(const std::vector<SubServer>& );
 
 };
 

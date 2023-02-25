@@ -219,7 +219,7 @@ void Server::_handle_get(int fd, const subServers_it& sbsrv_it, const Request& _
 
     (void) sbsrv_it;
     std::string _root = sbsrv_it->getRoot();
-    std::string _uri = _request.getUri();
+    std::string _uri = sbsrv_it->matchLocation(_request.getUri());
     std::cout << "root: " << _root << std::endl;
 //    std::string _root = "www/";
     std::string _index = "index.html";

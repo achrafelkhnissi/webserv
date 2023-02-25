@@ -19,7 +19,6 @@ typedef struct {
 	std::string                 client_max_body_size;
 	std::string                 error_pages;
 	std::string                 prefix;
-    std::string                 path;
 	bool                        auto_index;
     // TODO: add Cgi
 
@@ -51,6 +50,8 @@ public:
     const vector<location>&            getLocation() const;
     void    fill_location(const LocationConfig& location_config, location& location);
     void    print_data() const;
+
+    std::string matchLocation(const std::string& path) const;
 
 };
 
