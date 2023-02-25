@@ -9,7 +9,7 @@ client_max_body_size = "10m"
 
 [[server.location]]
 path = "/html4"
-root = "/www"
+root = "www"
 index = "index.html index.htm"
 try_files = "$uri $uri/ =404"
 accepted_methods = "GET HEAD"
