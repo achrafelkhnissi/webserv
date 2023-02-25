@@ -1,6 +1,6 @@
 
 [[server]]
-port = "80"
+port = "1337"
 host = "10.0.0.1"
 server_name = ["example.com", "example2.com", "example3.com"]
 root = "www/html"
@@ -8,8 +8,8 @@ error_page = "404 /404.html"
 client_max_body_size = "10m"
 
 [[server.location]]
-path = "/test"
-root = "www/html4"
+path = "/html4"
+root = "/www"
 index = "index.html index.htm"
 try_files = "$uri $uri/ =404"
 accepted_methods = "GET HEAD"
@@ -22,8 +22,26 @@ client_max_body_size = "10m"
 [server.location.location]
 path = "/1"
 
+[[server.location]]
+path = "/html5"
+root = "www"
+index = "index.html index.htm"
+try_files = "$uri $uri/ =404"
+accepted_methods = "GET HEAD"
+error_page = "404 /404.html"
+prefix=""
+redirect = "http://example.com"
+autoindex = "on"
+client_max_body_size = "10m"
+
 [[server]]
 port = "8080"
 host = "10.0.0.1"
 server_name = ["sub.example.com", "sub.example2.com", "sub.example3.com"]
-root = "www"
+root = "www/html2"
+
+[[server]]
+port = "8080"
+host = "10.0.0.1"
+server_name = ["sub.example1.com", "sub.example20.com", "sub.example30.com"]
+root = "www/html3"
