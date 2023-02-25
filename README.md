@@ -25,6 +25,15 @@
 - If `listener IP:PORT` is specified, the server must answer to this IP:PORT only.
 - If `listener *:PORT` is specified, the server must answer to any IP on this PORT.
 
+#### Handling requests
+1. Read the request
+2. Get the request port and server_name
+3. Match the request with the appropriate virtual server (port) (if no match, use the default server)
+   - If there's multiple virtual servers with the same port, match the server_name
+   - If there's no match, use the default server
+4. Match the location with the request (if no match, respond with 404)
+
+
 ### 23-02-2023
 - Match the request with the appropriate virtual server
 - If the request is not matched with any virtual server, the default server must answer with the appropriate response.
