@@ -65,7 +65,3 @@ const std::vector<SubServer>::iterator Vserver::matchSubServer(const std::string
     }
     return _sub_servers.begin();
 }
-
-const location Vserver::matchLocation(const vector<SubServer> &) {
-
-}
