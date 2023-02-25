@@ -26,11 +26,18 @@ public:
 	Request();
 	void push(std::string);
 
-	const string& getProtocol() const;
+    const string& getHost() const; // TODO: remove this
+    const int& getPort() const; // TODO: remove this
+    void printData() const; // TODO: remove this
+    void setRequest(); // TODO: remove this
+
+
+    const string& getProtocol() const;
 	const string& getVersion() const;
 	const string& getMethod() const;
 	const string& getUri() const;
 	const string& getBody() const;
+
 	void setProtocol(const std::string& protocol);
 	void setVersion(int major_version);
 	void setMethod(const std::string& method);
@@ -39,6 +46,10 @@ public:
 	~Request();
 
 private:
+
+    string host;
+    int port;
+
 	string protocol;
 	string version;
 	string method;
