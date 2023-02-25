@@ -5,7 +5,7 @@
  *
  * @param config: Configuration object that contains all the information from the config file
  */
- Server::Server(Configuration config): _config(config) {
+ Server::Server(Configuration config): _config(config), _request() {
 
 	 _error_pages[400] = "www/errors/error-400.html";
 	 _error_pages[401] = "www/errors/error-401.html";
@@ -174,11 +174,24 @@ void Server::_handle_request(pollfds_it it) {
 
     buffer[bytes_read] = '\0';
     std::cout << "Received " << bytes_read << " bytes on fd " << it->fd << std::endl;
-    std::cout << buffer << std::endl;
 
-    // Send the response to the client
-    if (method == "GET")
-        _handle_get(it->fd, host_port);
+    std::cout << "=== REQUEST RECEIVED ===" << std::endl;
+    std::cout << buffer << std::endl;
+    _request.setRequest();
+    std::cout << "=== END OF REQUEST ===" << std::endl;
+
+    // Match the port and host to the correct server
+    vserver_it vserver_iter = _vserver.find(_request.getPort());
+
+    subServers_it subserv_it = vserver_iter->second.matchSubServer(_request.getHost());
+
+    subserv_it->print_data();
+
+    // Check if the mothod is allowed!
+
+//     Send the response to the client
+    if (_request.getMethod() == "GET")
+        _handle_get(it->fd, subserv_it, _request);
 }
 
 void Server::_clear_pollfds() {
@@ -201,7 +214,8 @@ void Server::_send_response(int fd) {
 
 
 
-void Server::_handle_get(int fd, std::pair<std::string, int> host_port) {
+void Server::_handle_get(int fd, subServers_it sbsrv_it, Request _request) {
+
 
 
     std::string _root = _vserver[host_port.second].getRoot();
@@ -229,6 +243,10 @@ void Server::_handle_get(int fd, std::pair<std::string, int> host_port) {
         send(fd, response_header.c_str(), response_header.length(), 0);
         return;
     }
+
+    std::string response = "HTTP/1.1 200 OK\r\n"
+                           "Content-Type: text/html\r\n\r\n" +
+                            getFileContent(resource_path); // TODO: <-- Test this.
 
     resource_file.seekg(0, std::ios::end);
     content_length = resource_file.tellg();
@@ -345,6 +363,19 @@ void Server::print_data() const {
 
 }
 
+
+std::string Server::getFileContent(const std::string& path) const {
+    std::ifstream file(path);
+
+    std::cout << "path: " << path << std::endl;
+
+    std::stringstream fileContent;
+    std::string line;
+    while (std::getline(file, line)) {
+        fileContent << line << std::endl;
+    }
+    return fileContent.str();
+ }
 
 /*
 1. If Request-URI is an absoluteURI, the host is part of the

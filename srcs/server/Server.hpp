@@ -6,6 +6,8 @@
 #include <vector>                       // std::vector
 #include "../request/Request.hpp"       // Request class
 
+#include <sstream>
+
 /*
  * Server class - This class is responsible for creating a server object
  *
@@ -26,6 +28,7 @@ private:
     typedef vserver::iterator                       vserver_it;
     typedef vserver::const_iterator                 const_vserver_it;
 	typedef std::map<int, std::string>			    error_pages;
+    typedef std::vector<SubServer>::iterator        subServers_it;
 
 private:
     vserver                 _vserver;
@@ -43,7 +46,7 @@ public:
     void _handle_connections(int fd);
     void _handle_request(pollfds_it it);
     void _send_response(int fd);
-    void _handle_get(int fd, std::pair<std::string, int> host_port);
+    void _handle_get(int fd, subServers_it subServer, Request& request);
     void _handle_post(int fd);
     void _handle_delete(int fd);
     void _handle_error(int fd);
@@ -51,6 +54,9 @@ public:
     void _error(const std::string& msg);
     void _setup_vserver(Vserver& vserver);
     void print_data() const;
+
+    std::string getFileContent(const std::string& path) const;
+
 };
 
 #endif
