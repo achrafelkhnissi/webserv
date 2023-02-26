@@ -1,10 +1,36 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>My Awesome Website</title>
+    <title>webserv</title>
+    <link rel="icon" type="image/png" href="imgs/icon.png">
+    <style>
+        /* Define a keyframe animation called 'color-shift' */
+        @keyframes color-shift {
+            0% { background-color: #FF6B6B; }
+            25% { background-color: #FFE66D; }
+            50% { background-color: #3D88F7; }
+            75% { background-color: #30CC75; }
+            100% { background-color: #FF6B6B; }
+        }
+
+        /* Style the 'Hello Webserv' header */
+        h1 {
+            font-size: 4em;
+            text-align: center;
+            animation: color-shift 5s linear infinite;
+        }
+
+        /* Style the 'Welcome' message */
+        p {
+            font-size: 2em;
+            text-align: center;
+            margin-top: 100px;
+            animation: color-shift 7s linear infinite;
+        }
+    </style>
 </head>
 <body>
-<h1>Welcome to my awesome website! | root="www/html/"</h1>
-<p>This is the home page for my awesome website.</p>
+<h1>Hello Webserv</h1>
+<p>Welcome!</p>
 </body>
 </html>
