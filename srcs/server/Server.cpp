@@ -155,8 +155,9 @@ void Server::_handleRequest(pollfdsVectorIterator_t it) {
 
     subServerIter_->printData();
 
-    if (_request.getMethod() == "GET")
+    if (_request.getMethod() == "GET") {
         _handleGET(it->fd, subServerIter_, _request);
+    }
 }
 
 void Server::_clearPollfds() {
@@ -181,26 +182,43 @@ void Server::_sendResponse(int fd) {
 
 void Server::_handleGET(int fd, const subServersIterator_t &subServersIterator, const Request& request) {
 
-
     string root_ = subServersIterator->getRoot();
     string uri_ = request.getUri();
     string index_ = "index.html";
     location_t    location_;
 
     // Match the uri to the correct location
-    locationVectorConstIterator_t locIter_ = subServersIterator->getLocation().begin();
-    locationVectorConstIterator_t locIterEnd_ = subServersIterator->getLocation().end();
-    for (; locIter_ != locIterEnd_; ++locIter_) {
-        if (locIter_->prefix == uri_) {
-            location_ = *locIter_;
-            break;
+
+    string str_ = uri_;
+    std::cout << "uri: " << uri_ << " | len: " << str_.size() << std::endl;
+
+    bool isMatch_ = false;
+    while (!isMatch_) {
+
+        locationVectorConstIterator_t locIter_ = subServersIterator->getLocation().begin();
+        locationVectorConstIterator_t locIterEnd_ = subServersIterator->getLocation().end();
+        for (; locIter_ != locIterEnd_; ++locIter_) {
+//            std::cout << "locIter: " << locIter_->prefix << std::endl;
+            if (locIter_->prefix == str_) {
+                location_ = *locIter_;
+                isMatch_ = true;
+                std::cout << "matched: " << str_ << std::endl;
+                break;
+            }
+        }
+        std::size_t found_ = str_.find_last_of("/");
+        if (found_ != std::string::npos) {
+            str_ = str_.substr(0, found_);
+            if (str_ == "/")
+                break;
         }
     }
 
-
     root_ = location_.root;
 
-    string resourcePath_ = root_ + uri_ + "/" + index_;
+//    string resourcePath_ = root_ + uri_ + "/" + index_;
+    string resourcePath_ = "www/errors/404/error-404.html";
+
 
     std::cout << "index_path: " << resourcePath_ << std::endl;
 
@@ -208,47 +226,52 @@ void Server::_handleGET(int fd, const subServersIterator_t &subServersIterator, 
     std::stringstream responseHeaderStream_;
     string responseHeader_;
     string responseBody_;
-    int contentLength_, responseSize_, bytesSent_;
+//    int contentLength_, responseSize_, bytesSent_;
 
     // open the requested resource file
-    resourceFile_.open(resourcePath_, std::ios::binary);
-    if (!resourceFile_.is_open()) {
-        // if the file does not exist, send a 404 response_
-        responseHeaderStream_ << "HTTP/1.1 404 Not Found\r\n\r\n";
-        responseHeader_ = responseHeaderStream_.str();
-        send(fd, responseHeader_.c_str(), responseHeader_.length(), 0);
-        return;
-    }
+//    resourceFile_.open(resourcePath_, std::ios::binary);
+//    if (!resourceFile_.is_open()) {
+//        // if the file does not exist, send a 404 response_
+//        std::cout << "404 Not Found" << std::endl;
+//        resourcePath_ = _getErrorPage(404);
+//        std::cout << "error_page: " << resourcePath_ << std::endl;
+//        responseHeaderStream_ << "HTTP/1.1 404 Not Found\r\n\r\n";
+//        responseHeader_ = responseHeaderStream_.str();
+//        send(fd, responseHeader_.c_str(), responseHeader_.length(), 0);
+////        return;
+//    }
 
-    std::string response_ = "HTTP/1.1 200 OK\r\n"
+    string response_ = "HTTP/1.1 200 OK\r\n"
                            "Content-Type: text/html\r\n\r\n" +
-        _getFileContent(resourcePath_); // TODO: <-- Test this.
+        _getFileContent(resourcePath_); // TODO: <-- Test this
 
-    resourceFile_.seekg(0, std::ios::end);
-    contentLength_ = resourceFile_.tellg();
-    resourceFile_.seekg(0, std::ios::beg);
+        send(fd, response_.c_str(), response_.length(), 0);
 
-
-    // allocate memory for the response_ body and read the resource file contents into it
-    responseBody_.resize(contentLength_);
-    resourceFile_.read(&responseBody_[0], contentLength_);
-
-    // construct the response_ header with the content length and send it to the client
-    responseHeaderStream_ << "HTTP/1.1 200 OK\r\nContent-Length: " << contentLength_ << "\r\n\r\n";
-    responseHeader_ = responseHeaderStream_.str();
-    send(fd, responseHeader_.c_str(), responseHeader_.length(), 0);
-
-    // send the response_ body to the client in chunks
-    bytesSent_ = 0;
-    while (bytesSent_ < contentLength_) {
-        responseSize_ = send(fd, &responseBody_[bytesSent_], contentLength_ - bytesSent_, 0);
-        if (responseSize_ < 0) {
-            // error sending response_ to client
-            break;
-        }
-        bytesSent_ += responseSize_;
-    }
-//    _sendResponse(fd);
+//    resourceFile_.seekg(0, std::ios::end);
+//    contentLength_ = resourceFile_.tellg();
+//    resourceFile_.seekg(0, std::ios::beg);
+//
+//
+//    // allocate memory for the response_ body and read the resource file contents into it
+//    responseBody_.resize(contentLength_);
+//    resourceFile_.read(&responseBody_[0], contentLength_);
+//
+//    // construct the response_ header with the content length and send it to the client
+//    responseHeaderStream_ << "HTTP/1.1 200 OK\r\nContent-Length: " << contentLength_ << "\r\n\r\n";
+//    responseHeader_ = responseHeaderStream_.str();
+//    send(fd, responseHeader_.c_str(), responseHeader_.length(), 0);
+//
+//    // send the response_ body to the client in chunks
+//    bytesSent_ = 0;
+//    while (bytesSent_ < contentLength_) {
+//        responseSize_ = send(fd, &responseBody_[bytesSent_], contentLength_ - bytesSent_, 0);
+//        if (responseSize_ < 0) {
+//            // error sending response_ to client
+//            break;
+//        }
+//        bytesSent_ += responseSize_;
+//    }
+////    _sendResponse(fd);
 }
 
 
@@ -281,7 +304,7 @@ void Server::_handleGET(int fd, const subServersIterator_t &subServersIterator, 
 // */
 
 string Server::_getErrorPage(int code) const {
-    return "www/errors/error-" + std::to_string(code) + ".html";
+    return "www/errors/404/error-" + std::to_string(code) + ".html";
 }
 
 
@@ -347,10 +370,8 @@ void Server::printData() const {
 }
 
 
-std::string Server::_getFileContent(const std::string& path) const {
+string Server::_getFileContent(const std::string& path) const {
     std::ifstream file_(path);
-
-    std::cout << "path: " << path << std::endl;
 
     std::stringstream fileContent_;
     std::string line_;
