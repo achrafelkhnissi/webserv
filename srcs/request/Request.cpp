@@ -16,11 +16,11 @@ Request::Request() {
 }
 
 void    Request::setRequest() {
-    std::cout << "Host: "; std::cin >> host;
-    std::cout << "Port: "; std::cin >> port;
-    std::cout << "Protocol: "; std::cin >> protocol;
-    std::cout << "Version: "; std::cin >> version;
-    std::cout << "Method: "; std::cin >> method;
+//    std::cout << "Host: "; std::cin >> host;
+//    std::cout << "Port: "; std::cin >> port;
+//    std::cout << "Protocol: "; std::cin >> protocol;
+//    std::cout << "Version: "; std::cin >> version;
+//    std::cout << "Method: "; std::cin >> method;
     std::cout << "URI: "; std::cin >> uri;
 } // TODO: remove this
 
