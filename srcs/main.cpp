@@ -19,13 +19,12 @@ int main(int ac, char** av) {
     }
 
     toml::table* t = toml::parse_file(config_file);
-	if (t == NULL) {
+	if (t == nullptr) {
 		std::cerr << "Error parsing file" << std::endl;
 		return 1;
 	}
 
     try {
-
         Configuration config(*t);
         //	//t->print();
 
