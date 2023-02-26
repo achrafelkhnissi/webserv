@@ -6,20 +6,19 @@
 #define WEBSERV_SUBSERVER_H
 
 #include <iostream>
-//#include <vector>
 #include "Configuration.hpp"  // Configuration class
 #include "typedefs.hpp"
 
 struct location_s{
 
-	stringVector_t          allowed_methods;
-    string                  index;
-	string                  redirection; // 301, 302, 307
-	string                  root;
-	string                  client_max_body_size;
-	string                  error_pages;
-	string                  prefix;
-	bool                    auto_index;
+	stringVector_t  allowedMethods;
+    string          index;
+	string          redirection; // 301, 302, 307
+	string          root;
+	string          clientMaxBodySize;
+	string          errorPages;
+	string          prefix;
+	bool            autoIndex;
     // TODO: add Cgi
 
 };
@@ -27,27 +26,26 @@ struct location_s{
 class SubServer {
 
 private:
-	stringVector_t          _server_name;
-    locationVector_t        _locations;
-	string                 _root;
-	string                 _index;
-	string                 _error_pages;
-	string                 _client_max_body_size;
+	stringVector_t      _serverName;
+    locationVector_t    _locations;
+	string              _root;
+	string              _index;
+	string              _errorPages;
+	string              _clientMaxBodySize;
     // TODO: add Cgi
 
 public:
     explicit SubServer(const ServerConfig& config);
     ~SubServer();
 
-    const stringVector_t&    getServerName() const;
-    const string&                 getRoot() const;
-    const string&                 getIndex() const;
-    const string&                 getErrorPages() const;
-    const string&                 getClientMaxBodySize() const;
-    const locationVector_t &            getLocation() const;
-    void    fill_location(const LocationConfig& location_config, location_t& location);
-    void    print_data() const;
-
+    void                    printData() const;
+    void                    fillLocation(const LocationConfig& locationConfig, location_t& location);
+    const string&           getRoot() const;
+    const string&           getIndex() const;
+    const string&           getErrorPages() const;
+    const string&           getClientMaxBodySize() const;
+    const stringVector_t&   getServerName() const;
+    const locationVector_t& getLocation() const;
 };
 
 

@@ -16,7 +16,7 @@ LocationConfig fill_location(toml::table& location) {
 	l.cgi_path = location["cgi_path"].as_str("/var/www/html/cgi");
 	l.cgi_extension = location["cgi_extension"].as_str(".cgi");
 	l.cgi_pass = location["cgi_pass"].as_str("");
-	l.client_max_body_size = location["client_max_body_size"].as_str("10m");
+	l.client_max_body_size = location["_clientMaxBodySize"].as_str("10m");
 	l.error_page = location["error_page"].as_str("404 /404.html");
 	return l;
 }
@@ -30,7 +30,7 @@ ServerConfig fill_server(toml::table& server) {
 	}
 	s.root = server["root"].as_str("/var/www/html");
 	s.error_page = server["error_page"].as_str("404 /404.html");
-	s.client_max_body_size = server["client_max_body_size"].as_str("10m");
+	s.client_max_body_size = server["_clientMaxBodySize"].as_str("10m");
 
 	toml::table& t = server["location"];
 	for (size_t i = 0; i < t.vec.size(); i++) {

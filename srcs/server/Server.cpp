@@ -1,5 +1,6 @@
 #include "Server.hpp"
 
+
 /*
  * Server class - This class is responsible for creating a server object
  *
@@ -7,65 +8,58 @@
  */
  Server::Server(Configuration config): _config(config), _request() {
 
-	 _error_pages[400] = "www/errors/error-400.html";
-	 _error_pages[401] = "www/errors/error-401.html";
-	 _error_pages[403] = "www/errors/error-403.html";
-	 _error_pages[404] = "www/errors/error-404.html";
-	 _error_pages[405] = "www/errors/error-405.html";
-	 _error_pages[500] = "www/errors/error-500.html";
+    vector<ServerConfig> servers_ = _config.getServers();
 
-    vector<ServerConfig> servers = _config.getServers();
-
-    for (vector<ServerConfig>::iterator it = servers.begin(); it != servers.end(); ++it) {
-        if (_vserver.find(it->port) != _vserver.end()) {
-            _vserver[it->port].addSubServer(*it);
+    for (vector<ServerConfig>::iterator it_ = servers_.begin(); it_ != servers_.end(); ++it_) {
+        if (_virtualServer.find(it_->port) != _virtualServer.end()) {
+            _virtualServer[it_->port].addSubServer(*it_);
         } else {
-            _vserver[it->port] = Vserver(*it);
+            _virtualServer[it_->port] = VirtualServer(*it_);
         }
     }
-    for (virtualServerMapIterator_t it = _vserver.begin(); it != _vserver.end(); ++it) {
-        _setup_vserver(it->second);
+    for (virtualServerMapIterator_t it_ = _virtualServer.begin(); it_ != _virtualServer.end(); ++it_) {
+        _setupVirtualServer(it_->second);
     }
 
-    for (virtualServerMapIterator_t it = _vserver.begin(); it != _vserver.end(); ++it) {
-        it->second.print_data();
+    for (virtualServerMapIterator_t it_ = _virtualServer.begin(); it_ != _virtualServer.end(); ++it_) {
+        it_->second.printData();
     }
 
 }
 
-void Server::_setup_vserver(Vserver& vserver) {
+void Server::_setupVirtualServer(VirtualServer& vserver) {
     // Create a socket
-    int _server_fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (_server_fd == -1)
+    int serverFd_ = socket(AF_INET, SOCK_STREAM, 0);
+    if (serverFd_ == -1)
         _error("socket");
 
     // Set the server socket to non-blocking mode
-    if (fcntl(_server_fd, F_SETFL, O_NONBLOCK) < 0)
+    if (fcntl(serverFd_, F_SETFL, O_NONBLOCK) < 0)
         _error("fcntl");
 
     // Set the server socket to reuse the address
-    int optval = 1;
-    if (setsockopt(_server_fd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) < 0)
+    int optionValue_ = 1;
+    if (setsockopt(serverFd_, SOL_SOCKET, SO_REUSEADDR, &optionValue_, sizeof(optionValue_)) < 0)
         _error("setsockopt");
 
     // Bind the socket to the port and host
-    struct sockaddr_in server_addr = {};
-    memset(&server_addr, 0, sizeof(server_addr));
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_addr.s_addr = INADDR_ANY;
-    server_addr.sin_port = htons(vserver.getPort());
+    struct sockaddr_in serverAddr_ = {};
+    memset(&serverAddr_, 0, sizeof(serverAddr_));
+    serverAddr_.sin_family = AF_INET;
+    serverAddr_.sin_addr.s_addr = INADDR_ANY;
+    serverAddr_.sin_port = htons(vserver.getPort());
 
-    if (bind(_server_fd, (struct sockaddr *) &server_addr, sizeof(server_addr)) == -1)
+    if (bind(serverFd_, (struct sockaddr *) &serverAddr_, sizeof(serverAddr_)) == -1)
         strerror(errno);
 
     // Listen for incoming connections
-    if (listen(_server_fd, SOMAXCONN) == -1)
+    if (listen(serverFd_, SOMAXCONN) == -1)
         _error("listen");
 
-    struct pollfd server_fd = {};
-    server_fd.fd = _server_fd;
-    server_fd.events = POLLIN;
-    _fds.push_back(server_fd);
+    struct pollfd serverPollFd_ = {};
+    serverPollFd_.fd = serverFd_;
+    serverPollFd_.events = POLLIN;
+    _fds.push_back(serverPollFd_);
 
 }
 
@@ -74,26 +68,26 @@ void Server::start() {
 
     // Start the server loop
     while (true) {
-        int ready = poll(_fds.data(), _fds.size(), -1);
+        int ready_ = poll(_fds.data(), _fds.size(), -1);
 
-        if (ready == -1)
+        if (ready_ == -1)
             _error("poll");
 
-        if (ready == 0)
+        if (ready_ == 0)
             _error("poll timeout");
 
 
         // Loop through the server fds and handle connections
-        for (size_t i = 0; i < _vserver.size(); i++) {
+        for (size_t i = 0; i < _virtualServer.size(); i++) {
             if (_fds[i].revents & POLLIN) {
-                _handle_connections(_fds[i].fd);
+                _handleConnections(_fds[i].fd);
             }
         }
 
         // Loop through the client fds and handle requests
-        for (pollfdsVectorIterator_t it = _fds.begin() + _vserver.size(); it != _fds.end(); ++it) {
+        for (pollfdsVectorIterator_t it = _fds.begin() + _virtualServer.size(); it != _fds.end(); ++it) {
             if (it->revents & POLLIN) {
-                _handle_request(it);
+                _handleRequest(it);
             }
         }
     }
@@ -101,224 +95,197 @@ void Server::start() {
 }
 
 Server::~Server() {
-    _clear_pollfds();
+    _clearPollfds();
 }
 
-void Server::_handle_connections(int sockfd) {
+void Server::_handleConnections(int sockfd) {
 
     while (true) {
-        struct sockaddr_in client_addr = {};
-        socklen_t client_len = sizeof(client_addr);
-        int client_fd = accept(sockfd, (struct sockaddr*)&client_addr, &client_len);
-        if (client_fd == -1) {
+        struct sockaddr_in sockAddrIn_ = {};
+        socklen_t clientLen_ = sizeof(sockAddrIn_);
+        int clientFd_ = accept(sockfd, (struct sockaddr*)&sockAddrIn_, &clientLen_);
+        if (clientFd_ == -1) {
             if (errno == EWOULDBLOCK || errno == EAGAIN) {
                 break;
             } else {
                 _error("accept");
             }
         }
-        // Add the client socket to the pollfds list
-        struct pollfd client = {};
-        client.fd = client_fd;
-        client.events = POLLIN;
-        _fds.push_back(client);
+        // Add the clientPollFd_ socket to the pollfds list
+        struct pollfd clientPollFd_ = {};
+        clientPollFd_.fd = clientFd_;
+        clientPollFd_.events = POLLIN;
+        _fds.push_back(clientPollFd_);
 
-        std::cout << "Accepted connection on fd " << client_fd << std::endl;
+        std::cout << "Accepted connection on fd " << clientFd_ << std::endl;
     }
 }
 
-hostPortPair_t getHostPortFromRequest(const string& request) {
-    std::string host;
-    int port = 80; // default HTTP port
-
-    // Find the Host header in the request
-    size_t hostPos = request.find("Host:");
-    if (hostPos != string::npos) {
-        hostPos += 6; // move to the start of the host string
-        size_t hostEndPos = request.find("\r\n", hostPos);
-        if (hostEndPos != string::npos) {
-            host = request.substr(hostPos, hostEndPos - hostPos);
-        }
-    }
-
-    // Find the port number in the host string, if specified
-    size_t portPos = host.find(':');
-    if (portPos != string::npos) {
-        port = std::stoi(host.substr(portPos + 1));
-        host = host.substr(0, portPos);
-    }
-
-    return std::make_pair(host, port);
-}
-
-void Server::_handle_request(pollfdsVectorIterator_t it) {
+void Server::_handleRequest(pollfdsVectorIterator_t it) {
     // Handle the request
 
-    string method = _request.getMethod();
+    string method_ = _request.getMethod();
 
 
-    char buffer[BUFFER_SIZE];
-    ssize_t bytes_read = recv(it->fd, buffer, BUFFER_SIZE, 0);
+    char buffer_[BUFFER_SIZE];
+    ssize_t bytesRead_ = recv(it->fd, buffer_, BUFFER_SIZE, 0);
 
-     hostPortPair_t host_port = getHostPortFromRequest(buffer);
-
-
-    if (bytes_read == -1)
+    if (bytesRead_ == -1)
         _error("recv");
 
-    if (bytes_read == 0) {
+    if (bytesRead_ == 0) {
         std::cout << "Closed connection on fd " << it->fd << std::endl;
         close(it->fd);
         _fds.erase(it);
         return;
     }
 
-    buffer[bytes_read] = '\0';
-    std::cout << "Received " << bytes_read << " bytes on fd " << it->fd << std::endl;
+    buffer_[bytesRead_] = '\0';
+    std::cout << "Received " << bytesRead_ << " bytes on fd " << it->fd << std::endl;
 
     std::cout << "=== REQUEST RECEIVED ===" << std::endl;
-    std::cout << buffer << std::endl;
+    std::cout << buffer_ << std::endl;
     _request.setRequest();
     std::cout << "=== END OF REQUEST ===" << std::endl;
 
     // Match the port and host to the correct server
-    virtualServerMapIterator_t vserver_iter = _vserver.find(_request.getPort());
+    virtualServerMapIterator_t vserverIter_ = _virtualServer.find(_request.getPort());
 
-    subServersIterator_t subserv_it = vserver_iter->second.matchSubServer(_request.getHost());
+    subServersIterator_t subServerIter_ = vserverIter_->second.matchSubServer(_request.getHost());
 
-    subserv_it->print_data();
+    subServerIter_->printData();
 
-    // Check if the mothod is allowed!
-
-//     Send the response to the client
     if (_request.getMethod() == "GET")
-        _handle_get(it->fd, subserv_it, _request);
+        _handleGET(it->fd, subServerIter_, _request);
 }
 
-void Server::_clear_pollfds() {
-    pollfdsVectorIterator_t it = _fds.begin();
-    pollfdsVectorIterator_t end = _fds.end();
+void Server::_clearPollfds() {
+    pollfdsVectorIterator_t iter_ = _fds.begin();
+    pollfdsVectorIterator_t iterEnd_ = _fds.end();
 
-    for(; it != end; it++)
-        close(it->fd);
+    for(; iter_ != iterEnd_; iter_++)
+        close(iter_->fd);
     _fds.clear();
 }
 
-void Server::_send_response(int fd) {
-// Send the response to the client
-    string response = "HTTP/1.1 200 OK\r\n"
+void Server::_sendResponse(int fd) {
+// Send the response_ to the client
+    string response_ = "HTTP/1.1 200 OK\r\n"
                            "Content-Type: text/html\r\n\r\n"
                            "<h1>Hello World!</h1>";
-    send(fd, response.c_str(), response.length(), 0);
+    send(fd, response_.c_str(), response_.length(), 0);
 }
 
 
 
 
-void Server::_handle_get(int fd, const subServersIterator_t & sbsrv_it, const Request& _request) {
+void Server::_handleGET(int fd, const subServersIterator_t &subServersIterator, const Request& request) {
 
 
-    (void) sbsrv_it;
-    std::string root_ = sbsrv_it->getRoot();
-    std::string uri_ = _request.getUri();
+    string root_ = subServersIterator->getRoot();
+    string uri_ = request.getUri();
+    string index_ = "index.html";
     location_t    location_;
 
     // Match the uri to the correct location
-    std::vector<location_t>::const_iterator loc_it = sbsrv_it->getLocation().begin();
-    std::vector<location_t>::const_iterator loc_end = sbsrv_it->getLocation().end();
-    for (; loc_it != loc_end; ++loc_it) {
-        if (loc_it->prefix == uri_) {
-            location_ = *loc_it;
+    locationVectorConstIterator_t locIter_ = subServersIterator->getLocation().begin();
+    locationVectorConstIterator_t locIterEnd_ = subServersIterator->getLocation().end();
+    for (; locIter_ != locIterEnd_; ++locIter_) {
+        if (locIter_->prefix == uri_) {
+            location_ = *locIter_;
             break;
         }
     }
 
 
     root_ = location_.root;
-    std::cout << "root: " << root_ << std::endl;
-//    std::string _root = "www/";
-    std::string _index = "index.html";
 
-    std::string resource_path = root_ + uri_ + "/" + _index;
+    string resourcePath_ = root_ + uri_ + "/" + index_;
 
-    std::cout << "index_path: " << resource_path << std::endl;
+    std::cout << "index_path: " << resourcePath_ << std::endl;
 
-    std::ifstream resource_file;
-    std::stringstream response_header_stream;
-    std::string response_header;
-    std::string response_body;
-    int content_length, response_size, bytes_sent;
+    std::ifstream resourceFile_;
+    std::stringstream responseHeaderStream_;
+    string responseHeader_;
+    string responseBody_;
+    int contentLength_, responseSize_, bytesSent_;
 
     // open the requested resource file
-    resource_file.open(resource_path, std::ios::binary);
-    if (!resource_file.is_open()) {
-        // if the file does not exist, send a 404 response
-        response_header_stream << "HTTP/1.1 404 Not Found\r\n\r\n";
-        response_header = response_header_stream.str();
-        send(fd, response_header.c_str(), response_header.length(), 0);
+    resourceFile_.open(resourcePath_, std::ios::binary);
+    if (!resourceFile_.is_open()) {
+        // if the file does not exist, send a 404 response_
+        responseHeaderStream_ << "HTTP/1.1 404 Not Found\r\n\r\n";
+        responseHeader_ = responseHeaderStream_.str();
+        send(fd, responseHeader_.c_str(), responseHeader_.length(), 0);
         return;
     }
 
-    std::string response = "HTTP/1.1 200 OK\r\n"
+    std::string response_ = "HTTP/1.1 200 OK\r\n"
                            "Content-Type: text/html\r\n\r\n" +
-                            getFileContent(resource_path); // TODO: <-- Test this.
+        _getFileContent(resourcePath_); // TODO: <-- Test this.
 
-    resource_file.seekg(0, std::ios::end);
-    content_length = resource_file.tellg();
-    resource_file.seekg(0, std::ios::beg);
+    resourceFile_.seekg(0, std::ios::end);
+    contentLength_ = resourceFile_.tellg();
+    resourceFile_.seekg(0, std::ios::beg);
 
 
-    // allocate memory for the response body and read the resource file contents into it
-    response_body.resize(content_length);
-    resource_file.read(&response_body[0], content_length);
+    // allocate memory for the response_ body and read the resource file contents into it
+    responseBody_.resize(contentLength_);
+    resourceFile_.read(&responseBody_[0], contentLength_);
 
-    // construct the response header with the content length and send it to the client
-    response_header_stream << "HTTP/1.1 200 OK\r\nContent-Length: " << content_length << "\r\n\r\n";
-    response_header = response_header_stream.str();
-    send(fd, response_header.c_str(), response_header.length(), 0);
+    // construct the response_ header with the content length and send it to the client
+    responseHeaderStream_ << "HTTP/1.1 200 OK\r\nContent-Length: " << contentLength_ << "\r\n\r\n";
+    responseHeader_ = responseHeaderStream_.str();
+    send(fd, responseHeader_.c_str(), responseHeader_.length(), 0);
 
-    // send the response body to the client in chunks
-    bytes_sent = 0;
-    while (bytes_sent < content_length) {
-        response_size = send(fd, &response_body[bytes_sent], content_length - bytes_sent, 0);
-        if (response_size < 0) {
-            // error sending response to client
+    // send the response_ body to the client in chunks
+    bytesSent_ = 0;
+    while (bytesSent_ < contentLength_) {
+        responseSize_ = send(fd, &responseBody_[bytesSent_], contentLength_ - bytesSent_, 0);
+        if (responseSize_ < 0) {
+            // error sending response_ to client
             break;
         }
-        bytes_sent += response_size;
+        bytesSent_ += responseSize_;
     }
-//    _send_response(fd);
+//    _sendResponse(fd);
 }
 
 
 //
 ///*
-// *  @disc _handle_post method - This method is responsible for handling POST requests
+// *  @disc _handlePOST method - This method is responsible for handling POST requests
 // * 							and sending a response to the client
 // * 	@param fd: the file descriptor of the client socket
 // */
-//void Server::_handle_post(int fd) {
+//void Server::_handlePOST(int fd) {
 //    // Handle the POST request
 //    // ...
 //    (void)fd;
 //}
 //
 ///*
-// * @disc _handle_delete method - This method is responsible for handling DELETE requests
+// * @disc _handleDELETE method - This method is responsible for handling DELETE requests
 // * @param fd: the file descriptor of the client socket
 // */
-//void Server::_handle_delete(int fd) {
+//void Server::_handleDELETE(int fd) {
 //    // Handle the DELETE request
 //    // ...
 //    (void)fd;
 //}
 //
 ///*
-// * @disc _handle_error method - This method is responsible for handling errors
+// * @disc _handleEerror method - This method is responsible for handling errors
 // *
 // * @param fd: the file descriptor of the client socket
 // */
-//void Server::_handle_error(int fd) {
+
+string Server::_getErrorPage(int code) const {
+    return "www/errors/error-" + std::to_string(code) + ".html";
+}
+
+
+//void Server::_handleEerror(int fd) {
 //    // Handle the error
 //    // ...
 //    (void)fd;
@@ -354,14 +321,14 @@ void Server::_handle_get(int fd, const subServersIterator_t & sbsrv_it, const Re
 //*
 //* @param msg: the error message to print
 //*/
-void Server::_error(const std::string &msg) {
+void Server::_error(const string &msg) {
 //    std::cerr << msg << ": ";
 //    strerror(errno);
     std::perror(msg.c_str());
     exit(EXIT_FAILURE);
 }
 
-void Server::print_data() const {
+void Server::printData() const {
     std::cout << "----------------------------------------" << std::endl;
     std::cout << "Server data:" << std::endl;
     std::cout << "----------------------------------------" << std::endl;
@@ -371,8 +338,8 @@ void Server::print_data() const {
         std::cout << "events: " << it->events << std::endl;
         std::cout << "revents: " << it->revents << std::endl;
     }
-    for (virtualServerMapConstIterator_t it = _vserver.begin(); it != _vserver.end(); it++) {
-        it->second.print_data();
+    for (virtualServerMapConstIterator_t it = _virtualServer.begin(); it != _virtualServer.end(); it++) {
+        it->second.printData();
     }
     std::cout << "----------------------------------------" << std::endl;
     std::cout << "Server data end" << std::endl;
@@ -380,17 +347,17 @@ void Server::print_data() const {
 }
 
 
-std::string Server::getFileContent(const std::string& path) const {
-    std::ifstream file(path);
+std::string Server::_getFileContent(const std::string& path) const {
+    std::ifstream file_(path);
 
     std::cout << "path: " << path << std::endl;
 
-    std::stringstream fileContent;
-    std::string line;
-    while (std::getline(file, line)) {
-        fileContent << line << std::endl;
+    std::stringstream fileContent_;
+    std::string line_;
+    while (std::getline(file_, line_)) {
+        fileContent_ << line_ << std::endl;
     }
-    return fileContent.str();
+    return fileContent_.str();
  }
 
 /*

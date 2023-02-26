@@ -9,7 +9,7 @@
 
 
 class SubServer;
-class Vserver;
+class VirtualServer;
 class Server;
 
 typedef struct location_s location_t;
@@ -19,7 +19,7 @@ typedef std::vector<pollfd>                         pollfdsVector_t;
 typedef std::vector<pollfd>::iterator               pollfdsVectorIterator_t;
 typedef std::vector<pollfd>::const_iterator         pollfdsVectorConstIterator_t;
 
-typedef std::map<int, Vserver>                      virtualServerMap_t;
+typedef std::map<int, VirtualServer>                      virtualServerMap_t;
 typedef virtualServerMap_t::iterator                virtualServerMapIterator_t ;
 typedef virtualServerMap_t::const_iterator          virtualServerMapConstIterator_t;
 
@@ -46,7 +46,7 @@ typedef std::vector<std::string>::iterator          stringVectorIterator_t;
 typedef std::vector<std::string>::const_iterator    stringVectorConstIterator_t;
 
 #include "Server.hpp"
-#include "Vserver.hpp"
+#include "VirtualServer.hpp"
 #include "SubServer.hpp"
 
 #endif //WEBSERV_TYPEDEFS_HPP

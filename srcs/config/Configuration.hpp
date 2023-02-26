@@ -36,7 +36,7 @@ struct LocationConfig {
 		std::cout << s << "cgi_path: " << cgi_path << std::endl;
 		std::cout << s << "cgi_extension: " << cgi_extension << std::endl;
 		std::cout << s << "cgi_pass: " << cgi_pass << std::endl;
-		std::cout << s << "client_max_body_size: " << client_max_body_size << std::endl;
+		std::cout << s << "_clientMaxBodySize: " << client_max_body_size << std::endl;
 		std::cout << s << "error_page: " << error_page << std::endl;
 		std::cout << std::endl;
 	}
@@ -63,7 +63,7 @@ struct ServerConfig {
 		std::cout << std::endl;
 		std::cout << "root: " << root << std::endl;
 		std::cout << "error_page: " << error_page << std::endl;
-		std::cout << "client_max_body_size: " << client_max_body_size << std::endl;
+		std::cout << "_clientMaxBodySize: " << client_max_body_size << std::endl;
 		for (size_t i = 0; i < locations.size(); i++) {
 			std::cout << "location " << i << ":" << std::endl;
 			locations[i].print(1);

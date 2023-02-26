@@ -5,7 +5,7 @@ host = "10.0.0.1"
 server_name = ["example.com", "example2.com", "example3.com"]
 root = "www/html"
 error_page = "404 /404.html"
-client_max_body_size = "10m"
+_clientMaxBodySize = "10m"
 
 [[server.location]]
 path = "/html4"
@@ -17,7 +17,7 @@ error_page = "404 /404.html"
 prefix=""
 redirect = "http://example.com"
 autoindex = "on"
-client_max_body_size = "10m"
+_clientMaxBodySize = "10m"
 
 [server.location.location]
 path = "/1"
@@ -32,7 +32,7 @@ error_page = "404 /404.html"
 prefix=""
 redirect = "http://example.com"
 autoindex = "on"
-client_max_body_size = "10m"
+_clientMaxBodySize = "10m"
 
 [[server]]
 port = "8080"
