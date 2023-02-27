@@ -182,98 +182,117 @@ void Server::_sendResponse(int fd) {
 
 void Server::_handleGET(int fd, const subServersIterator_t &subServersIterator, const Request& request) {
 
-    string root_ = subServersIterator->getRoot();
-    string uri_ = request.getUri();
-    string index_ = "index.html";
-    location_t    location_;
+	string root_ = subServersIterator->getRoot();
+	string uri_ = request.getUri();
+	string index_ = "index.html";
+	location_t location_ = {};
 
-    // Match the uri to the correct location
+	// Match the uri to the correct location
 
-    string str_ = uri_;
-    std::cout << "uri: " << uri_ << " | len: " << str_.size() << std::endl;
+	string str_ = uri_;
+	std::cout << "uri: " << uri_ << " | len: " << str_.size() << std::endl;
 
-    bool isMatch_ = false;
-    while (!isMatch_) {
-
-        locationVectorConstIterator_t locIter_ = subServersIterator->getLocation().begin();
-        locationVectorConstIterator_t locIterEnd_ = subServersIterator->getLocation().end();
-        for (; locIter_ != locIterEnd_; ++locIter_) {
+	bool isMatch_ = false;
+	while (!isMatch_) {
+		if (str_.empty())
+			break;
+		locationVectorConstIterator_t locIter_ = subServersIterator->getLocation().begin();
+		locationVectorConstIterator_t locIterEnd_ = subServersIterator->getLocation().end();
+		for (; locIter_ != locIterEnd_; ++locIter_) {
 //            std::cout << "locIter: " << locIter_->prefix << std::endl;
-            if (locIter_->prefix == str_) {
-                location_ = *locIter_;
-                isMatch_ = true;
-                std::cout << "matched: " << str_ << std::endl;
-                break;
-            }
-        }
-        std::size_t found_ = str_.find_last_of("/");
-        if (found_ != std::string::npos) {
-            str_ = str_.substr(0, found_);
-            if (str_ == "/")
-                break;
-        }
-    }
+			if (locIter_->prefix == str_) {
+				location_ = *locIter_;
+				isMatch_ = true;
+				std::cout << "matched: " << str_ << std::endl;
+				break;
+			}
+		}
+		std::size_t found_ = str_.find_last_of("/");
+		if (found_ != std::string::npos) {
+			str_ = str_.substr(0, found_);
+			if (str_ == "/")
+				break;
+		}
+		std::cout << "hereee" << std::endl;
+	}
 
-    root_ = location_.root;
+//	if (!isMatch_) {
+//        std::stringstream response_stream;
+//        response_stream << "HTTP/1.1 404 Not Found\r\n\r\n"; //TODO: send 404.html
+//		// 	string resourcePath_ = "www/errors/404/error-404.html";
+//
+//        std::string response = response_stream.str();
+//        send(fd, response.c_str(), response.length(), 0);
+//        return;
+//	}
+
+	root_ = location_.root;
 
 //    string resourcePath_ = root_ + uri_ + "/" + index_;
-    string resourcePath_ = "www/errors/404/error-404.html";
+	string resourcePath_ = "www/index.html";
+	std::cout << "index_path: " << resourcePath_ << std::endl;
 
-
-    std::cout << "index_path: " << resourcePath_ << std::endl;
-
-    std::ifstream resourceFile_;
-    std::stringstream responseHeaderStream_;
-    string responseHeader_;
-    string responseBody_;
-//    int contentLength_, responseSize_, bytesSent_;
-
-    // open the requested resource file
-//    resourceFile_.open(resourcePath_, std::ios::binary);
-//    if (!resourceFile_.is_open()) {
-//        // if the file does not exist, send a 404 response_
-//        std::cout << "404 Not Found" << std::endl;
-//        resourcePath_ = _getErrorPage(404);
-//        std::cout << "error_page: " << resourcePath_ << std::endl;
-//        responseHeaderStream_ << "HTTP/1.1 404 Not Found\r\n\r\n";
-//        responseHeader_ = responseHeaderStream_.str();
-//        send(fd, responseHeader_.c_str(), responseHeader_.length(), 0);
-////        return;
-//    }
-
-    string response_ = "HTTP/1.1 200 OK\r\n"
-                           "Content-Type: text/html\r\n\r\n" +
-        _getFileContent(resourcePath_); // TODO: <-- Test this
-
-        send(fd, response_.c_str(), response_.length(), 0);
-
-//    resourceFile_.seekg(0, std::ios::end);
-//    contentLength_ = resourceFile_.tellg();
-//    resourceFile_.seekg(0, std::ios::beg);
+//	std::ifstream resourceFile_;
+//	std::stringstream responseHeaderStream_;
+//	string responseHeader_;
+//	string responseBody_;
 //
-//
-//    // allocate memory for the response_ body and read the resource file contents into it
-//    responseBody_.resize(contentLength_);
-//    resourceFile_.read(&responseBody_[0], contentLength_);
-//
-//    // construct the response_ header with the content length and send it to the client
-//    responseHeaderStream_ << "HTTP/1.1 200 OK\r\nContent-Length: " << contentLength_ << "\r\n\r\n";
-//    responseHeader_ = responseHeaderStream_.str();
-//    send(fd, responseHeader_.c_str(), responseHeader_.length(), 0);
-//
-//    // send the response_ body to the client in chunks
-//    bytesSent_ = 0;
-//    while (bytesSent_ < contentLength_) {
-//        responseSize_ = send(fd, &responseBody_[bytesSent_], contentLength_ - bytesSent_, 0);
-//        if (responseSize_ < 0) {
-//            // error sending response_ to client
-//            break;
-//        }
-//        bytesSent_ += responseSize_;
-//    }
-////    _sendResponse(fd);
+//	send(fd, response_.c_str(), response_.length(), 0);
+
+	  std::ifstream file_stream(resourcePath_, std::ios::binary);
+    if (!file_stream.is_open()) {
+		std::cout << "File not opened!" << std::endl;
+		// file not found, send 404 error
+		exit(1);
+    }
+
+    // get file size
+    file_stream.seekg(0, std::ios::end);
+    size_t content_length = file_stream.tellg();
+    file_stream.seekg(0, std::ios::beg);
+
+    // set content type based on file extension
+    std::string content_type;
+    std::string extension = resourcePath_.substr(resourcePath_.find_last_of(".") + 1);
+	if (extension == "html") {
+		content_type = "text/html";
+	} else if (extension == "jpg" || extension == "jpeg") {
+        content_type = "image/jpeg";
+    } else if (extension == "png") {
+        content_type = "image/png";
+    } else if (extension == "mov") {
+        content_type = "video/mov";
+    } else if (extension == "mp3") {
+        content_type = "audio/mpeg";
+    } else {
+        // unknown file type, send 415 error
+        std::stringstream response_stream;
+        response_stream << "HTTP/1.1 415 Unsupported Media Type\r\n\r\n"; //TODO: test without stream
+        std::string response = response_stream.str();
+        send(fd, response.c_str(), response.length(), 0);
+        return;
+    }
+
+    // send HTTP response header
+    std::stringstream response_stream;
+    response_stream << "HTTP/1.1 200 OK\r\n";
+    response_stream << "Content-Length: " << content_length << "\r\n";
+    response_stream << "Content-Type: " << content_type << "\r\n\r\n";
+    std::string response_header = response_stream.str();
+    send(fd, response_header.c_str(), response_header.length(), 0);
+
+    // send file contents in chunks
+    const size_t CHUNK_SIZE = 1024 * 1024; // 1 MB chunk size
+    char buffer[CHUNK_SIZE];
+    while (file_stream.good()) {
+        file_stream.read(buffer, CHUNK_SIZE);
+        size_t bytes_read = file_stream.gcount();
+        if (bytes_read <= 0) {
+            break;
+        }
+        send(fd, buffer, bytes_read, 0);
+    }
 }
-
 
 //
 ///*
