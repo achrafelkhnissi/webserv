@@ -10,7 +10,7 @@ Request::Request() {
 	protocol = "HTTP";
 	version = "1.1";
 	method = "GET";
-	uri = "/";
+	uri = "";
 	query = "name=ismail&age=23";
 	body = "Hello World";
 }
@@ -21,7 +21,7 @@ void    Request::setRequest() {
 //    std::cout << "Protocol: "; std::cin >> protocol;
 //    std::cout << "Version: "; std::cin >> version;
 //    std::cout << "Method: "; std::cin >> method;
-    std::cout << "URI: "; std::cin >> uri;
+//    std::cout << "URI: "; std::cin >> uri;
 } // TODO: remove this
 
 void Request::printData() const {
