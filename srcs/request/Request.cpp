@@ -21,7 +21,10 @@ void    Request::setRequest() {
 //    std::cout << "Protocol: "; std::cin >> protocol;
 //    std::cout << "Version: "; std::cin >> version;
 //    std::cout << "Method: "; std::cin >> method;
-//    std::cout << "URI: "; std::cin >> uri;
+    std::cout << "URI: "; std::cin >> uri;
+	if (uri == "empty") { //TODO: remove this later
+		uri = "";
+	}
 } // TODO: remove this
 
 void Request::printData() const {
