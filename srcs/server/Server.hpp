@@ -2,7 +2,7 @@
 #define SERVER_HPP
 
 #include <vector>                       // std::vector
-
+#include <sys/stat.h>				   // stat
 #include "VirtualServer.hpp"                  // VirtualServer class
 #include "SubServer.hpp"                // SubServer class
 #include "Configuration.hpp"  // Configuration class
@@ -49,6 +49,7 @@ private:
     void    _clearPollfds();
     void    _error(const string& msg);
     void    _setupVirtualServer(VirtualServer& vserver);
+	bool 	_isDirectory(const std::string &dirPath) const;
 
     string  _getErrorPage(int code) const;
     string  _getFileContent(const string& path) const;
