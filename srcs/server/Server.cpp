@@ -21,9 +21,9 @@
         _setupVirtualServer(it_->second);
     }
 
-    for (virtualServerMapIterator_t it_ = _virtualServer.begin(); it_ != _virtualServer.end(); ++it_) {
-        it_->second.printData();
-    }
+//    for (virtualServerMapIterator_t it_ = _virtualServer.begin(); it_ != _virtualServer.end(); ++it_) {
+//        it_->second.printData();
+//    }
 
 }
 
@@ -116,8 +116,6 @@ void Server::_handleConnections(int sockfd) {
         clientPollFd_.fd = clientFd_;
         clientPollFd_.events = POLLIN;
         _fds.push_back(clientPollFd_);
-
-        std::cout << "Accepted connection on fd " << clientFd_ << std::endl;
     }
 }
 
@@ -134,14 +132,12 @@ void Server::_handleRequest(pollfdsVectorIterator_t it) {
         _error("recv");
 
     if (bytesRead_ == 0) {
-        std::cout << "Closed connection on fd " << it->fd << std::endl;
         close(it->fd);
         _fds.erase(it);
         return;
     }
 
     buffer_[bytesRead_] = '\0';
-    std::cout << "Received " << bytesRead_ << " bytes on fd " << it->fd << std::endl;
 
     std::cout << "=== REQUEST RECEIVED ===" << std::endl;
     std::cout << buffer_ << std::endl;
@@ -153,7 +149,7 @@ void Server::_handleRequest(pollfdsVectorIterator_t it) {
 
     subServersIterator_t subServerIter_ = vserverIter_->second.matchSubServer(_request.getHost());
 
-    subServerIter_->printData();
+//    subServerIter_->printData();
 
     if (_request.getMethod() == "GET") {
         _handleGET(it->fd, subServerIter_, _request);
@@ -178,78 +174,90 @@ void Server::_sendResponse(int fd) {
 }
 
 
+    bool Server::_isDirectory(const std::string &dirPath) const {
+        struct stat info = {};
+        return stat(dirPath.c_str(), &info) == 0 && (info.st_mode & S_IFDIR);
+    }
 
-
+/*
+ * TODO:
+ * 		- Match the location to the uri first even if the root is setted
+ * 		- If not location is matched then use the root
+ * 		- If the index.html not found then return 404 or 403 (still not sure why 403)
+ */
 void Server::_handleGET(int fd, const subServersIterator_t &subServersIterator, const Request& request) {
 
 	string root_ = subServersIterator->getRoot();
-	string uri_ = request.getUri();
-	string index_ = "index.html";
+	string uri_ = request.getUri().empty() ? "/" : request.getUri();
+	string index_ = subServersIterator->getIndex();
+	std::cout << "index: " <<  index_ << std::endl;
 	location_t location_ = {};
 
 	// Match the uri to the correct location
 
 	string str_ = uri_;
-	std::cout << "uri: " << uri_ << " | len: " << str_.size() << std::endl;
 
 	bool isMatch_ = false;
-	while (!isMatch_) {
-		if (str_.empty())
-			break;
+	do {
 		locationVectorConstIterator_t locIter_ = subServersIterator->getLocation().begin();
 		locationVectorConstIterator_t locIterEnd_ = subServersIterator->getLocation().end();
 		for (; locIter_ != locIterEnd_; ++locIter_) {
-//            std::cout << "locIter: " << locIter_->prefix << std::endl;
 			if (locIter_->prefix == str_) {
 				location_ = *locIter_;
 				isMatch_ = true;
-				std::cout << "matched: " << str_ << std::endl;
 				break;
 			}
 		}
 		std::size_t found_ = str_.find_last_of("/");
-		if (found_ != std::string::npos) {
+		if (found_ != std::string::npos){
 			str_ = str_.substr(0, found_);
-			if (str_ == "/")
-				break;
 		}
-		std::cout << "hereee" << std::endl;
-	}
+
+	} while (!str_.empty() && !isMatch_);
 
 //	if (!isMatch_) {
-//        std::stringstream response_stream;
-//        response_stream << "HTTP/1.1 404 Not Found\r\n\r\n"; //TODO: send 404.html
-//		// 	string resourcePath_ = "www/errors/404/error-404.html";
-//
-//        std::string response = response_stream.str();
-//        send(fd, response.c_str(), response.length(), 0);
-//        return;
+////        std::stringstream response_stream;
+////        response_stream << "HTTP/1.1 404 Not Found\r\n\r\n"; //TODO: send 404.html
+////		// 	string resourcePath_ = "www/errors/404/error-404.html";
+////        std::string response = response_stream.str();
+////        send(fd, response.c_str(), response.length(), 0);
+////        return;
 //	}
 
-	root_ = location_.root;
+// TODO: if is match then use the location infos
+	if (isMatch_){
+		root_ = location_.root;
+		index_ = location_.index;
+	}
 
-//    string resourcePath_ = root_ + uri_ + "/" + index_;
-	string resourcePath_ = "www/index.html";
+
+	// Check if the uri is a directory
+
+    string resourcePath_ = root_ + uri_;
+	if (_isDirectory(resourcePath_)){
+		if (resourcePath_.back() != '/')
+			resourcePath_ += "/";
+		resourcePath_ += index_;
+	}
+
 	std::cout << "index_path: " << resourcePath_ << std::endl;
 
-//	std::ifstream resourceFile_;
-//	std::stringstream responseHeaderStream_;
-//	string responseHeader_;
-//	string responseBody_;
-//
-//	send(fd, response_.c_str(), response_.length(), 0);
-
-	  std::ifstream file_stream(resourcePath_, std::ios::binary);
+	std::ifstream file_stream(resourcePath_, std::ios::binary);
     if (!file_stream.is_open()) {
 		std::cout << "File not opened!" << std::endl;
+		::perror("open");
 		// file not found, send 404 error
+		file_stream.close();
 		exit(1);
     }
 
+	stringstream string_stream;
+	string_stream << file_stream.rdbuf();
+
     // get file size
-    file_stream.seekg(0, std::ios::end);
-    size_t content_length = file_stream.tellg();
-    file_stream.seekg(0, std::ios::beg);
+//    file_stream.seekg(0, std::ios::end);
+//    size_t content_length = file_stream.tellg();
+//    file_stream.seekg(0, std::ios::beg);
 
     // set content type based on file extension
     std::string content_type;
@@ -264,34 +272,45 @@ void Server::_handleGET(int fd, const subServersIterator_t &subServersIterator, 
         content_type = "video/mov";
     } else if (extension == "mp3") {
         content_type = "audio/mpeg";
+	} else if (extension == "mp4") {
+        content_type = "video/mp4";
     } else {
         // unknown file type, send 415 error
         std::stringstream response_stream;
         response_stream << "HTTP/1.1 415 Unsupported Media Type\r\n\r\n"; //TODO: test without stream
         std::string response = response_stream.str();
         send(fd, response.c_str(), response.length(), 0);
+		file_stream.close();
+		response_stream.clear();
         return;
     }
 
     // send HTTP response header
     std::stringstream response_stream;
     response_stream << "HTTP/1.1 200 OK\r\n";
-    response_stream << "Content-Length: " << content_length << "\r\n";
+    response_stream << "Content-Length: " << string_stream.str().size() << "\r\n";
     response_stream << "Content-Type: " << content_type << "\r\n\r\n";
     std::string response_header = response_stream.str();
     send(fd, response_header.c_str(), response_header.length(), 0);
 
     // send file contents in chunks
-    const size_t CHUNK_SIZE = 1024 * 1024; // 1 MB chunk size
+    const size_t CHUNK_SIZE = 1024;
     char buffer[CHUNK_SIZE];
-    while (file_stream.good()) {
-        file_stream.read(buffer, CHUNK_SIZE);
-        size_t bytes_read = file_stream.gcount();
+
+	std::cout << "Sending file..." << std::endl;
+
+    while (string_stream.good()) {
+        string_stream.read(buffer, CHUNK_SIZE);
+        size_t bytes_read = string_stream.gcount();
         if (bytes_read <= 0) {
             break;
         }
         send(fd, buffer, bytes_read, 0);
+		std::cout << "bytes_read: " << bytes_read << std::endl;
     }
+	std::cout << "Done sending file" << std::endl;
+	response_stream.clear();
+	file_stream.close();
 }
 
 //
