@@ -60,3 +60,4 @@
 * [HTTP/1.1: Message Headers](https://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html)
 * [HTTP/1.1: Message Syntax and Routing](https://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html)
 * [HTTP/1.1: Message Headers](https://www.w3.org/Protocols/rfc2616/rfc2616-sec6.html)
+* [File Examples](https://file-examples.com/)

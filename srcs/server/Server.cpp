@@ -274,6 +274,8 @@ void Server::_handleGET(int fd, const subServersIterator_t &subServersIterator, 
         content_type = "audio/mpeg";
 	} else if (extension == "mp4") {
         content_type = "video/mp4";
+    } else if (extension == "webm") {
+        content_type = "video/webm";
     } else {
         // unknown file type, send 415 error
         std::stringstream response_stream;
