@@ -11,7 +11,6 @@ SubServer::SubServer(const ServerConfig &config) {
     _errorPages = config.error_page;
     _clientMaxBodySize = config.client_max_body_size;
 
-
     std::vector<LocationConfig>::const_iterator iter_ = config.locations.begin();
     std::vector<LocationConfig>::const_iterator iterEnd_ = config.locations.end();
 
