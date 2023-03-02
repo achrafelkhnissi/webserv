@@ -1,12 +1,12 @@
 #include "HttpParser.hpp"
+#include <string>
 
 HttpParser::HttpParser() {
 	state = HttpParser::p_status_line;
 	sl_state = HttpParser::sl_start;
 }
 
-HttpParser::~HttpParser() {
-}
+HttpParser::~HttpParser() { }
 
 HttpParser::e_status HttpParser::append(char c) {
 	switch (state) {
@@ -21,7 +21,7 @@ HttpParser::e_status HttpParser::append(char c) {
 	return HttpParser::FAILED;
 }
 
-HttpParser::e_status HttpParser::push(std::string &chunk) {
+HttpParser::e_status HttpParser::push(std::string& chunk) {
 	for (size_t i = 0; i < chunk.size(); i++) {
 		switch (append(chunk[i])) {
 		case HttpParser::DONE: {
@@ -65,6 +65,33 @@ static const string methods[] = {
 	"PATCH",
 };
 
+size_t same(string s1, string s2) {
+	if (s1.size() > s2.size() || s1.back() != s2[s1.size() - 1]) {
+		return -1;
+	}
+	size_t i = 0;
+	while (1)
+	{
+		if (i >= s1.size())
+			return s1.size() != s2.size();
+		if (s1[i] != s2[i])
+			return -1;
+		i++;
+	}
+	return 1;
+}
+
+HttpParser::e_status HttpParser::is_method() {
+	for (size_t i = 0; i < sizeof(methods) / sizeof(methods[0]); i++) {
+		size_t diff = same(method, methods[i]);
+		if (diff == 0)
+			return HttpParser::DONE;
+		if (diff == 1)
+			return HttpParser:: CONTINUE;
+	}
+	return HttpParser::FAILED;
+}
+
 HttpParser::e_status HttpParser::status_line_parser(char c) {
 	switch (sl_state) {
 	case sl_start: {
@@ -75,8 +102,12 @@ HttpParser::e_status HttpParser::status_line_parser(char c) {
 	case sl_method_start: {
 		if (c >= 'A' && c <= 'Z') {
 			method.push_back(c);
+			if (is_method() == HttpParser::FAILED)
+				return HttpParser::FAILED;
 			return HttpParser::CONTINUE;
 		}
+		if (is_method() != HttpParser::DONE)
+			return HttpParser::FAILED;
 		sl_state = sl_sp_after_method;
 	}
 	case sl_sp_after_method: {

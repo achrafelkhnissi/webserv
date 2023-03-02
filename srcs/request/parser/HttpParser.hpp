@@ -49,6 +49,7 @@ public:
 
 	e_status push(string& chunk); // process a chunk
 	e_status append(char c); // process a next char
+	e_status is_method();
 	// Request into_request(); // convert to request
 
 	void print() {
