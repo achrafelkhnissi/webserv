@@ -1,9 +1,13 @@
 #include "HttpParser.hpp"
+#include <_ctype.h>
+#include <iostream>
 #include <string>
+#include <utility>
 
 HttpParser::HttpParser() {
 	state = HttpParser::p_status_line;
 	sl_state = HttpParser::sl_start;
+	field.reserve(4100); // 4kb
 }
 
 HttpParser::~HttpParser() { }
@@ -13,10 +17,14 @@ HttpParser::e_status HttpParser::append(char c) {
 	case HttpParser::p_status_line:
 		return status_line_parser(c);
 		break;
-	case HttpParser::p_headers:
+	case HttpParser::p_headers: {
+		return headers_parser(c);
 		break;
-	case HttpParser::p_body:
+	}
+	case HttpParser::p_body: {
+		return HttpParser::DONE;
 		break;
+	}
 	}
 	return HttpParser::FAILED;
 }
@@ -25,12 +33,15 @@ HttpParser::e_status HttpParser::push(std::string& chunk) {
 	for (size_t i = 0; i < chunk.size(); i++) {
 		switch (append(chunk[i])) {
 		case HttpParser::DONE: {
-			if (state == HttpParser::p_body)
+			sl_state = HttpParser::sl_start;
+			next(state);
+			if (state == HttpParser::p_status_line)
 				return HttpParser::DONE;
 			break;
 		}
-		case HttpParser::FAILED:
+		case HttpParser::FAILED: {
 			return HttpParser::FAILED;
+		}
 		case HttpParser::CONTINUE:
 			break;
 		}
@@ -38,7 +49,7 @@ HttpParser::e_status HttpParser::push(std::string& chunk) {
 	return HttpParser::CONTINUE;
 }
 
-HttpParser::e_state& operator++(HttpParser::e_state& s) {
+HttpParser::e_state& next(HttpParser::e_state& s) {
 	switch (s) {
 	case HttpParser::p_status_line:
 		s = HttpParser::p_headers;
@@ -70,8 +81,7 @@ size_t same(string s1, string s2) {
 		return -1;
 	}
 	size_t i = 0;
-	while (1)
-	{
+	while (1) {
 		if (i >= s1.size())
 			return s1.size() != s2.size();
 		if (s1[i] != s2[i])
@@ -87,9 +97,69 @@ HttpParser::e_status HttpParser::is_method() {
 		if (diff == 0)
 			return HttpParser::DONE;
 		if (diff == 1)
-			return HttpParser:: CONTINUE;
+			return HttpParser::CONTINUE;
 	}
 	return HttpParser::FAILED;
+}
+
+HttpParser::e_status HttpParser::headers_parser(char c) {
+	switch (h_state) {
+	case h_start: {
+		if (c == '\r') {
+			h_state = HttpParser::h_crlfcr;
+			return HttpParser::CONTINUE;
+		} else {
+			if (strchr("!#$%&'*+-.^_`|~", c) == NULL && !isalnum(c))
+				return HttpParser::FAILED;
+			h_state = HttpParser::h_key;
+		}
+	}
+	case h_key: {
+		if (c == ':') {
+			h_state = HttpParser::h_spaces_after_colon;
+			return HttpParser::CONTINUE;
+		} else if (strchr("!#$%&'*+-.^_`|~", c) != NULL || isalnum(c))
+			field.push_back(c);
+		else
+			return HttpParser::FAILED;
+		break;
+	}
+	case h_spaces_after_colon: {
+		last_map = headers.insert(make_pair(field, ""));
+		field.clear();
+		h_state = HttpParser::h_value;
+		if (c == ' ')
+			break;
+	}
+	case h_value: {
+		if (c == '\r')
+			h_state = HttpParser::h_cr;
+		else
+			field.push_back(c);
+		break;
+	}
+	case h_cr: {
+		if (c == '\n') {
+			last_map->second = field;
+			field.clear();
+			h_state = HttpParser::h_start;
+			break;
+		} else
+			return HttpParser::FAILED;
+	}
+	case h_crlf: {
+		if (c == '\r')
+			h_state = HttpParser::h_crlfcr;
+		break;
+	}
+	case h_crlfcr: {
+		if (c == '\n')
+			return HttpParser::DONE;
+		return HttpParser::FAILED;
+		break;
+	}
+	}
+	return HttpParser::CONTINUE;
 }
 
 HttpParser::e_status HttpParser::status_line_parser(char c) {
@@ -204,6 +274,7 @@ HttpParser::e_status HttpParser::status_line_parser(char c) {
 	case sl_almost_done: {
 		if (c != '\n')
 			return HttpParser::FAILED;
+		sl_state = sl_start;
 		return HttpParser::DONE;
 	}
 	}

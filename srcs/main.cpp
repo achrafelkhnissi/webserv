@@ -9,14 +9,18 @@
 
 using namespace std;
 
-int main(int ac, char** av) {
+int main() {
 	HttpParser* t = new HttpParser();
-	string s0 = string(av[ac - 1]);
-	if(t->push(s0) != HttpParser::FAILED){
-		t->print();
+	string s0;
+	while (getline(cin, s0)) {
+		s0.push_back('\n');
+		HttpParser::e_status r = t->push(s0);
+		if (r == HttpParser::FAILED) {
+			cout << "FAILED" << endl;
+			break;
+		} else if (r == HttpParser::DONE)
+			cout << "DONE" << endl;
 	}
-	else 
-		cout << "FAILED" << endl;
 	delete t;
 	return 0;
 }

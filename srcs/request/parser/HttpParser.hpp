@@ -4,6 +4,19 @@
 #include <iostream>
 #include <queue>
 #include <string>
+#include <map>
+#include <vector>
+
+using namespace std;
+
+struct Header {
+	string key;
+	string value;
+
+	Header(string key) {
+		this->key = key;
+	}
+};
 
 using namespace std;
 
@@ -59,8 +72,20 @@ public:
 		cout << "Query: " << query << endl;
 	}
 
+	enum e_header_state {
+		h_start,
+		h_key,
+		h_spaces_after_colon,
+		h_value,
+		h_cr,
+		h_crlf,
+		h_crlfcr,
+	};
+
 private:
 	string chunk;
+	string field;
+	multimap<string, string>::iterator last_map;
 
 	string method;
 	string uri;
@@ -71,11 +96,14 @@ private:
 	/* states */
 	e_state state; // general state
 	e_sl_state sl_state; // status line state
+	e_header_state h_state; // header state
 
 	/* utils */
 	e_status status_line_parser(char c);
+	e_status headers_parser(char c);
+	multimap<string, string> headers;
 };
 
-HttpParser::e_state& operator++(HttpParser::e_state& s);
+HttpParser::e_state& next(HttpParser::e_state& s);
 
 #endif
