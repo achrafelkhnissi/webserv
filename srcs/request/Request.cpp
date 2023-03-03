@@ -20,7 +20,7 @@ void    Request::setRequest() {
 //    std::cout << "Port: "; std::cin >> port;
 //    std::cout << "Protocol: "; std::cin >> protocol;
 //    std::cout << "Version: "; std::cin >> version;
-//    std::cout << "Method: "; std::cin >> method;
+    std::cout << "Method: "; std::cin >> method;
     std::cout << "URI: "; std::cin >> uri;
 	if (uri == "empty") { //TODO: remove this later
 		uri = "";
