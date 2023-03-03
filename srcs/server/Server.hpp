@@ -29,6 +29,7 @@ private:
     pollfdsVector_t         _fds;
 	errorPagesMap_t 	    _errorPages;
     Request                 _request;
+    string                  _uploadPath;
 
 
 public:
@@ -42,9 +43,9 @@ private:
     void    _handleConnections(int fd);
     void    _handleRequest(pollfdsVectorIterator_t it);
     void    _sendResponse(int fd);
-    void    _handleGET(int fd, const subServersIterator_t&, const Request&);
-    void    _handlePOST(int fd);
-    void    _handleDELETE(int fd);
+    void    _handleGET(int, const subServersIterator_t&, const Request&);
+    void    _handlePOST(int, const Request&);
+    void    _handleDELETE(int clientSocket);
     void    _handleEerror(int fd);
     void    _clearPollfds();
     void    _error(const string& msg);

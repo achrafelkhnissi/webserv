@@ -18,19 +18,50 @@
 </header>
 
 <main>
+<!--  <section>-->
+<!--    <h2>Table of content</h2>-->
+<!--    <ul>-->
+<!--      <li><a href="html/inc.html">inc/</a></li>-->
+<!--        <li><a href="html/srcs.html">srcs/</a></li>-->
+<!--        <li><a href="html/tests.html">tests/</a></li>-->
+<!--        <li><a href="html/utils.html">utils/</a></li>-->
+<!--        <li><a href="html/www.html">www/</a></li>-->
+<!--        <li><a href="../Makefile">Makefile</a></li>-->
+<!--        <li><a href="../README.md">README.md</a></li>-->
+<!--    </ul>-->
+<!--  </section>-->
+
   <section>
-    <h2>Table of content</h2>
-    <ul>
-      <li><a href="inc/">inc/</a></li>
-        <li><a href="srcs/index.html">srcs/</a></li>
-        <li><a href="tests/">tests/</a></li>
-        <li><a href="utils/">utils/</a></li>
-        <li><a href="Makefile">Makefile</a></li>
-        <li><a href="README.md">README.md</a></li>
-        <li><a href="webserv">webserv</a></li>
-    </ul>
+    <h2> Testing POST request </h2>
+    <form action="/" method="post" enctype="multipart/form-data">
+      <input type="text" name="description" value="some text" />
+      <input type="file" name="myFile" />
+      <button type="submit">Submit</button>
+    </form>
+
   </section>
+
+
+    <section>
+        <h2> Testing GET request </h2>
+      <form action="" method="POST" class="form-example">
+        <div class="form-example">
+          <label for="name">Enter your name: </label>
+          <input type="text" name="name" id="name" required>
+        </div>
+        <div class="form-example">
+          <label for="email">Enter your email: </label>
+          <input type="email" name="email" id="email" required>
+        </div>
+        <div class="form-example">
+          <input type="submit" value="Subscribe!">
+        </div>
+      </form>
+    </section>
+
+
 </main>
+
 
 <footer>
   <p>
@@ -42,7 +73,6 @@
       <li> <a href="https://github.com/JamaaFathiya">Fathiya Jamia</a></li>
       <li> <a href="https://github.com/abellaismail7">Ismail Ait Bella</a></li>
     </ul>
-  </p>
 
 </footer>
 </body>

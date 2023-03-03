@@ -1,11 +1,5 @@
 #include "Server.hpp"
 
-
-/*
- * Server class - This class is responsible for creating a server object
- *
- * @param config: Configuration object that contains all the information from the config file
- */
  Server::Server(Configuration config): _config(config), _request() {
 
     vector<ServerConfig> servers_ = _config.getServers();
@@ -153,6 +147,8 @@ void Server::_handleRequest(pollfdsVectorIterator_t it) {
 
     if (_request.getMethod() == "GET") {
         _handleGET(it->fd, subServerIter_, _request);
+    } else if (_request.getMethod() == "POST") {
+//        _handlePOST(it->fd, _request);
     }
 }
 
@@ -173,18 +169,11 @@ void Server::_sendResponse(int fd) {
     send(fd, response_.c_str(), response_.length(), 0);
 }
 
-
-    bool Server::_isDirectory(const std::string &dirPath) const {
+bool Server::_isDirectory(const std::string &dirPath) const {
         struct stat info = {};
         return stat(dirPath.c_str(), &info) == 0 && (info.st_mode & S_IFDIR);
     }
 
-/*
- * TODO:
- * 		- Match the location to the uri first even if the root is setted
- * 		- If not location is matched then use the root
- * 		- If the index.html not found then return 404 or 403 (still not sure why 403)
- */
 void Server::_handleGET(int fd, const subServersIterator_t &subServersIterator, const Request& request) {
 
 	string root_ = subServersIterator->getRoot();
@@ -268,6 +257,8 @@ void Server::_handleGET(int fd, const subServersIterator_t &subServersIterator, 
         content_type = "image/jpeg";
     } else if (extension == "png") {
         content_type = "image/png";
+    } else if (extension == "css") {
+        content_type = "text/css";
     } else if (extension == "mov") {
         content_type = "video/mov";
     } else if (extension == "mp3") {
@@ -315,18 +306,95 @@ void Server::_handleGET(int fd, const subServersIterator_t &subServersIterator, 
 	file_stream.close();
 }
 
+//void Server::_handlePOST(int clientSocket, const Request& request) {
+//    (void) request;
+//    // read request headers from client
+//    std::string request_headers;
+//    char buffer[1024];
+//    int bytes_received;
+//    do {
+//        bytes_received = recv(clientSocket, buffer, sizeof(buffer), 0);
+//        if (bytes_received < 0) {
+//            // error reading request headers
+//            return;
+//        }
+//        request_headers.append(buffer, bytes_received);
+//    } while (bytes_received == sizeof(buffer));
 //
-///*
-// *  @disc _handlePOST method - This method is responsible for handling POST requests
-// * 							and sending a response to the client
-// * 	@param fd: the file descriptor of the client socket
-// */
-//void Server::_handlePOST(int fd) {
-//    // Handle the POST request
-//    // ...
-//    (void)fd;
+//    // parse request headers to get content length and content type
+//    std::istringstream request_stream(request_headers);
+//    std::string line;
+//    size_t content_length = 0;
+//    std::string content_type;
+//    while (std::getline(request_stream, line)) {
+//        if (line.find("Content-Length:") == 0) {
+//            content_length = std::stoi(line.substr(16));
+//        } else if (line.find("Content-Type:") == 0) {
+//            content_type = line.substr(14);
+//        }
+//    }
+//    // handle request based on content type
+//    if (content_type == "application/x-www-form-urlencoded") {
+//        // handle form data
+//        std::string form_data(&request_body[0], &request_body[0] + content_length);
+//        // process form data...
+//        // create response message
+//        std::stringstream response_stream;
+//        response_stream << "HTTP/1.1 200 OK\r\n\r\n";
+//        response_stream << "<html><body><h1>Form Submitted Successfully</h1></body></html>";
+//        std::string response = response_stream.str();
+//        send(clientSocket, response.c_str(), response.length(), 0);
+//    } else if (content_type == "multipart/form-data") {
+//        // handle file upload
+//        std::string boundary = "--" + content_type.substr(content_type.find("boundary=") + 9);
+//        std::istringstream request_body_stream(std::string(&request_body[0], &request_body[0] + content_length));
+//        std::string line;
+//        std::getline(request_body_stream, line);
+//        while (std::getline(request_body_stream, line)) {
+//            if (line == boundary || line == boundary + "--") {
+//                // end of file upload
+//                break;
+//            } else if (line.find("Content-Disposition:") == 0) {
+//                std::string filename;
+//                size_t filename_start = line.find("filename=\"") + 10;
+//                size_t filename_end = line.find("\"", filename_start);
+//                if (filename_start != std::string::npos && filename_end != std::string::npos) {
+//                    filename = line.substr(filename_start, filename_end - filename_start);
+//                }
+//                std::getline(request_body_stream, line); // skip Content-Type line
+//                std::getline(request_body_stream, line); // skip empty line
+//                std::ofstream file_stream(_uploadPath + filename, std::ios::binary);
+//                if (file_stream.is_open()) {
+//                    while (std::getline(request_body_stream, line)) {
+//                        if (line == boundary || line == boundary + "--") {
+//                            // end of file upload
+//                            break;
+//                        }
+//                        file_stream << line << "\n";
+//                    }
+//                    file_stream.close();
+//                    // create response message
+//                    std::stringstream response_stream;
+//                    response_stream << "HTTP/1.1 200 OK\r\n\r\n";
+//                    response_stream << "<html><body><h1>File Uploaded Successfully</h1></body></html>";
+//                    std::string response = response_stream.str();
+//                    send(clientSocket, response.c_str(), response.length(), 0);
+//                } else {
+//                    // error opening file stream
+//                    return;
+//                }
+//            }
+//        }
+//    } else {
+//        // unsupported content type
+//        std::stringstream response_stream;
+//        response_stream << "HTTP/1.1 400 Bad Request\r\n\r\n";
+//        response_stream << "<html><body><h1>Unsupported Content Type</h1></body></html>";
+//        std::string response = response_stream.str();
+//        send(clientSocket, response.c_str(), response.length(), 0);
+//    }
 //}
-//
+
 ///*
 // * @disc _handleDELETE method - This method is responsible for handling DELETE requests
 // * @param fd: the file descriptor of the client socket
@@ -378,12 +446,7 @@ string Server::_getErrorPage(int code) const {
 //            break;
 //    }
 //}
-//
-///*
-//* _error() - prints an error message and exits the program with EXIT_FAILURE
-//*
-//* @param msg: the error message to print
-//*/
+
 void Server::_error(const string &msg) {
 //    std::cerr << msg << ": ";
 //    strerror(errno);
