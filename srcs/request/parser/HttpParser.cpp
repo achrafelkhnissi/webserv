@@ -60,7 +60,6 @@ HttpParser::e_status HttpParser::append(char c) {
 }
 
 HttpParser::e_status HttpParser::identity_body_parser(char c) {
-	cout << chunk_size << endl;
 	if (chunk_size == 0)
 		return HttpParser::DONE;
 	chunk_size--;
