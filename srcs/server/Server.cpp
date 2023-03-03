@@ -149,7 +149,9 @@ void Server::_handleRequest(pollfdsVectorIterator_t it) {
         _handleGET(it->fd, subServerIter_, _request);
     } else if (_request.getMethod() == "POST") {
 //        _handlePOST(it->fd, _request);
-    }
+    } else if (_request.getMethod() == "DELETE") {
+        _handleDELETE(it->fd,subServerIter_,  _request);
+	}
 }
 
 void Server::_clearPollfds() {
@@ -243,10 +245,10 @@ void Server::_handleGET(int fd, const subServersIterator_t &subServersIterator, 
 	stringstream string_stream;
 	string_stream << file_stream.rdbuf();
 
-    // get file size
-//    file_stream.seekg(0, std::ios::end);
-//    size_t content_length = file_stream.tellg();
-//    file_stream.seekg(0, std::ios::beg);
+    //get file size
+    file_stream.seekg(0, std::ios::end);
+    size_t content_length = file_stream.tellg();
+    file_stream.seekg(0, std::ios::beg);
 
     // set content type based on file extension
     std::string content_type;
@@ -281,7 +283,8 @@ void Server::_handleGET(int fd, const subServersIterator_t &subServersIterator, 
     // send HTTP response header
     std::stringstream response_stream;
     response_stream << "HTTP/1.1 200 OK\r\n";
-    response_stream << "Content-Length: " << string_stream.str().size() << "\r\n";
+    //response_stream << "Content-Length: " << string_stream.str().size() << "\r\n";
+	response_stream << "Content-Length: " << content_length << "\r\n";
     response_stream << "Content-Type: " << content_type << "\r\n\r\n";
     std::string response_header = response_stream.str();
     send(fd, response_header.c_str(), response_header.length(), 0);
@@ -411,6 +414,86 @@ void Server::_handleGET(int fd, const subServersIterator_t &subServersIterator, 
 // * @param fd: the file descriptor of the client socket
 // */
 
+bool Server::is_regular_file(const char* path) const {
+    struct stat path_stat;
+    if (stat(path, &path_stat) != 0) {
+        // error occurred while checking file status
+        return false;
+    }
+    return S_ISREG(path_stat.st_mode);
+}
+
+void Server::_handleDELETE(int clientSocket , const subServersIterator_t &subServersIterator, const Request& request) {
+
+	string root_ = subServersIterator->getRoot();
+	string uri_ = request.getUri().empty() ? "/" : request.getUri();
+	string index_ = subServersIterator->getIndex();
+	std::cout << "index: " <<  index_ << std::endl;
+	location_t location_ = {};
+
+	// Match the uri to the correct location
+
+	string str_ = uri_;
+
+	bool isMatch_ = false;
+	do {
+		locationVectorConstIterator_t locIter_ = subServersIterator->getLocation().begin();
+		locationVectorConstIterator_t locIterEnd_ = subServersIterator->getLocation().end();
+		for (; locIter_ != locIterEnd_; ++locIter_) {
+			if (locIter_->prefix == str_) {
+				location_ = *locIter_;
+				isMatch_ = true;
+				break;
+			}
+		}
+		std::size_t found_ = str_.find_last_of("/");
+		if (found_ != std::string::npos){
+			str_ = str_.substr(0, found_);
+		}
+
+	} while (!str_.empty() && !isMatch_);
+
+	if (isMatch_){
+		root_ = location_.root;
+		index_ = location_.index;
+	}
+
+	string resourcePath_ = root_ + uri_;
+	std::cout << "resourcePath in the handleDelete function : " <<  resourcePath_ << std::endl;
+	if (_isDirectory(resourcePath_)){
+		if (resourcePath_.back() != '/')
+			resourcePath_ += "/";
+		resourcePath_ += index_;
+	}
+
+	// check if the file is regular file
+	if (!is_regular_file(resourcePath_.c_str())) {
+		// create response message
+		std::stringstream response_stream;
+		response_stream << "HTTP/1.1 404 Not Found\r\n\r\n";
+		response_stream << "<html><body><h1>File Not Found</h1></body></html>";
+		std::string response = response_stream.str();
+		send(clientSocket, response.c_str(), response.length(), 0);
+		return;
+	}
+
+	if (remove(resourcePath_.c_str()) != 0) {
+		// create response message
+		std::stringstream response_stream;
+		response_stream << "HTTP/1.1 500 Internal Server Error\r\n\r\n";
+		response_stream << "<html><body><h1>File Not Found</h1></body></html>";
+		std::string response = response_stream.str();
+		send(clientSocket, response.c_str(), response.length(), 0);
+	} else {
+	// create response message
+	std::stringstream response_stream;
+	response_stream << "HTTP/1.1 200 OK\r\n\r\n";
+	response_stream << "<html><body><h1>File Deleted Successfully</h1></body></html>";
+	std::string response = response_stream.str();
+	send(clientSocket, response.c_str(), response.length(), 0);
+}
+
+}
 string Server::_getErrorPage(int code) const {
     return "www/errors/404/error-" + std::to_string(code) + ".html";
 }

@@ -45,7 +45,8 @@ private:
     void    _sendResponse(int fd);
     void    _handleGET(int, const subServersIterator_t&, const Request&);
     void    _handlePOST(int, const Request&);
-    void    _handleDELETE(int clientSocket);
+	void 	_handleDELETE(int clientSocket, const subServersIterator_t &subServersIterator, const Request& request);
+	bool 	is_regular_file(const char* path) const;
     void    _handleEerror(int fd);
     void    _clearPollfds();
     void    _error(const string& msg);
