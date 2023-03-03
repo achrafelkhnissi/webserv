@@ -7,10 +7,28 @@
 HttpParser::HttpParser() {
 	state = HttpParser::p_status_line;
 	sl_state = HttpParser::sl_start;
+	encoding = HttpParser::none;
 	field.reserve(4100); // 4kb
 }
 
 HttpParser::~HttpParser() { }
+
+HttpParser::e_encoding HttpParser::get_encoding() {
+	multimap<string, string>::iterator it;
+	if (encoding == HttpParser::none) {
+		if ((it = headers.find("Transfer-Encoding")) != headers.end()) {
+			if (it->second == "chunked")
+				encoding = HttpParser::chunked;
+			else
+				encoding = HttpParser::unspecified;
+		} else if ((it = headers.find("Content-Length")) != headers.end()) {
+			encoding = HttpParser::identity;
+			chunk_size = atoi(it->second.c_str());
+		} else
+			encoding = HttpParser::unspecified;
+	}
+	return encoding;
+}
 
 HttpParser::e_status HttpParser::append(char c) {
 	switch (state) {
@@ -22,21 +40,52 @@ HttpParser::e_status HttpParser::append(char c) {
 		break;
 	}
 	case HttpParser::p_body: {
-		return HttpParser::DONE;
+		switch (get_encoding()) {
+		case identity:
+			return identity_body_parser(c);
+		case chunked:
+			return chunked_body_parser(c);
+		case unspecified:
+			return HttpParser::DONE;
+		case invalid:
+			break;
+		case none:
+			abort();
+			break;
+		}
 		break;
 	}
 	}
 	return HttpParser::FAILED;
 }
 
+HttpParser::e_status HttpParser::identity_body_parser(char c) {
+	cout << chunk_size << endl;
+	if (chunk_size == 0)
+		return HttpParser::DONE;
+	chunk_size--;
+	chunk.push_back(c);
+	return HttpParser::CONTINUE;
+}
+
 HttpParser::e_status HttpParser::push(std::string& chunk) {
 	for (size_t i = 0; i < chunk.size(); i++) {
 		switch (append(chunk[i])) {
 		case HttpParser::DONE: {
-			sl_state = HttpParser::sl_start;
+			switch (state) {
+			case HttpParser::p_status_line:
+				sl_state = HttpParser::sl_start;
+				break;
+			case HttpParser::p_headers:
+				get_encoding();
+				break;
+			case HttpParser::p_body: {
+				next(state);
+				return (DONE);
+				break;
+			}
+			}
 			next(state);
-			if (state == HttpParser::p_status_line)
-				return HttpParser::DONE;
 			break;
 		}
 		case HttpParser::FAILED: {
@@ -100,6 +149,67 @@ HttpParser::e_status HttpParser::is_method() {
 			return HttpParser::CONTINUE;
 	}
 	return HttpParser::FAILED;
+}
+
+HttpParser::e_status HttpParser::chunked_body_parser(char c) {
+	switch (ch_state) {
+	case bd_start: {
+		if (c == '\r')
+			ch_state = HttpParser::bd_chunk_data_crlf;
+		else if (isxdigit(c)) {
+			ch_state = HttpParser::bd_chunk_size;
+		} else
+			return HttpParser::FAILED;
+	}
+	case bd_chunk_size: {
+		if (isxdigit(c)) {
+			chunk_size = (chunk_size * 0xF + c - '0');
+			break;
+		}
+	}
+	case bd_chunk_sp_after_size: {
+		if (c == ' ' || c == '\t')
+			break;
+		if (c == '\r') {
+			ch_state = HttpParser::bd_chunk_size_cr;
+			break;
+		} else if (c == ';')
+			return HttpParser::FAILED; // specific error should be returned
+		else
+			return HttpParser::FAILED;
+	}
+	case bd_chunk_size_cr: {
+		if (c == '\n') {
+			ch_state = HttpParser::bd_chunk_data;
+			break;
+		} else
+			return HttpParser::FAILED;
+	}
+	case bd_chunk_data: {
+		if (chunk_size == 0) {
+			return HttpParser::DONE;
+		}
+		chunk_size--;
+		chunk.push_back(c);
+		if (chunk_size == 0) {
+			ch_state = HttpParser::bd_chunk_data_cr;
+		}
+		break;
+	}
+	case bd_chunk_data_cr: {
+		if (c != '\r')
+			return HttpParser::FAILED;
+		ch_state = HttpParser::bd_chunk_data_crlf;
+		break;
+	}
+	case bd_chunk_data_crlf: {
+		if (c != '\n')
+			return HttpParser::FAILED;
+		ch_state = HttpParser::bd_start;
+		break;
+	}
+	}
+	return HttpParser::CONTINUE;
 }
 
 HttpParser::e_status HttpParser::headers_parser(char c) {

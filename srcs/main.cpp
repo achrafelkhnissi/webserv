@@ -19,7 +19,10 @@ int main() {
 			cout << "FAILED" << endl;
 			break;
 		} else if (r == HttpParser::DONE)
+		{
+			t->print();
 			cout << "DONE" << endl;
+		}
 	}
 	delete t;
 	return 0;

@@ -17,6 +17,14 @@ public:
 	HttpParser(const HttpParser& other);
 	HttpParser& operator=(const HttpParser& other);
 
+	enum e_encoding {
+		none,
+		unspecified,
+		invalid,
+		identity,
+		chunked,
+	};
+
 	enum e_status {
 		DONE,
 		FAILED,
@@ -52,6 +60,7 @@ public:
 	e_status push(string& chunk); // process a chunk
 	e_status append(char c); // process a next char
 	e_status is_method();
+	e_encoding get_encoding();
 	// Request into_request(); // convert to request
 
 	void print() {
@@ -59,6 +68,8 @@ public:
 		cout << "URI: " << uri << endl;
 		cout << "Version: " << major_version << "." << minor_version << endl;
 		cout << "Query: " << query << endl;
+		cout << "Body: " << chunk << endl;
+		cout << "size: " << chunk_size << endl;
 	}
 
 	enum e_header_state {
@@ -71,10 +82,22 @@ public:
 		h_crlfcr,
 	};
 
+	enum e_chbody_state {
+		bd_start,
+		bd_chunk_size,
+		bd_chunk_sp_after_size,
+		bd_chunk_size_cr,
+		bd_chunk_data,
+		bd_chunk_data_cr,
+		bd_chunk_data_crlf,
+	};
+
 private:
 	string chunk;
 	string field;
 	multimap<string, string>::iterator last_map;
+	size_t body_size;
+	size_t chunk_size;
 
 	string method;
 	string uri;
@@ -86,10 +109,14 @@ private:
 	e_state state; // general state
 	e_sl_state sl_state; // status line state
 	e_header_state h_state; // header state
+	e_chbody_state ch_state; // chunked body state
+	e_encoding encoding; // body encoding
 
 	/* utils */
 	e_status status_line_parser(char c);
 	e_status headers_parser(char c);
+	e_status chunked_body_parser(char c);
+	e_status identity_body_parser(char c);
 	multimap<string, string> headers;
 };
 
