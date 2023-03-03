@@ -9,17 +9,6 @@
 
 using namespace std;
 
-struct Header {
-	string key;
-	string value;
-
-	Header(string key) {
-		this->key = key;
-	}
-};
-
-using namespace std;
-
 class HttpParser {
 
 public:
