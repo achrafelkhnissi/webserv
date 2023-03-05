@@ -72,7 +72,7 @@ class CGIHandler {
 
 public: // make it private later
 	stringVector_t _cgiPath;
-	string _body;
+	string _responseBody;
 
     stringMap_t _envMap; // todo: delete this later
     char **_env;
@@ -87,7 +87,7 @@ public:
 	void handle();
 	const string& getResponse() const;
     string getCmd();
-    void CGIExecuter() const;
+    string CGIExecuter();
 };
 
 
