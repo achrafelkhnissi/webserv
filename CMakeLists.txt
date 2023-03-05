@@ -15,6 +15,7 @@ include_directories(srcs/lib/toml/tokenizer/token)
 include_directories(srcs/request)
 include_directories(srcs/request/parser)
 include_directories(srcs/server)
+include_directories(srcs/CGIHandler)
 
 add_executable(webserv
         inc/typedefs.hpp
