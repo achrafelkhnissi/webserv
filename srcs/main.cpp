@@ -20,7 +20,9 @@ int main() {
 			break;
 		} else if (r == HttpParser::DONE)
 		{
-			t->print();
+			Request &req = t->into_request();
+			req.print();
+			delete &req;
 			cout << "DONE" << endl;
 		}
 	}

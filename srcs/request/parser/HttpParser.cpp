@@ -13,6 +13,17 @@ HttpParser::HttpParser() {
 
 HttpParser::~HttpParser() { }
 
+
+Request &HttpParser::into_request() {
+	Request* req = new Request();
+	req->set_method(method);
+	req->set_uri(uri);
+	req->set_headers(headers);
+	req->set_body(chunk);
+	req->set_query(query);
+	return *req;
+}
+
 HttpParser::e_encoding HttpParser::get_encoding() {
 	multimap<string, string>::iterator it;
 	if (encoding == HttpParser::none) {
