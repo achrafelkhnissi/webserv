@@ -199,31 +199,19 @@ void Server::_handleGET(int fd, const subServersIterator_t &subServersIterator, 
 				break;
 			}
 		}
-		std::size_t found_ = str_.find_last_of("/");
+		std::size_t found_ = str_.find_last_of('/');
 		if (found_ != std::string::npos){
 			str_ = str_.substr(0, found_);
 		}
 
 	} while (!str_.empty() && !isMatch_);
 
-//	if (!isMatch_) {
-////        std::stringstream response_stream;
-////        response_stream << "HTTP/1.1 404 Not Found\r\n\r\n"; //TODO: send 404.html
-////		// 	string resourcePath_ = "www/errors/404/error-404.html";
-////        std::string response = response_stream.str();
-////        send(fd, response.c_str(), response.length(), 0);
-////        return;
-//	}
-
-// TODO: if is match then use the location infos
 	if (isMatch_){
 		root_ = location_.root;
 		index_ = location_.index;
 	}
 
-
 	// Check if the uri is a directory
-
     string resourcePath_ = root_ + uri_;
 	if (_isDirectory(resourcePath_)){
 		if (resourcePath_.back() != '/')
@@ -231,7 +219,39 @@ void Server::_handleGET(int fd, const subServersIterator_t &subServersIterator, 
 		resourcePath_ += index_;
 	}
 
-	std::cout << "index_path: " << resourcePath_ << std::endl;
+    //        _handleCGI(fd, subServersIterator, request, resourcePath_);
+//    } else {
+//        _handleStatic(fd, subServersIterator, request, resourcePath_);
+//    }
+
+    if (location_.prefix == "/cgi-bin") {
+
+        // Set environment variables for CGI
+        _CGIEnv["SERVER_SOFTWARE"] = "webserv/1.0";
+        _CGIEnv["SERVER_NAME"] = subServersIterator->getServerName().at(0);
+        _CGIEnv["GATEWAY_INTERFACE"] = "CGI/1.1";
+        _CGIEnv["SERVER_PROTOCOL"] = "HTTP/1.1";
+        _CGIEnv["SERVER_PORT"] = std::to_string(request.getPort());
+        _CGIEnv["REQUEST_METHOD"] = request.getMethod();
+        _CGIEnv["REQUEST_URI"] = request.getUri();
+        _CGIEnv["PATH_INFO"] = resourcePath_;
+        _CGIEnv["SCRIPT_NAME"] = resourcePath_.substr(resourcePath_.find_last_of('/') + 1);
+        _CGIEnv["QUERY_STRING"] = request.getQuery();
+//    _CGIEnv["REMOTE_ADDR"] = request.getRemoteAddr();
+//    _CGIEnv["REMOTE_PORT"] = std::to_string(request.getRemotePort());
+//    _CGIEnv["CONTENT_TYPE"] = request.getContentType();
+//    _CGIEnv["CONTENT_LENGTH"] = std::to_string(request.getContentLength());
+        _CGIEnv["HTTP_HOST"] = request.getHost();
+//    _CGIEnv["HTTP_USER_AGENT"] = request.getUserAgent();
+//    _CGIEnv["HTTP_ACCEPT"] = request.getAccept();
+//    _CGIEnv["HTTP_ACCEPT_LANGUAGE"] = request.getAcceptLanguage();
+//    _CGIEnv["HTTP_ACCEPT_ENCODING"] = request.getAcceptEncoding();
+
+        // call CGI
+//        _handleCGI(fd, subServersIterator, request, resourcePath_);
+    }
+
+    std::cout << "index_path: " << resourcePath_ << std::endl;
 
 	std::ifstream file_stream(resourcePath_, std::ios::binary);
     if (!file_stream.is_open()) {

@@ -30,6 +30,7 @@ private:
 	errorPagesMap_t 	    _errorPages;
     Request                 _request;
     string                  _uploadPath;
+    stringMap_t             _CGIEnv;
 
 
 public:
@@ -52,7 +53,7 @@ private:
     void    _error(const string& msg);
     void    _setupVirtualServer(VirtualServer& vserver);
 	bool 	_isDirectory(const std::string &dirPath) const;
-
+    void    _setCGIEnv(const Request& request, const location_t& location, const string& path);
     string  _getErrorPage(int code) const;
     string  _getFileContent(const string& path) const;
 
