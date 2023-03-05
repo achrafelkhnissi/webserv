@@ -27,6 +27,8 @@ typedef std::map<int, std::string>			        errorPagesMap_t;
 typedef errorPagesMap_t::iterator			        errorPagesMapIterator_t;
 typedef errorPagesMap_t::const_iterator		        errorPagesMapConstIterator_t;
 
+typedef std::map<std::string, std::string>           stringMap_t; // env map for CGI
+
 /* SubServer Typdefs */
 typedef std::vector<location_t>                       locationVector_t;
 typedef std::vector<location_t>::iterator             locationVectorIterator_t;
