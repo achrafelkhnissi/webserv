@@ -88,3 +88,7 @@ const int& Request::getPort() const { return port; } // TODO: remove this
 
 
 Request::~Request() { }
+
+const string &Request::getQuery() const {
+    return query;
+}

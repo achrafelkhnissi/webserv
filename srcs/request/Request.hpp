@@ -27,6 +27,7 @@ public:
 	void push(std::string);
 
     const string& getHost() const; // TODO: remove this
+    const string& getQuery() const; // TODO: remove this
     const int& getPort() const; // TODO: remove this
     void printData() const; // TODO: remove this
     void setRequest(); // TODO: remove this
