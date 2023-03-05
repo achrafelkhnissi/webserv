@@ -39,6 +39,8 @@ add_executable(webserv
         srcs/request/parser/Parser.hpp
         srcs/request/Request.cpp
         srcs/request/Request.hpp
+        srcs/CGIHandler/CGIHandler.cpp
+        srcs/CGIHandler/CGIHandler.hpp
         srcs/server/Server.cpp
         srcs/server/Server.hpp
         srcs/server/SubServer.cpp
