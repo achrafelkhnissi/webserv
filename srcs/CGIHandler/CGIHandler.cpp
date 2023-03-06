@@ -8,7 +8,7 @@
 
 
 
-CGIHandler::CGIHandler(const stringMap_t &env) {
+CGIHandler::CGIHandler(const stringMap_t &env, const string &body): _envMap(env), _requestBody(body) {
 
     _envSize = env.size();
     _env = new char*[_envSize + 1];
@@ -18,7 +18,6 @@ CGIHandler::CGIHandler(const stringMap_t &env) {
     for(stringMap_t::const_iterator it = env.begin(); it != env.end(); it++, i++) {
         *(_env + i) = strdup((it->first + "=" + it->second).c_str());
     }
-    _envMap = env; // todo: remove this line
 }
 
 string CGIHandler::getCmd() {
@@ -61,57 +60,67 @@ string CGIHandler::CGIExecuter() {
 	string cmd_ = getCmd();
     setArgs(cmd_);
 
-	int fd[2];
-	int savedStdout_ = dup(1);
-	int savedStdin_ = dup(0);
+	int fdForResponse[2];
+    int fdForRequest[2];
+//	int savedStdout_ = dup(1);
+//	int savedStdin_ = dup(0);
 
-	if (pipe(fd) == -1)
+	if (pipe(fdForResponse) == -1 || pipe(fdForRequest) == -1)
 		throw std::runtime_error("pipe() failed");
+
 
     pid_t pid = fork();
     if (pid == -1) {
         throw std::runtime_error("fork() failed");
-    } else if (pid == 0) {
-        // child process
-		// dup the read end of the pipe to stdin ro read the body of the request
-		if (dup2(fd[1], STDOUT_FILENO) == -1 ||  close(fd[0]) == -1 || close(fd[1]) == -1)
+    } else if (pid == 0) { // child process
+
+		if (dup2(fdForResponse[1], STDOUT_FILENO) == -1 //dup the write end of the pipe to stdout to write the response
+            || close(fdForResponse[0]) == -1 || close(fdForResponse[1]) == - 1
+            || dup2(fdForRequest[0], STDIN_FILENO) == -1 //dup the read end of the pipe to stdin to read the request
+            || close(fdForRequest[1]) == -1 || close(fdForRequest[0]) == -1 )// close the read and write end of the pipe
 			throw std::runtime_error("dup2() of close() failed");
-		//dup the write end of the pipe to stdout
+
+        char buffer_[1024];
+        int ret = 0;
+        string body = "";
+        do {
+            ::memset(buffer_, 0, 1024);
+            ret = read( STDIN_FILENO, buffer_, 1024) ;
+            body += buffer_;
+        } while (ret > 0);
+
+        std::cout << "body received: " << body << std::endl;
 
         if (execve(_argv[0], _argv, _env) == -1) {
             throw std::runtime_error(strerror(errno));
         }
     } else {
 
-		close(fd[1]); // close the write end of the pipe
+        close(fdForRequest[0]); // close the read end of the pipe
+        write(fdForRequest[1], _requestBody.c_str(), _requestBody.size());
+        close(fdForRequest[1]);
+
+		close(fdForResponse[1]); // close the write end of the pipe
         int status;
         waitpid(pid, &status, 0);
         if (WIFEXITED(status)) {
-            std::cout << "Child exited with status " << WEXITSTATUS(status) << std::endl;
+            std::cerr << "Child exited with status " << WEXITSTATUS(status) << std::endl;
         } else if (WIFSIGNALED(status)) {
-            std::cout << "Child terminated by signal " << WTERMSIG(status) << std::endl;
+            std::cerr << "Child terminated by signal " << WTERMSIG(status) << std::endl;
         }
 
 		char buffer_[1024];
 		int ret = 0;
 		do {
 			::memset(buffer_, 0, 1024);
-			ret = read(fd[0], buffer_, 1024) ;
+			ret = read(fdForResponse[0], buffer_, 1024) ;
 			_responseBody += buffer_;
 
 		} while (ret > 0);
 			std::cout << "_responseBody: " << _responseBody << std::endl;
 
-
-
-		dup2(savedStdout_, STDOUT_FILENO); //restore stdout
-		dup2(savedStdin_, STDIN_FILENO); //restore stdin
-		close(fd[0]);
-//		close(fd[1]);
-		close(savedStdin_);
-		close(savedStdout_);
+		close(fdForResponse[0]);
 	}
-
 	return _responseBody;
 }
 
