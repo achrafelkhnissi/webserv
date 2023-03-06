@@ -8,6 +8,7 @@
 #include "Configuration.hpp"  // Configuration class
 #include "Request.hpp"       // Request class
 #include "typedefs.hpp"
+#include "HttpParser.hpp"
 
 #include <sstream>
 
@@ -31,8 +32,7 @@ private:
     Request                 _request;
     string                  _uploadPath;
     stringMap_t             _CGIEnv;
-
-
+    clientHttpParserMap_t   _clientHttpParserMap;
 public:
     Server(Configuration config);
     ~Server();

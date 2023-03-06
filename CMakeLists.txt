@@ -16,6 +16,8 @@ include_directories(srcs/request)
 include_directories(srcs/request/parser)
 include_directories(srcs/server)
 include_directories(srcs/CGIHandler)
+include_directories(srcs/request)
+include_directories(srcs/request/parser)
 
 add_executable(webserv
         inc/typedefs.hpp
@@ -36,8 +38,6 @@ add_executable(webserv
         srcs/lib/toml/tokenizer/Lexer.hpp
         srcs/lib/toml/toml.cpp
         srcs/lib/toml/toml.hpp
-        srcs/request/parser/Parser.cpp
-        srcs/request/parser/Parser.hpp
         srcs/request/Request.cpp
         srcs/request/Request.hpp
         srcs/CGIHandler/CGIHandler.cpp
@@ -49,4 +49,9 @@ add_executable(webserv
         srcs/server/VirtualServer.cpp
         srcs/server/VirtualServer.hpp
         srcs/utils/utils.cpp
-        srcs/main.cpp)
+        srcs/main.cpp
+        srcs/request/parser/HttpParser.cpp
+        srcs/request/parser/HttpParser.cpp
+        srcs/request/Request.cpp
+        srcs/request/Request.hpp
+        )

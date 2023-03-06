@@ -33,7 +33,7 @@ const string& SubServer::getRoot() const {
     return _root;
 }
 
-const string& SubServer::getIndex() const {
+const stringVector_t& SubServer::getIndex() const {
     return _index;
 }
 
@@ -73,7 +73,7 @@ void SubServer::printData() const {
     }
     std::cout << std::endl;
     std::cout << "\t- root: " << _root << std::endl;
-    std::cout << "\t- index: " << _index << std::endl;
+    std::cout << "\t- index: " << _index[0] << std::endl; // todo: print all index
     std::cout << "\t- _errorPages: " << _errorPages << std::endl;
     std::cout << "\t- _clientMaxBodySize: " << _clientMaxBodySize << std::endl;
     std::cout << "\t- location: " << std::endl;
@@ -82,7 +82,7 @@ void SubServer::printData() const {
     while (it != ite) {
         std::cout << "\t\tprefix: " << it->prefix << std::endl;
         std::cout << "\t\troot: " << it->root << std::endl;
-        std::cout << "\t\tindex: " << it->index << std::endl;
+        std::cout << "\t\tindex: " << it->index[0] << std::endl; // todo: print all index
         std::cout << "\t\t_clientMaxBodySize: " << it->clientMaxBodySize << std::endl;
         std::cout << "\t\t_errorPages: " << it->errorPages << std::endl;
         std::cout << "\t\tauto_index: " << it->autoIndex << std::endl;

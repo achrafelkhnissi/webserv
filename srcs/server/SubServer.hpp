@@ -12,7 +12,7 @@
 struct location_s{
 
 	stringVector_t  allowedMethods;
-    string          index;
+    stringVector_t  index;
 	string          redirection; // 301, 302, 307
 	string          root;
 	string          clientMaxBodySize;
@@ -29,7 +29,7 @@ private:
 	stringVector_t      _serverName;
     locationVector_t    _locations;
 	string              _root;
-	string              _index;
+	stringVector_t      _index;
 	string              _errorPages;
 	string              _clientMaxBodySize;
     // TODO: add Cgi
@@ -41,7 +41,7 @@ public:
     void                    printData() const;
     void                    fillLocation(const LocationConfig& locationConfig, location_t& location);
     const string&           getRoot() const;
-    const string&           getIndex() const;
+    const stringVector_t&   getIndex() const;
     const string&           getErrorPages() const;
     const string&           getClientMaxBodySize() const;
     const stringVector_t&   getServerName() const;

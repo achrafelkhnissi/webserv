@@ -14,13 +14,13 @@ HttpParser::HttpParser() {
 HttpParser::~HttpParser() { }
 
 
-Request &HttpParser::into_request() {
+Request &HttpParser::into_request() { //TODO: free this object after use
 	Request* req = new Request();
-	req->set_method(method);
-	req->set_uri(uri);
-	req->set_headers(headers);
-	req->set_body(chunk);
-	req->set_query(query);
+	req->setMethod(method);
+	req->setUri(uri);
+	req->setHeaders(headers);
+	req->setBody(chunk);
+	req->setQuery(query);
 	return *req;
 }
 
@@ -88,6 +88,11 @@ HttpParser::e_status HttpParser::push(std::string& chunk) {
 				break;
 			case HttpParser::p_headers:
 				get_encoding();
+                if (method == "GET")
+                {
+                    next(state);
+                    return HttpParser::DONE;
+                }
 				break;
 			case HttpParser::p_body: {
 				next(state);
@@ -399,4 +404,28 @@ HttpParser::e_status HttpParser::status_line_parser(char c) {
 	}
 	}
 	return DONE;
+}
+
+HttpParser& HttpParser::operator=(const HttpParser& other) {
+    if (this != &other) {
+        this->chunk = other.chunk;
+        this->field = other.field;
+        this->last_map = other.last_map;
+        this->body_size = other.body_size;
+        this->chunk_size = other.chunk_size;
+        this->method = other.method;
+        this->uri = other.uri;
+        this->body = other.body;
+        this->query = other.query;
+        this->major_version = other.major_version;
+        this->minor_version = other.minor_version;
+        this->state = other.state;
+        this->sl_state = other.sl_state;
+        this->h_state = other.h_state;
+        this->ch_state = other.ch_state;
+        this->encoding = other.encoding;
+        this->state = other.state;
+        this->headers = other.headers;
+    }
+    return *this;
 }

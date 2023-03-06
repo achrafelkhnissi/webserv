@@ -11,6 +11,8 @@
 class SubServer;
 class VirtualServer;
 class Server;
+class Request;
+class HttpParser;
 
 typedef struct location_s location_t;
 
@@ -28,6 +30,10 @@ typedef errorPagesMap_t::iterator			        errorPagesMapIterator_t;
 typedef errorPagesMap_t::const_iterator		        errorPagesMapConstIterator_t;
 
 typedef std::map<std::string, std::string>           stringMap_t; // env map for CGI
+
+typedef std::map<int, HttpParser>                    clientHttpParserMap_t;
+typedef clientHttpParserMap_t::iterator              clientHttpParserMapIterator_t;
+typedef clientHttpParserMap_t::const_iterator        clientHttpParserMapConstIterator_t;
 
 /* SubServer Typdefs */
 typedef std::vector<location_t>                       locationVector_t;
@@ -50,6 +56,8 @@ typedef std::vector<std::string>::const_iterator    stringVectorConstIterator_t;
 #include "Server.hpp"
 #include "VirtualServer.hpp"
 #include "SubServer.hpp"
+#include "HttpParser.hpp"
+#include "Request.hpp"
 
 #endif //WEBSERV_TYPEDEFS_HPP
 

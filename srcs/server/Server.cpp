@@ -110,6 +110,9 @@ void Server::_handleConnections(int sockfd) {
         clientPollFd_.fd = clientFd_;
         clientPollFd_.events = POLLIN;
         _fds.push_back(clientPollFd_);
+
+        _clientHttpParserMap[clientFd_] = HttpParser();
+
     }
 }
 
@@ -119,39 +122,59 @@ void Server::_handleRequest(pollfdsVectorIterator_t it) {
     string method_ = _request.getMethod();
 
 
-    char buffer_[BUFFER_SIZE];
-    ssize_t bytesRead_ = recv(it->fd, buffer_, BUFFER_SIZE, 0);
+    string requestBuffer_;
+    ssize_t bytesRead_ = 0;
 
-    if (bytesRead_ == -1)
-        _error("recv");
+        char buffer_[BUFFER_SIZE];
+        bytesRead_ = recv(it->fd, buffer_, BUFFER_SIZE, 0);
 
-    if (bytesRead_ == 0) {
-        close(it->fd);
-        _fds.erase(it);
+        if (bytesRead_ == -1)
+            _error("recv");
+
+        if (bytesRead_ == 0){
+            close(it->fd);
+            _fds.erase(it);
+        }
+
+
+    cout << "buffer: " << buffer_ << endl;
+
+    HttpParser::e_status status = _clientHttpParserMap[it->fd].push(requestBuffer_);
+
+    if (status == HttpParser::FAILED){
+        std::cout << "FAILED" << std::endl;
         return;
     }
+    else if (status == HttpParser::DONE)
+    {
+        std::cout << "DONE" << std::endl;
+        Request req = _clientHttpParserMap[it->fd].into_request();
+        std::cout << "=== REQUEST RECEIVED ===" << std::endl;
+        req.print();
+        std::cout << "=== END OF REQUEST ===" << std::endl;
 
-    buffer_[bytesRead_] = '\0';
+        // Match the port and host to the correct server
+        virtualServerMapIterator_t vserverIter_ = _virtualServer.find(_request.getHost().second);
 
-    std::cout << "=== REQUEST RECEIVED ===" << std::endl;
-    std::cout << buffer_ << std::endl;
-    _request.setRequest();
-    std::cout << "=== END OF REQUEST ===" << std::endl;
-
-    // Match the port and host to the correct server
-    virtualServerMapIterator_t vserverIter_ = _virtualServer.find(_request.getPort());
-
-    subServersIterator_t subServerIter_ = vserverIter_->second.matchSubServer(_request.getHost());
+        subServersIterator_t subServerIter_ = vserverIter_->second.matchSubServer(_request.getHost().first);
 
 //    subServerIter_->printData();
 
-    if (_request.getMethod() == "GET") {
-        _handleGET(it->fd, subServerIter_, _request);
-    } else if (_request.getMethod() == "POST") {
+        if (_request.getMethod() == "GET") {
+            _handleGET(it->fd, subServerIter_, _request);
+        } else if (_request.getMethod() == "POST") {
 //        _handlePOST(it->fd, _request);
-    } else if (_request.getMethod() == "DELETE") {
-        _handleDELETE(it->fd,subServerIter_,  _request);
-	}
+        } else if (_request.getMethod() == "DELETE") {
+            _handleDELETE(it->fd,subServerIter_,  _request);
+        }
+    } else if (status == HttpParser::CONTINUE) {
+        cout << "CONTINUE" << endl;
+        return;
+    }
+
+
+
+
 }
 
 void Server::_clearPollfds() {
@@ -180,8 +203,7 @@ void Server::_handleGET(int fd, const subServersIterator_t &subServersIterator, 
 
 	string root_ = subServersIterator->getRoot();
 	string uri_ = request.getUri().empty() ? "/" : request.getUri();
-	string index_ = subServersIterator->getIndex();
-	std::cout << "index: " <<  index_ << std::endl;
+	stringVector_t index_ = subServersIterator->getIndex();
 	location_t location_ = {};
 
 	// Match the uri to the correct location
@@ -216,7 +238,7 @@ void Server::_handleGET(int fd, const subServersIterator_t &subServersIterator, 
 	if (_isDirectory(resourcePath_)){
 		if (resourcePath_.back() != '/')
 			resourcePath_ += "/";
-		resourcePath_ += index_;
+		resourcePath_ += index_[0]; //todo: return the first index the exists
 	}
 
     //        _handleCGI(fd, subServersIterator, request, resourcePath_);
@@ -231,7 +253,7 @@ void Server::_handleGET(int fd, const subServersIterator_t &subServersIterator, 
         _CGIEnv["SERVER_NAME"] = subServersIterator->getServerName().at(0);
         _CGIEnv["GATEWAY_INTERFACE"] = "CGI/1.1";
         _CGIEnv["SERVER_PROTOCOL"] = "HTTP/1.1";
-        _CGIEnv["SERVER_PORT"] = std::to_string(request.getPort());
+        _CGIEnv["SERVER_PORT"] = std::to_string(request.getHost().second);
         _CGIEnv["REQUEST_METHOD"] = request.getMethod();
         _CGIEnv["REQUEST_URI"] = request.getUri();
         _CGIEnv["PATH_INFO"] = resourcePath_;
@@ -241,7 +263,7 @@ void Server::_handleGET(int fd, const subServersIterator_t &subServersIterator, 
 //    _CGIEnv["REMOTE_PORT"] = std::to_string(request.getRemotePort());
 //    _CGIEnv["CONTENT_TYPE"] = request.getContentType();
 //    _CGIEnv["CONTENT_LENGTH"] = std::to_string(request.getContentLength());
-        _CGIEnv["HTTP_HOST"] = request.getHost();
+        _CGIEnv["HTTP_HOST"] = request.getHost().first;
 //    _CGIEnv["HTTP_USER_AGENT"] = request.getUserAgent();
 //    _CGIEnv["HTTP_ACCEPT"] = request.getAccept();
 //    _CGIEnv["HTTP_ACCEPT_LANGUAGE"] = request.getAcceptLanguage();
@@ -447,8 +469,7 @@ void Server::_handleDELETE(int clientSocket , const subServersIterator_t &subSer
 
 	string root_ = subServersIterator->getRoot();
 	string uri_ = request.getUri().empty() ? "/" : request.getUri();
-	string index_ = subServersIterator->getIndex();
-	std::cout << "index: " <<  index_ << std::endl;
+	stringVector_t index_ = subServersIterator->getIndex();
 	location_t location_ = {};
 
 	// Match the uri to the correct location
@@ -483,7 +504,7 @@ void Server::_handleDELETE(int clientSocket , const subServersIterator_t &subSer
 	if (_isDirectory(resourcePath_)){
 		if (resourcePath_.back() != '/')
 			resourcePath_ += "/";
-		resourcePath_ += index_;
+		resourcePath_ += index_[0]; // todo: find the first index file that exists
 	}
 
 	// check if the file is regular file
