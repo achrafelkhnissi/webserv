@@ -7,16 +7,17 @@
 
 
 
+
 CGIHandler::CGIHandler(const stringMap_t &env) {
+
     _envSize = env.size();
     _env = new char*[_envSize + 1];
-
+    _env[_envSize] = NULL; // NULL terminate the array is expected by execve
 	_responseBody = "";
     int i = 0;
     for(stringMap_t::const_iterator it = env.begin(); it != env.end(); it++, i++) {
-        _env[i] = strdup((it->first + "=" + it->second).c_str());
+        *(_env + i) = strdup((it->first + "=" + it->second).c_str());
     }
-
     _envMap = env; // todo: remove this line
 }
 
@@ -49,9 +50,17 @@ string CGIHandler::getCmd() {
    return cmd_ += "helloCGI.py" ;
 }
 
+void CGIHandler::setArgs(string cmd){
+    _argv = new char*[2];
+    _argv[0] = strdup(cmd.c_str());
+    _argv[1] = NULL;
+}
+
 string CGIHandler::CGIExecuter() {
 
 	string cmd_ = getCmd();
+    setArgs(cmd_);
+
 	int fd[2];
 	int savedStdout_ = dup(1);
 	int savedStdin_ = dup(0);
@@ -59,30 +68,22 @@ string CGIHandler::CGIExecuter() {
 	if (pipe(fd) == -1)
 		throw std::runtime_error("pipe() failed");
 
-
-	 char* args[] = { "./www/cgi-bin/helloCGI.py", NULL };
-	 char* env_[] = { NULL };
     pid_t pid = fork();
     if (pid == -1) {
         throw std::runtime_error("fork() failed");
     } else if (pid == 0) {
-
-				std::cout << "\n\nthe cmd : " << cmd_ << std::endl;
-
-
         // child process
 		// dup the read end of the pipe to stdin ro read the body of the request
 		if (dup2(fd[1], STDOUT_FILENO) == -1 ||  close(fd[0]) == -1 || close(fd[1]) == -1)
 			throw std::runtime_error("dup2() of close() failed");
 		//dup the write end of the pipe to stdout
 
-
-	std::cerr << "args:" << _env << std::endl;
-        if (execve(args[0], args, env_) == -1) {
+        if (execve(_argv[0], _argv, _env) == -1) {
             throw std::runtime_error(strerror(errno));
         }
     } else {
-		close(fd[1]);
+
+		close(fd[1]); // close the write end of the pipe
         int status;
         waitpid(pid, &status, 0);
         if (WIFEXITED(status)) {
@@ -118,6 +119,10 @@ string CGIHandler::CGIExecuter() {
 CGIHandler::~CGIHandler() {
     for(int i = 0; i < _envSize; i++) {
         free(_env[i]);
+    }
+
+    for (int i = 0; i < 2; i++) {
+        free(_argv[i]);
     }
     delete[] _env;
 }

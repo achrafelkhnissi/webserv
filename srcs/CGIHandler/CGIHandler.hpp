@@ -76,6 +76,7 @@ public: // make it private later
 
     stringMap_t _envMap; // todo: delete this later
     char **_env;
+    char **_argv;
     size_t _envSize;
 
 
@@ -87,6 +88,7 @@ public:
 	void handle();
 	const string& getResponse() const;
     string getCmd();
+    void setArgs(string);
     string CGIExecuter();
 };
 
