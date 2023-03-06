@@ -9,34 +9,56 @@
 
 #include <iostream>
 #include <string>
+//
+//int main(int ac, char** av) {
+//
+//    std::string config_file = "default.toml";
+//
+//    if (ac == 2) {
+//        config_file = av[1];
+//    }
+//
+//    toml::table* t = toml::parse_file(config_file);
+//	if (t == nullptr) {
+//		std::cerr << "Error parsing file" << std::endl;
+//		return 1;
+//	}
+//
+//    try {
+//        Configuration config(*t);
+//        //	//t->print();
+//
+//        // Initialise the server.
+//        Server server(config);
+//        server.start();
+//
+//    } catch (const std::exception& e) {
+//        std::cerr << "Exception: " << e.what() << "\n";
+//    }
+//
+//    delete t;
+//
+//    return 0;
+//}
 
-int main(int ac, char** av) {
 
-    std::string config_file = "default.toml";
 
-    if (ac == 2) {
-        config_file = av[1];
-    }
+#include "CGIHandler.hpp"
 
-    toml::table* t = toml::parse_file(config_file);
-	if (t == nullptr) {
-		std::cerr << "Error parsing file" << std::endl;
-		return 1;
-	}
+int main() {
+    stringMap_t env;
+    env["PATH_INFO"] = "./www/cgi-bin/hel";
+    env["QUERY_STRING"] = "name=achraf&age=23";
+    env["REQUEST_METHOD"] = "GET";
 
-    try {
-        Configuration config(*t);
-        //	//t->print();
+    CGIHandler cgi(env , "this is a body");
+    cgi._cgiPath.push_back("helloCGI.py");
+    cgi._cgiPath.push_back("helloCGI.php");
+    cgi._cgiPath.push_back("helloCGI.sh");
+    cgi._cgiPath.push_back("helloCGI.rb");
 
-        // Initialise the server.
-        Server server(config);
-        server.start();
+//    std::cout << cgi.getCmd() << std::endl;
 
-    } catch (const std::exception& e) {
-        std::cerr << "Exception: " << e.what() << "\n";
-    }
-
-    delete t;
-
+    cgi.CGIExecuter();
     return 0;
 }
