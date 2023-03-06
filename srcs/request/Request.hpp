@@ -1,28 +1,16 @@
 #ifndef REQUEST_HPP
 #define REQUEST_HPP
 
+#include <iostream>
+#include <map>
 #include <string>
 #include <utility>
 #include <vector>
 
 using namespace std;
 
-struct RequestTokenParser {
-	std::string token;
-	void (*done)(std::string);
-};
-
 class Request {
 public:
-	enum Method { GET, POST, PUT, DELETE, HEAD, OPTIONS, TRACE, CONNECT };
-
-	enum Status {
-		DONE,
-		FAILED,
-		CONTINUE,
-
-	};
-
 	Request();
 	void push(std::string);
 
@@ -44,7 +32,26 @@ public:
 	void setMethod(const std::string& method);
 	void setUri(const std::string& uri);
 	void setBody(const std::string& body);
+
+	const string& get_protocol() const;
+	int get_version() const;
+	const string& get_method() const;
+	const string& get_uri() const;
+	const string& get_body() const;
+	void set_protocol(const std::string& protocol);
+	void set_version(int major_version);
+	void set_method(std::string& method);
+	void set_uri(std::string& uri);
+	void set_body(std::string& body);
+	void set_headers(multimap<string, string>& headers);
+	void set_query(string& query);
+
+	pair<string, unsigned short> get_host();
+	string &get_content_type();
+
 	~Request();
+
+	void print();
 
 private:
 
@@ -52,14 +59,14 @@ private:
     int port;
 
 	string protocol;
-	string version;
 	string method;
 	string uri;
 	string body;
 	string query;
-	vector<pair<string, string> > headers;
-	//Status status;
-	//int index;
-	//RequestTokenParser token_parser[6];
+
+	int version;
+	string host;
+	multimap<string, string> headers;
 };
+
 #endif
