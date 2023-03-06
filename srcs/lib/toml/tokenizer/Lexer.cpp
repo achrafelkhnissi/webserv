@@ -58,7 +58,7 @@ bool Lexer::tokenize_value(std::string& line, Token& tk) {
 				"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_", pos);
 			if (size == std::string::npos)
 				return false;
-			make_token(&tk, line.substr(pos, size), Token::VALUE);
+			make_token(&tk, line.substr(pos, size - pos), Token::VALUE);
 			pos = size;
 		} else
 			return false;
@@ -177,7 +177,7 @@ Token::e_token Lexer::expect_value() {
 	case Token::COMMA:
 		return Token::VALUE | Token::QOUTED;
 	case Token::ASSIGN:
-		return Token::OPENBRACKET | Token::QOUTED | Token::KEY;
+		return Token::OPENBRACKET | Token::QOUTED | Token::VALUE;
 	case Token::_EOF:
 		abort();
 	default:
