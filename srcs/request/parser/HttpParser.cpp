@@ -8,13 +8,13 @@ HttpParser::HttpParser() {
 	state = HttpParser::p_status_line;
 	sl_state = HttpParser::sl_start;
 	encoding = HttpParser::none;
+	h_state = HttpParser::h_start;
 	field.reserve(4100); // 4kb
 }
 
 HttpParser::~HttpParser() { }
 
-
-Request &HttpParser::into_request() {
+Request& HttpParser::into_request() {
 	Request* req = new Request();
 	req->set_method(method);
 	req->set_uri(uri);
@@ -88,6 +88,8 @@ HttpParser::e_status HttpParser::push(std::string& chunk) {
 				break;
 			case HttpParser::p_headers:
 				get_encoding();
+				if (method == "GET")
+					return (DONE);
 				break;
 			case HttpParser::p_body: {
 				next(state);
@@ -252,11 +254,15 @@ HttpParser::e_status HttpParser::headers_parser(char c) {
 			break;
 	}
 	case h_value: {
-		if (c == '\r')
+
+		if (c == '\n' || c == '\r') {
 			h_state = HttpParser::h_cr;
-		else
+			if (c == '\r')
+				break;
+		} else {
 			field.push_back(c);
-		break;
+			break;
+		}
 	}
 	case h_cr: {
 		if (c == '\n') {
@@ -268,9 +274,10 @@ HttpParser::e_status HttpParser::headers_parser(char c) {
 			return HttpParser::FAILED;
 	}
 	case h_crlf: {
-		if (c == '\r')
+		if (c == '\r') {
 			h_state = HttpParser::h_crlfcr;
-		break;
+			break;
+		}
 	}
 	case h_crlfcr: {
 		if (c == '\n')
@@ -386,10 +393,12 @@ HttpParser::e_status HttpParser::status_line_parser(char c) {
 		return HttpParser::CONTINUE;
 	}
 	case sl_http_minor: {
-		if (c != '\r')
-			return HttpParser::FAILED;
 		sl_state = sl_almost_done;
-		return HttpParser::CONTINUE;
+		if (c == '\r')
+			return HttpParser::CONTINUE;
+		if (c == '\n') {
+		} else
+			return HttpParser::FAILED;
 	}
 	case sl_almost_done: {
 		if (c != '\n')
