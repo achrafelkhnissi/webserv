@@ -62,8 +62,6 @@ string CGIHandler::CGIExecuter() {
 
 	int fdForResponse[2];
     int fdForRequest[2];
-//	int savedStdout_ = dup(1);
-//	int savedStdin_ = dup(0);
 
 	if (pipe(fdForResponse) == -1 || pipe(fdForRequest) == -1)
 		throw std::runtime_error("pipe() failed");
@@ -79,17 +77,6 @@ string CGIHandler::CGIExecuter() {
             || dup2(fdForRequest[0], STDIN_FILENO) == -1 //dup the read end of the pipe to stdin to read the request
             || close(fdForRequest[1]) == -1 || close(fdForRequest[0]) == -1 )// close the read and write end of the pipe
 			throw std::runtime_error("dup2() of close() failed");
-
-        char buffer_[1024];
-        int ret = 0;
-        string body = "";
-        do {
-            ::memset(buffer_, 0, 1024);
-            ret = read( STDIN_FILENO, buffer_, 1024) ;
-            body += buffer_;
-        } while (ret > 0);
-
-        std::cout << "body received: " << body << std::endl;
 
         if (execve(_argv[0], _argv, _env) == -1) {
             throw std::runtime_error(strerror(errno));
@@ -117,8 +104,6 @@ string CGIHandler::CGIExecuter() {
 			_responseBody += buffer_;
 
 		} while (ret > 0);
-			std::cout << "_responseBody: " << _responseBody << std::endl;
-
 		close(fdForResponse[0]);
 	}
 	return _responseBody;
