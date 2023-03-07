@@ -138,7 +138,7 @@ void Server::_handleRequest(pollfdsVectorIterator_t it) {
 
 
     cout << "buffer: " << buffer_ << endl;
-
+    requestBuffer_ = string(buffer_, bytesRead_);
     HttpParser::e_status status = _clientHttpParserMap[it->fd].push(requestBuffer_);
 
     if (status == HttpParser::FAILED){
@@ -148,15 +148,16 @@ void Server::_handleRequest(pollfdsVectorIterator_t it) {
     else if (status == HttpParser::DONE)
     {
         std::cout << "DONE" << std::endl;
-        Request req = _clientHttpParserMap[it->fd].into_request();
+        _request = _clientHttpParserMap[it->fd].into_request();
         std::cout << "=== REQUEST RECEIVED ===" << std::endl;
-        req.print();
-        std::cout << "=== END OF REQUEST ===" << std::endl;
+        _request.print();
+        std::cout << "=== END OF REQUEST ===\n\n\n" << std::endl;
 
         // Match the port and host to the correct server
-        virtualServerMapIterator_t vserverIter_ = _virtualServer.find(_request.getHost().second);
 
+        virtualServerMapIterator_t vserverIter_ = _virtualServer.find(_request.getHost().second);
         subServersIterator_t subServerIter_ = vserverIter_->second.matchSubServer(_request.getHost().first);
+
 
 //    subServerIter_->printData();
 
@@ -228,18 +229,27 @@ void Server::_handleGET(int fd, const subServersIterator_t &subServersIterator, 
 
 	} while (!str_.empty() && !isMatch_);
 
-	if (isMatch_){
+    if (isMatch_){
+//        std::cout << "Matched location: " << location_.prefix << std::endl;
 		root_ = location_.root;
 		index_ = location_.index;
+//        std::cout <<"root : "<< root_ << std::endl;
 	}
 
-	// Check if the uri is a directory
+
+    // Check if the uri is a directory
     string resourcePath_ = root_ + uri_;
 	if (_isDirectory(resourcePath_)){
-		if (resourcePath_.back() != '/')
+
+        if (resourcePath_.back() != '/')
 			resourcePath_ += "/";
-		resourcePath_ += index_[0]; //todo: return the first index the exists
-	}
+//        std::cout <<  << std::endl;
+
+        resourcePath_ += index_[0]; //todo: return the first index the exists
+
+    }
+
+    std::cout << resourcePath_ << std::endl;
 
     //        _handleCGI(fd, subServersIterator, request, resourcePath_);
 //    } else {
@@ -273,11 +283,11 @@ void Server::_handleGET(int fd, const subServersIterator_t &subServersIterator, 
 //        _handleCGI(fd, subServersIterator, request, resourcePath_);
     }
 
-    std::cout << "index_path: " << resourcePath_ << std::endl;
+    std::cout << "index_path: " << resourcePath_ << "\n\n\n"<< std::endl;
 
 	std::ifstream file_stream(resourcePath_, std::ios::binary);
     if (!file_stream.is_open()) {
-		std::cout << "File not opened!" << std::endl;
+//		std::cout << "File not opened!" << std::endl;
 		::perror("open");
 		// file not found, send 404 error
 		file_stream.close();
@@ -335,7 +345,7 @@ void Server::_handleGET(int fd, const subServersIterator_t &subServersIterator, 
     const size_t CHUNK_SIZE = 1024;
     char buffer[CHUNK_SIZE];
 
-	std::cout << "Sending file..." << std::endl;
+//	std::cout << "Sending file..." << std::endl;
 
     while (string_stream.good()) {
         string_stream.read(buffer, CHUNK_SIZE);
@@ -344,9 +354,9 @@ void Server::_handleGET(int fd, const subServersIterator_t &subServersIterator, 
             break;
         }
         send(fd, buffer, bytes_read, 0);
-		std::cout << "bytes_read: " << bytes_read << std::endl;
+//		std::cout << "bytes_read: " << bytes_read << std::endl;
     }
-	std::cout << "Done sending file" << std::endl;
+//	std::cout << "Done sending file" << std::endl;
 	response_stream.clear();
 	file_stream.close();
 }
@@ -500,7 +510,7 @@ void Server::_handleDELETE(int clientSocket , const subServersIterator_t &subSer
 	}
 
 	string resourcePath_ = root_ + uri_;
-	std::cout << "resourcePath in the handleDelete function : " <<  resourcePath_ << std::endl;
+//	std::cout << "resourcePath in the handleDelete function : " <<  resourcePath_ << std::endl;
 	if (_isDirectory(resourcePath_)){
 		if (resourcePath_.back() != '/')
 			resourcePath_ += "/";
