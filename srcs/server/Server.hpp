@@ -1,30 +1,66 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
-#include <iostream>
-#include <vector>
-#include <poll.h>
+#include <vector>                       // std::vector
+#include <sys/stat.h>				   // stat
+#include "VirtualServer.hpp"                  // VirtualServer class
+#include "SubServer.hpp"                // SubServer class
+#include "Configuration.hpp"  // Configuration class
+#include "Request.hpp"       // Request class
+#include "typedefs.hpp"
+#include "HttpParser.hpp"
+#include "Response.hpp"
 
+#include <sstream>
+
+/*
+ * Server class - This class is responsible for creating a server object
+ *
+ * @var _virtualServer - vector of VirtualServer objects (one for each virtual server)
+ * @var _config - Configuration object that contains all the information from the config file
+ *
+ * @method Server - constructor that takes a Configuration object as an argument
+ * @method ~Server - destructor
+ * @method start - method to start the server
+ */
 class Server {
 
 private:
-    int         _port; // port number
-    std::string _host; // hostname
-    // std::vector<pollfd> _fds; // vector to store file descriptor information
-
+    virtualServerMap_t      _virtualServer;
+    Configuration           _config;
+    pollfdsVector_t         _fds;
+	errorPagesMap_t 	    _errorPages;
+    Request                 _request;
+    string                  _uploadPath;
+    stringMap_t             _CGIEnv;
+    clientHttpParserMap_t   _clientHttpParserMap;
+    std::map<string, string> _mimeTypes;
 public:
-    Server(int port, const std::string& host); // constructor that takes port and host as an argument
+    Server(Configuration config);
     ~Server();
 
-    void start(); // method to start the server, it will listen for incoming connections
+    void    start();
+    void    printData() const;
 
-    void handle_connection(int fd); // method to handle incoming connections, it will accept new connections and add them to the poll list
-    void handle_request(int fd); // method to handle incoming requests, it will read the request, parse it and call the appropriate method
-    void send_response(int fd); // method to send HTTP responses, it will send the response to the client
-    void handle_get(int fd); // method to handle GET requests
-    void handle_post(int fd); // method to handle POST requests
-    void handle_delete(int fd); // method to handle DELETE requests
-    void handle_error(int fd); // method to handle errors
+private:
+    void    _handleConnections(int fd);
+    void    _handleRequest(pollfdsVectorIterator_t it);
+    void    _sendResponse(int fd);
+    void    _handleGET(int, const subServersIterator_t&, const Request&);
+    void    _handlePOST(int, const Request&);
+	void 	_handleDELETE(int clientSocket, const subServersIterator_t &subServersIterator, const Request& request);
+	bool 	is_regular_file(const char* path) const;
+    void    _handleEerror(int fd);
+    void    _clearPollfds();
+    void    _error(const string& msg) const;
+    void    _setupVirtualServer(VirtualServer& vserver);
+	bool 	_isDirectory(const std::string &dirPath) const;
+    void    _setCGIEnv(const Request& request, const location_t& location, const string& path);
+    string  _getErrorPage(int code) const;
+    string  _getFileContent(const string& path) const;
+    string  _extractExtension(const string& path) const;
+    void    _setMimeTypes();
+
 };
 
 #endif
