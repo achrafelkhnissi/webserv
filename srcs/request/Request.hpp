@@ -1,5 +1,4 @@
-#ifndef REQUEST_HPP
-#define REQUEST_HPP
+#pragma once
 
 #include <iostream>
 #include <map>
@@ -48,5 +47,3 @@ private:
 
 	multimap<string, string> headers;
 };
-
-#endif

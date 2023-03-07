@@ -1,5 +1,4 @@
-#ifndef PARSER_HPP
-#define PARSER_HPP
+#pragma once
 
 #include <iostream>
 #include <queue>
@@ -124,4 +123,3 @@ private:
 
 HttpParser::e_state& next(HttpParser::e_state& s);
 
-#endif

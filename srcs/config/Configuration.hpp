@@ -30,7 +30,6 @@ struct LocationConfig {
 		string s(indent, ' ');
 		cout << s << "path: " << path << endl;
 		cout << s << "root: " << root << endl;
-		cout << s << "index: ";
 		ITER_FOREACH(vector<string>, index, it) {
 			cout << *it << " ";
 		}

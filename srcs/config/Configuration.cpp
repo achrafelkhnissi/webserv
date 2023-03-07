@@ -12,6 +12,7 @@ LocationConfig fill_location(toml::table& location) {
 	ITER_FOREACH(vector<toml::table>, location["index"].vec, it) {
 		l.index.push_back(it->as_str("default.com"));
 	}
+    l.index.push_back("index.html"); // TODO REMOVE THIS
 	l.autoindex = location["autoindex"].as_str("off");
 	l.upload_path = location["upload_path"].as_str("www/html/upload");
 	l.upload_store = location["upload_store"].as_str("on");
