@@ -12,7 +12,7 @@
 int main() {
 
     // open a file to serve
-    FILE* html_data = fopen("index.html", "r");
+    FILE* html_data = fopen("srcs.html", "r");
 
     char response_data[1024];
     fgets(response_data, 1024, html_data);
