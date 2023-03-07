@@ -19,6 +19,20 @@ Response::Response() {
 
 Response::~Response() {}
 
+
+bool Response::is_regular_file(const char* path) const {
+    struct stat path_stat;
+    if (stat(path, &path_stat) != 0) {
+        // error occurred while checking file status
+        return false;
+    }
+    return S_ISREG(path_stat.st_mode);
+}
+
+void Response::setStatusCode(int statusCode) {
+    this->statusCode = statusCode;
+}
+
 void Response::setStatusCode(const string& filePath, std::map<string, string> &mimTypes) {
     std::string extension = filePath.substr(filePath.find_last_of(".") );
     std::string M = mimTypes[extension];
@@ -27,7 +41,7 @@ void Response::setStatusCode(const string& filePath, std::map<string, string> &m
     if (M.empty()) {
         statusCode = 415;
     }
-    else if (!file.is_open()) {
+    if (!is_regular_file(filePath.c_str()) || !file.is_open()) {
         statusCode = 404;
     }
     else {
@@ -77,4 +91,13 @@ size_t Response::getContentLength() const{
 }
 const string& Response::getContentType() const{
     return content_type;
+}
+
+const string &Response::getBody() const {
+    return body;
+}
+
+void Response::setBody(const string &s) {
+    this->body = s;
+
 }
