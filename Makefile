@@ -12,21 +12,17 @@
 
 NAME		= webserv
 
-CC			= c++
-FLAGS		= # -Wall -Wextra -Werror -std=c++98
+CC			= c++ -g
+CXXFLAGS		= # -Wall -Wextra -Werror -std=c++98
 RM			= rm -rf
 
 OBJDIR		= build
 
-CONFIG 		=  $(addprefix ./config/, Configuration)
-SERVER		=  $(addprefix ./server/, Server)
-UTILS		=  $(addprefix ./utils/, )
+INCLUDES	:= $(shell find . -name '*.hpp' -type f -exec dirname {} \; | uniq | sed 's/^/-I /' | grep -v Playground)
+SOURCES     := $(shell find . -name '*.cpp' -print -type f | grep -v Playground)
 
-FILES		= main $(addprefix ./srcs/, $(CONFIG) $(SERVER) $(UTILS) )
-HEADERS		= -I ./srcs/config/ -I ./srcs/server/
-
-SRC			= $(FILES:=.cpp)
-OBJ			= $(addprefix $(OBJDIR)/, $(FILES:=.o))
+HEADERS		= $($SOURCES:=.hpp)
+OBJ			= $(SOURCES:%.cpp=$(OBJDIR)/%.o)
 
 #Colors:
 GREEN		=	\e[92;5;118m
@@ -44,13 +40,13 @@ endif
 
 all: $(NAME)
 
-$(NAME): $(OBJ) $(HEADER)
-	@$(CC) $(OBJ) $(OPTS) -o $(NAME)
+$(NAME): $(OBJ) $(HEADERS)
+	@$(CC) $(INCLUDES) $(CXXFLAGS) $(OBJ) $(OPTS) -o $(NAME)
 	@printf "$(_SUCCESS) $(GREEN)- Executable ready.\n$(RESET)"
 
 $(OBJDIR)/%.o: %.cpp $(HEADER)
 	@mkdir -p $(dir $@)
-	@$(CC) $(FLAGS) $(OPTS) -c $< -o $@
+	@$(CC) $(INCLUDES) $(CXXFLAGS) $(OPTS) -c $< -o $@
 
 clean:
 	@$(RM) $(OBJDIR) $(OBJ)
