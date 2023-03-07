@@ -78,23 +78,46 @@
 <!--</body>-->
 <!--</html>-->
 
+<!--<!DOCTYPE html>-->
+<!--<html>-->
+<!--<head>-->
+<!--	<title>Delete Request Example</title>-->
+<!--	<script>-->
+<!--		function sendDeleteRequest() {-->
+<!--			fetch('/delete.txt', {method: 'DELETE'})-->
+<!--				.then(response => {-->
+<!--					console.log(response.status);-->
+<!--				})-->
+<!--				.catch(error => {-->
+<!--					console.error(error);-->
+<!--				});-->
+<!--		}-->
+<!--	</script>-->
+<!--</head>-->
+<!--<body>-->
+<!--	<button onclick="sendDeleteRequest()">Send DELETE Request</button>-->
+<!--</body>-->
+<!--</html>-->
+
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Delete Request Example</title>
-	<script>
-		function sendDeleteRequest() {
-			fetch('/delete.txt', {method: 'DELETE'})
-				.then(response => {
-					console.log(response.status);
-				})
-				.catch(error => {
-					console.error(error);
-				});
+	<link rel="icon" href="media/image/icon.png">
+	<title>Hello WebServ Animation</title>
+	<style>
+		@keyframes slideIn {
+			from {opacity: 0; transform: translateY(-50px);}
+			to {opacity: 1; transform: translateY(0);}
 		}
-	</script>
+		h1 {
+			font-size: 5em;
+			color: #333;
+			text-align: center;
+			animation: slideIn 1s ease-in-out;
+		}
+	</style>
 </head>
 <body>
-	<button onclick="sendDeleteRequest()">Send DELETE Request</button>
+<h1>Hello WebServ</h1>
 </body>
 </html>
