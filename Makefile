@@ -1,37 +1,59 @@
+# **************************************************************************** #
+#                                                                              #
+#                                                         :::      ::::::::    #
+#    Makefile                                           :+:      :+:    :+:    #
+#                                                     +:+ +:+         +:+      #
+#    By: ael-khni <ael-khni@student.1337.ma>        +#+  +:+       +#+         #
+#                                                 +#+#+#+#+#+   +#+            #
+#    Created: 2022/07/24 17:30:02 by ael-khni          #+#    #+#              #
+#    Updated: 2023/01/28 21:53:41 by ael-khni         ###   ########.fr        #
+#                                                                              #
+# **************************************************************************** #
 
-CC 		= g++
-CFLAGS += -Wall -Werror -Wextra -std=c++98 -g
-LDFLAGS += -lm
-#INCLUDE = -I inc -I $(shell find srcs -name "*.hpp" -exec dirname {} \; | uniq)
-INCLUDE = $(addprefix -I , inc $(addprefix srcs/, server config utils request))
+NAME		= webserv
 
-S_DIR	= srcs
-INC_HEADERS = $(shell find inc -name "*.hpp")
-SRC_HEADERS = $(shell find srcs -name "*.hpp")
-FILES 	= $(shell find srcs -name "*.cpp" | cut -d/ -f2-)
-B_DIR	= build
-OBJ		= $(addprefix $(B_DIR)/, $(FILES:.cpp=.o))
-NAME 	= webserv
+CC			= c++
+CXXFLAGS		= # -Wall -Wextra -Werror -std=c++98
+RM			= rm -rf
+
+OBJDIR		= build
+
+INCLUDES	:= $(shell find . -name '*.hpp' -type f -exec dirname {} \; | uniq | sed 's/^/-I /' | grep -v Playground)
+SOURCES     := $(shell find . -name '*.cpp' -print -type f | grep -v Playground)
+
+HEADERS		= $($SOURCES:=.hpp)
+OBJ			= $(SOURCES:%.cpp=$(OBJDIR)/%.o)
+
+#Colors:
+GREEN		=	\e[92;5;118m
+YELLOW		=	\e[93;5;226m
+GRAY		=	\e[33;2;37m
+RESET		=	\e[0m
+CURSIVE		=	\e[33;3m
+
+#Debug
+ifeq ($(DEBUG), 1)
+   OPTS = -g
+endif
+
+.PHONY: all clean fclean re
 
 all: $(NAME)
 
-$(NAME): $(OBJ)
-	$(CC) $^ -o $@ $(LDFLAGS)
+$(NAME): $(OBJ) $(HEADERS)
+	@$(CC) $(INCLUDES) $(CXXFLAGS) $(OBJ) $(OPTS) -o $(NAME)
+	@printf "$(_SUCCESS) $(GREEN)- Executable ready.\n$(RESET)"
 
-$(B_DIR)/%.o: $(S_DIR)/%.cpp $(INC_HEADERS) $(SRC_HEADERS)
-	mkdir -p $(@D)
-	$(CC) $(CFLAGS) $(INCLUDE) -o $@ -c $<
-
-run:
-	./$(NAME) # ./config/webserv.conf
+$(OBJDIR)/%.o: %.cpp $(HEADER)
+	@mkdir -p $(dir $@)
+	@$(CC) $(INCLUDES) $(CXXFLAGS) $(OPTS) -c $< -o $@
 
 clean:
-	rm -f $(OBJ)
-	rm -rf $(B_DIR)
+	@$(RM) $(OBJDIR) $(OBJ)
+	@printf "$(YELLOW)    - Object files removed.$(RESET)\n"
 
 fclean: clean
-	rm -f $(NAME)
+	@$(RM) $(NAME)
+	@printf "$(YELLOW)    - Executable removed.$(RESET)\n"
 
 re: fclean all
-
-.PHONY: all clean fclean re
