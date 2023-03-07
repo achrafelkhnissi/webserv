@@ -331,6 +331,11 @@ void Server::_handleGET(int fd, const subServersIterator_t &subServersIterator, 
 
     response_.setStatusCode(resourcePath_, _mimeTypes);
 
+    if (response_.getStatusCode() != 200)
+    {
+        resourcePath_ = root_ + "/error_pages/" + std::to_string(response_.getStatusCode()) + ".html";
+        std::cout << "here" << resourcePath_ << "\n\n\n" << std::endl;
+    }
     std::cout << "status code: " << response_.getStatusCode() << std::endl;
 
     response_.setContentLength(resourcePath_);
