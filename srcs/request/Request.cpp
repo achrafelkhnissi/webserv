@@ -74,8 +74,11 @@ pair<string, unsigned short> Request::getHost() const {
 	return host;
 }
 
-string &Request::getContentType() {
-	return headers.find("Content-Type")->second;
+const string &Request::getContentType() {
+    multimap<string, string>::iterator res = headers.find("Content-Type");
+    if (res == headers.end())
+        return *(new string("")); // leak
+    return res->second;
 }
 
 void Request::print() {
@@ -86,7 +89,6 @@ void Request::print() {
 	cout << "Query: " << query << endl;
 	cout << "Host: " << getHost().first << endl;
 	cout << "Port: " << getHost().second << endl;
-    cout << "I'm here" << endl;
 	cout << "Content-Type: " << getContentType() << endl;
 }
 

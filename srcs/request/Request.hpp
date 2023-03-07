@@ -28,7 +28,7 @@ public:
 	void setQuery(string& query);
 
 	pair<string, unsigned short> getHost() const;
-	string &getContentType();
+	const string &getContentType();
 
 	~Request();
 
