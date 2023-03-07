@@ -301,6 +301,26 @@ void sendResponseBody(int fd, const string& resourcePath) {
     file_stream.close();
     // send HTTP response body
 }
+void sendResponseBody(int fd, Response response) {
+
+    std::stringstream body_stream;
+    std::ifstream file_stream(response.getBody().c_str(), std::ios::binary);
+    body_stream << file_stream.rdbuf();
+    const size_t CHUNK_SIZE = 1024;
+    char buffer[CHUNK_SIZE];
+
+
+    while (body_stream.good()) {
+        body_stream.read(buffer, CHUNK_SIZE);
+        size_t bytes_read = body_stream.gcount();
+        if (bytes_read <= 0) {
+            break;
+        }
+        send(fd, buffer, bytes_read, 0);
+    }
+    body_stream.clear();
+    file_stream.close();
+}
 
 void Server::_handleGET(int fd, const subServersIterator_t &subServersIterator, const Request& request) {
 
@@ -314,43 +334,29 @@ void Server::_handleGET(int fd, const subServersIterator_t &subServersIterator, 
 		root_ = location_->root;
 		index_ = location_->index;
 	}
-
     // Check if the uri is a directory
     string resourcePath_ = root_ + uri_;
 	if (_isDirectory(resourcePath_)){
-
         if (resourcePath_.back() != '/')
 			resourcePath_ += "/";
-//        std::cout <<  << std::endl;
-
         resourcePath_ += index_[0]; //todo: return the first index the exists
-
     }
-
     std::cout << resourcePath_ << std::endl;
-
     response_.setStatusCode(resourcePath_, _mimeTypes);
-
     if (response_.getStatusCode() != 200)
-    {
         resourcePath_ = root_ + "/error_pages/" + std::to_string(response_.getStatusCode()) + ".html";
-        std::cout << "here" << resourcePath_ << "\n\n\n" << std::endl;
-    }
-    std::cout << "status code: " << response_.getStatusCode() << std::endl;
 
     response_.setContentLength(resourcePath_);
     response_.setContentType(_extractExtension(resourcePath_), _mimeTypes);
 
-
+    std::cout << "\n\nstatus code: " << response_.getStatusCode() << std::endl;
     std::cout << "content type: " << response_.getContentType() << std::endl;
     std::cout << "content length: " << response_.getContentLength() << std::endl;
 
     response_.setHeaders();
-    // send HTTP response header
     sendResponseHeaders(fd, response_);
-
-    // send HTTP response body
     sendResponseBody(fd, resourcePath_);
+
 }
 
 //void Server::_handlePOST(int clientSocket, const Request& request) {
@@ -458,83 +464,43 @@ void Server::_handleGET(int fd, const subServersIterator_t &subServersIterator, 
  * @param fd: the file descriptor of the client socket
  */
 
-bool Server::is_regular_file(const char* path) const {
-    struct stat path_stat;
-    if (stat(path, &path_stat) != 0) {
-        // error occurred while checking file status
-        return false;
-    }
-    return S_ISREG(path_stat.st_mode);
-}
-
 void Server::_handleDELETE(int clientSocket , const subServersIterator_t &subServersIterator, const Request& request) {
 
 	string root_ = subServersIterator->getRoot();
 	string uri_ = request.getUri().empty() ? "/" : request.getUri();
 	stringVector_t index_ = subServersIterator->getIndex();
-	location_t location_ = {};
 
 	// Match the uri to the correct location
 
-	string str_ = uri_;
+    location_t *location_ = matchLocation(subServersIterator->getLocation(), uri_);
 
-	bool isMatch_ = false;
-	do {
-		locationVectorConstIterator_t locIter_ = subServersIterator->getLocation().begin();
-		locationVectorConstIterator_t locIterEnd_ = subServersIterator->getLocation().end();
-		for (; locIter_ != locIterEnd_; ++locIter_) {
-			if (locIter_->prefix == str_) {
-				location_ = *locIter_;
-				isMatch_ = true;
-				break;
-			}
-		}
-		std::size_t found_ = str_.find_last_of("/");
-		if (found_ != std::string::npos){
-			str_ = str_.substr(0, found_);
-		}
-
-	} while (!str_.empty() && !isMatch_);
-
-	if (isMatch_){
-		root_ = location_.root;
-		index_ = location_.index;
-	}
+    if (location_ != nullptr){
+        root_ = location_->root;
+        index_ = location_->index;
+    }
 
 	string resourcePath_ = root_ + uri_;
-//	std::cout << "resourcePath in the handleDelete function : " <<  resourcePath_ << std::endl;
-	if (_isDirectory(resourcePath_)){
-		if (resourcePath_.back() != '/')
-			resourcePath_ += "/";
-		resourcePath_ += index_[0]; // todo: find the first index file that exists
-	}
+    Response response_   = Response();
+//	if (_isDirectory(resourcePath_)){    //TODO: why this is here?
+//		if (resourcePath_.back() != '/')
+//			resourcePath_ += "/";
+//		resourcePath_ += index_[0]; // todo: find the first index file that exists
+//	}
 
 	// check if the file is regular file
-	if (!is_regular_file(resourcePath_.c_str())) {
-		// create response message
-		std::stringstream response_stream;
-		response_stream << "HTTP/1.1 404 Not Found\r\n\r\n";
-		response_stream << "<html><body><h1>File Not Found</h1></body></html>";
-		std::string response = response_stream.str();
-		send(clientSocket, response.c_str(), response.length(), 0);
-		return;
-	}
+
+    response_.setStatusCode(resourcePath_.c_str(), _mimeTypes);
 
 	if (remove(resourcePath_.c_str()) != 0) {
-		// create response message
-		std::stringstream response_stream;
-		response_stream << "HTTP/1.1 500 Internal Server Error\r\n\r\n";
-		response_stream << "<html><body><h1>File Not Found</h1></body></html>";
-		std::string response = response_stream.str();
-		send(clientSocket, response.c_str(), response.length(), 0);
-	} else {
+        response_.setStatusCode(404);
+	}
+    response_.setContentLength(resourcePath_);
+    response_.setContentType(_extractExtension(resourcePath_), _mimeTypes);
+    response_.setBody("<html><body><h1>File Deleted Successfully</h1></body></html>");
+    sendResponseHeaders(clientSocket, response_);
+    sendResponseBody(clientSocket, response_);
 	// create response message
-	std::stringstream response_stream;
-	response_stream << "HTTP/1.1 200 OK\r\n\r\n";
-	response_stream << "<html><body><h1>File Deleted Successfully</h1></body></html>";
-	std::string response = response_stream.str();
-	send(clientSocket, response.c_str(), response.length(), 0);
-}
+
 
 }
 string Server::_getErrorPage(int code) const {
