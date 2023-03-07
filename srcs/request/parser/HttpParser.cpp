@@ -22,6 +22,7 @@ Request& HttpParser::into_request() {
 	req->setHeaders(headers);
 	req->setBody(chunk);
 	req->setQuery(query);
+    reset();
 	return *req;
 }
 
@@ -434,4 +435,23 @@ HttpParser& HttpParser::operator=(const HttpParser& other) {
         this->headers = other.headers;
     }
     return *this;
+}
+
+void HttpParser::reset() {
+    state = HttpParser::p_status_line;
+    sl_state = HttpParser::sl_start;
+    h_state = HttpParser::h_start;
+    ch_state = HttpParser::bd_start;
+    encoding = HttpParser::unspecified;
+    h_state = HttpParser::h_start;
+    body_size = 0;
+    chunk_size = 0;
+    method.clear();
+    uri.clear();
+    query.clear();
+    major_version = 0;
+    minor_version = 0;
+    field.clear();
+    chunk.clear();
+    headers.clear();
 }

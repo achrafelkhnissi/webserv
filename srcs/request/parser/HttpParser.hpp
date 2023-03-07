@@ -62,7 +62,9 @@ public:
 	e_status is_method();
 	e_encoding get_encoding();
 	Request &into_request();
-	// Request into_request(); // convert to request
+    void reset(); // reset parser
+
+    // Request into_request(); // convert to request
 
 	void print() {
 		cout << "Method: " << method << endl;
