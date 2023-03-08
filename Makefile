@@ -10,6 +10,8 @@
 #                                                                              #
 # **************************************************************************** #
 
+# todo: fix the makefile not compiling when editing a header file (tested with Server.hpp)
+
 NAME		= webserv
 
 CC			= c++ -g
@@ -44,7 +46,7 @@ $(NAME): $(OBJ) $(HEADERS)
 	@$(CC) $(INCLUDES) $(CXXFLAGS) $(OBJ) $(OPTS) -o $(NAME)
 	@printf "$(_SUCCESS) $(GREEN)- Executable ready.\n$(RESET)"
 
-$(OBJDIR)/%.o: %.cpp $(HEADER)
+$(OBJDIR)/%.o: %.cpp $(HEADERS)
 	@mkdir -p $(dir $@)
 	@$(CC) $(INCLUDES) $(CXXFLAGS) $(OPTS) -c $< -o $@
 
