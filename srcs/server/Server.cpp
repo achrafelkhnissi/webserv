@@ -30,7 +30,7 @@ void Server::_setMimeTypes() {
     _mimeTypes[".gif"] = "image/gif";
     _mimeTypes[".htm"] = "text/html";
     _mimeTypes[".html"] = "text/html";
-    _mimeTypes[".ico"] = "image/vnd.microsoft.icon";
+//    _mimeTypes[".ico"] = "image/vnd.microsoft.icon";
     _mimeTypes[".jpeg"] = "image/jpeg";
     _mimeTypes[".jpg"] = "image/jpeg";
     _mimeTypes[".js"] = "text/javascript";
@@ -51,16 +51,16 @@ void Server::_setupVirtualServer(VirtualServer& vserver) {
     // Create a socket
     int serverFd_ = socket(AF_INET, SOCK_STREAM, 0);
     if (serverFd_ == -1)
-        _error("socket");
+        _error("socket", 1);
 
     // Set the server socket to non-blocking mode
     if (fcntl(serverFd_, F_SETFL, O_NONBLOCK) < 0)
-        _error("fcntl");
+        _error("fcntl", 1);
 
     // Set the server socket to reuse the address
     int optionValue_ = 1;
     if (setsockopt(serverFd_, SOL_SOCKET, SO_REUSEADDR, &optionValue_, sizeof(optionValue_)) < 0)
-        _error("setsockopt");
+        _error("setsockopt", 1);
 
     // Bind the socket to the port and host
     struct sockaddr_in serverAddr_ = {};
@@ -70,11 +70,11 @@ void Server::_setupVirtualServer(VirtualServer& vserver) {
     serverAddr_.sin_port = htons(vserver.getPort());
 
     if (bind(serverFd_, (struct sockaddr *) &serverAddr_, sizeof(serverAddr_)) == -1)
-        strerror(errno);
+        _error("bind", 1);
 
     // Listen for incoming connections
     if (listen(serverFd_, SOMAXCONN) == -1)
-        _error("listen");
+        _error(MSG("bind()"), 1);
 
     struct pollfd serverPollFd_ = {};
     serverPollFd_.fd = serverFd_;
@@ -91,10 +91,10 @@ void Server::start() {
         int ready_ = poll(_fds.data(), _fds.size(), -1);
 
         if (ready_ == -1)
-            _error("poll");
+            _error("poll", 1);
 
         if (ready_ == 0)
-            _error("poll timeout");
+            _error("poll timeout", 1);
 
 
         // Loop through the server fds and handle connections
@@ -128,7 +128,7 @@ void Server::_handleConnections(int sockfd) {
             if (errno == EWOULDBLOCK || errno == EAGAIN) {
                 break;
             } else {
-                _error("accept");
+                _error("accept", 1);
             }
         }
         // Add the clientPollFd_ socket to the pollfds list
@@ -155,7 +155,7 @@ void Server::_handleRequest(pollfdsVectorIterator_t it) {
         bytesRead_ = recv(it->fd, buffer_, BUFFER_SIZE, 0);
 
         if (bytesRead_ == -1)
-            _error("recv");
+            _error("recv", 1);
 
         if (bytesRead_ == 0){
             close(it->fd);
@@ -268,7 +268,7 @@ string Server::_extractExtension(const string &path) const {
 void sendResponseHeaders(int fd, const Response& response) {
     // send HTTP response header
     std::stringstream response_stream;
-    response_stream << "HTTP/1.1 200 OK\r\n";
+    response_stream << "HTTP/1.1 200 OK\r\n"; //TODO: change to response.getStatus()
     std::map<std::string, std::string>::const_iterator headerIter_ = response.getHeaders().begin();
     std::map<std::string, std::string>::const_iterator headerIterEnd_ = response.getHeaders().end();
     for (; headerIter_ != headerIterEnd_; ++headerIter_) {
@@ -284,7 +284,7 @@ void sendResponseBody(int fd, const string& resourcePath) {
 
     std::stringstream body_stream;
     std::ifstream file_stream(resourcePath.c_str(), std::ios::binary);
-   body_stream << file_stream.rdbuf();
+    body_stream << file_stream.rdbuf();
     const size_t CHUNK_SIZE = 1024;
     char buffer[CHUNK_SIZE];
 
@@ -339,9 +339,11 @@ void Server::_handleGET(int fd, const subServersIterator_t &subServersIterator, 
 	if (_isDirectory(resourcePath_)){
         if (resourcePath_.back() != '/')
 			resourcePath_ += "/";
-        resourcePath_ += index_[0]; //todo: return the first index the exists
+        resourcePath_ += index_[0]; //todo: return the first index that exists
     }
-    std::cout << resourcePath_ << std::endl;
+
+    std::cout << "resource path: " << resourcePath_ << std::endl;
+
     response_.setStatusCode(resourcePath_, _mimeTypes);
     if (response_.getStatusCode() != 200)
         resourcePath_ = root_ + "/error_pages/" + std::to_string(response_.getStatusCode()) + ".html";
@@ -481,12 +483,6 @@ void Server::_handleDELETE(int clientSocket , const subServersIterator_t &subSer
 
 	string resourcePath_ = root_ + uri_;
     Response response_   = Response();
-//	if (_isDirectory(resourcePath_)){    //TODO: why this is here?
-//		if (resourcePath_.back() != '/')
-//			resourcePath_ += "/";
-//		resourcePath_ += index_[0]; // todo: find the first index file that exists
-//	}
-
 	// check if the file is regular file
 
     response_.setStatusCode(resourcePath_.c_str(), _mimeTypes);
@@ -539,8 +535,17 @@ string Server::_getErrorPage(int code) const {
 //    }
 //}
 
-void Server::_error(const string& msg) const {
-    throw std::runtime_error(msg + " | " + strerror(errno));
+std::string Server::_getBasename(const std::string& path) const {
+    size_t pos = path.find_last_of("/\\");
+    if (pos != std::string::npos) {
+        return path.substr(pos + 1);
+    }
+    return path;
+}
+
+void Server::_error(const std::string &msg, int err) const {
+    std::string errorMsg = msg + (!err ? "." : (std::string(" | ") + strerror(errno)));
+    throw std::runtime_error(errorMsg);
 }
 
 void Server::printData() const {
