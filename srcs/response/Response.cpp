@@ -38,6 +38,7 @@ void Response::setStatusCode(const string& filePath, std::map<string, string> &m
     std::string M = mimTypes[extension];
     std::ifstream file(filePath);
 
+    //TODO: check if we should support a file with no extension
     if (M.empty()) {
         statusCode = 415;
     }
@@ -75,13 +76,23 @@ void Response::setHeaders() {
 }
 
 const stringMap_t& Response::getHeaders() const {
-    for (std::map<string, string>::const_iterator it = headers.begin(); it != headers.end(); ++it) {
-        std::cout << it->first << " : " << it->second << std::endl;
-    }
+//    for (std::map<string, string>::const_iterator it = headers.begin(); it != headers.end(); ++it) {
+//        std::cout << it->first << " : " << it->second << std::endl;
+//    }
     return headers;
 }
 void Response::setContentType(const string& extension, std::map<string, string> &mimTypes) {
 
+    // todo: check if the content type doesn't exist
+    // if it doesn't exist, set it to text/plain or respond with the following
+    /*
+     *  std::stringstream response_stream;
+     *  response_stream << "HTTP/1.1 415 Unsupported Media Type\r\n\r\n";
+     *  std::string response = response_stream.str();
+     *  send(fd, response.c_str(), response.length(), 0);
+	 * file_stream.close();
+	 * response_stream.clear();
+     */
     content_type =  mimTypes[extension];
 
 }
