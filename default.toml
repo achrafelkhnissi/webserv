@@ -41,14 +41,3 @@ redirect = "http://example.com"
 autoindex = "on"
 _clientMaxBodySize = "10m"
 
-[[server]]
-port = "8080"
-host = "10.0.0.1"
-server_name = ["sub.example.com", "sub.example2.com", "sub.example3.com"]
-root = "www/html2"
-
-[[server]]
-port = "8080"
-host = "10.0.0.1"
-server_name = ["sub.example1.com", "sub.example20.com", "sub.example30.com"]
-root = "www/html3"
