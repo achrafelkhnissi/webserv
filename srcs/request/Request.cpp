@@ -9,8 +9,9 @@ Request::Request() {
 	protocol = "HTTP";
 	version = "1.1";
 	method = "GET";
-	uri = "";
 	query = "name=ismail&age=23";
+    uri = "/media/video/video.mp4";
+//    uri = "/media/image/myimage.jpg";
 	body = "Hello World";
 }
 
@@ -100,6 +101,10 @@ Request::~Request() { }
 
 const string &Request::getQuery() const {
     return query;
+}
+
+void Request::setRequest() {
+    std::cout << "Enter uri: "; cin >> uri;
 }
 
 

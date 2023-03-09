@@ -33,6 +33,7 @@ public:
 	~Request();
 
 	void print();
+    void setRequest();
 
 private:
 
