@@ -129,6 +129,13 @@ void Server::_handleConnections(int sockfd) {
 				_error("accept", 1);
 			}
 		}
+        if (fcntl(clientFd_, F_SETFL, O_NONBLOCK) < 0)
+            _error("fcntl", 1);
+
+        // Set the server socket to reuse the address
+        int optionValue_ = 1;
+        if (setsockopt(clientFd_, SOL_SOCKET, SO_REUSEADDR, &optionValue_, sizeof(optionValue_)) < 0)
+            _error("setsockopt", 1);
 		// Add the clientPollFd_ socket to the pollfds list
 		struct pollfd clientPollFd_ = {};
 		clientPollFd_.fd = clientFd_;
@@ -254,29 +261,18 @@ string Server::_extractExtension(const string &path) const {
 
 
 void sendResponseHeaders(int fd, const Response& response) {
-	// send HTTP response header
-	std::ostringstream response_stream;
-//    string response_stream;
-//    int i = 0;
 
-    response_stream << "HTTP/1.1 200 OK\r\n"; //TODO: change to response.getStatus()
-//	response_stream << "HTTP/1.1 200 OK\r\nContent-Type: image/jpeg\r\n\r\n";
+    std::ostringstream stream;
 
-    std::map<std::string, std::string>::const_iterator headerIter_ = response.getHeaders().begin();
-    std::map<std::string, std::string>::const_iterator headerIterEnd_ = response.getHeaders().end();
-    for (; headerIter_ != headerIterEnd_; ++headerIter_) {
-        response_stream << headerIter_->first  << ": " << headerIter_->second << "\r\n";
-    }
+    stream << "HTTP/1.1 200 OK\r\n" ;
+    stream << "Content-Type: " << response.getContentType() << "\r\n";
+    stream << "Content-Length: " << response.getContentLength() << "\r\n";
+    stream << "\r\n";
 
-	std::cout << "response_stream: " << response_stream << std::endl;
+    const string& res = stream.str();
+    send(fd, res.c_str(), res.size(), 0);
 
-    response_stream <<  "\r\n";
 
-	const string& response_header = response_stream.str();
-
-	send(fd, response_header.c_str(), response_header.size(), 0);
-//    std::string response_header = response_tream.str();
-//	send(fd, response_stream.str().c_str(), response_stream.str().length(), 0);
 
 }
 
@@ -310,13 +306,15 @@ void sendResponseBody(int fd, const string& resourcePath) {
 		return;
 	}
 
-	char buffer[BUFFER_SIZE];
+	char buffer[BUFFER_SIZE * 2];
+    int bytesSent = 0;
 	while (fileStream) {
 		fileStream.read(buffer, BUFFER_SIZE);
 		int bytesRead = fileStream.gcount();
 		send(fd, buffer, bytesRead, 0);
+        bytesSent += bytesRead;
 	}
-
+    std::cout << "bytes sent: " << bytesSent << std::endl;
 	fileStream.close();
 }
 
@@ -339,6 +337,45 @@ void sendResponseBody(int fd, Response response) {
 	}
 	body_stream.clear();
 	file_stream.close();
+}
+
+void sendFile(int socket, const char* filePath) {
+    ifstream fileStream(filePath, ios::in | ios::binary);
+
+    if (!fileStream) {
+        cerr << "Unable to open file" << endl;
+        return;
+    }
+
+    // Calculate the size of the file
+    fileStream.seekg(0, ios::end);
+    int fileSize = fileStream.tellg();
+    fileStream.seekg(0, ios::beg);
+
+    // Create the HTTP response header with the Content-Length field
+    ostringstream responseHeader;
+//   stringstream responseHeader;
+    responseHeader << "HTTP/1.1 200 OK\r\n";
+    responseHeader << "Content-Type: image/jpeg\r\n";
+//	responseHeader << "Content-Type: image/jpeg\r\n";
+    responseHeader << "Content-Length: " << to_string(fileSize) << "\r\n";
+    responseHeader << "\r\n";
+
+    // Send the HTTP response header
+    const string& response = responseHeader.str();
+    send(socket, response.c_str(), response.size(), 0);
+
+    // Send the file data
+    char buffer[BUFFER_SIZE];
+    int bytesSent = 0;
+    while (fileStream) {
+        fileStream.read(buffer, BUFFER_SIZE);
+        int bytesRead = fileStream.gcount();
+        send(socket, buffer, bytesRead, 0);
+        bytesSent += bytesRead;
+    }
+    std::cout << "Bytes sent: " << bytesSent << std::endl;
+    fileStream.close();
 }
 
 void Server::_handleGET(int fd, const subServersIterator_t &subServersIterator, const Request& request) {
@@ -367,6 +404,7 @@ void Server::_handleGET(int fd, const subServersIterator_t &subServersIterator, 
 	if (response_.getStatusCode() != 200)
 		resourcePath_ = root_ + "/error_pages/" + std::to_string(response_.getStatusCode()) + ".html";
 
+    std::cout << "here" << std::endl;
 	response_.setContentLength(resourcePath_);
 	response_.setContentType(_extractExtension(resourcePath_), _mimeTypes);
 
@@ -378,9 +416,43 @@ void Server::_handleGET(int fd, const subServersIterator_t &subServersIterator, 
 	response_.setHeaders();
 	sendResponseHeaders(fd, response_);
     sendResponseBody(fd, resourcePath_);
-//	char* response = "HTTP/1.1 200 OK\r\nContent-Type: video/mp4\r\n\r\n";
-//    char* response = "HTTP/1.1 200 OK\r\nContent-Type: image/jpeg\r\n\r\n";
-//    send(fd, response, strlen(response), 0);
+
+
+//    string uri = "www/media/image/myimage.jpg";
+//    ifstream fileStream(uri, ios::in | ios::binary);
+//    if (!fileStream) {
+//        cerr << "Unable to open file" << endl;
+//        return;
+//    }
+//
+//    // Calculate the size of the file
+//    fileStream.seekg(0, ios::end);
+//    int fileSize = fileStream.tellg();
+//    fileStream.seekg(0, ios::beg);
+//
+//
+//    std::ostringstream responseHeader;
+//    responseHeader << "HTTP/1.1 200 OK\r\n";
+//    responseHeader << "Content-Type: image/jpeg\r\n";
+//    responseHeader << "Content-Length: " << fileSize << "\r\n";
+//    responseHeader << "\r\n";
+//
+//    const string& response = responseHeader.str();
+//    send(fd, response.c_str(), response.size(), 0);
+//
+//    // Send the file data
+//    char buffer[BUFFER_SIZE];
+//    int bytesSent = 0;
+//    while (fileStream) {
+//        fileStream.read(buffer, BUFFER_SIZE);
+//        int bytesRead = fileStream.gcount();
+//        send(fd, buffer, bytesRead, 0);
+//        bytesSent += bytesRead;
+//        memset(buffer, 0, BUFFER_SIZE);
+//        usleep(1);
+//    }
+//    std::cout << "Bytes sent: " << bytesSent << std::endl;
+//    fileStream.close();
 }
 
 //void Server::_handlePOST(int clientSocket, const Request& request) {

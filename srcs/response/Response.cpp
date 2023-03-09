@@ -35,7 +35,9 @@ void Response::setStatusCode(int statusCode) {
 }
 
 void Response::setStatusCode(const string& filePath, std::map<string, string> &mimTypes) {
+    std::cout <<"extension " << filePath.find_last_of(".")  << std::endl;
     std::string extension = filePath.substr(filePath.find_last_of(".") );
+    std::cout << "extension: " << extension << std::endl;
     std::string M = mimTypes[extension];
     std::ifstream file(filePath);
 
