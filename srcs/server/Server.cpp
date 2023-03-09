@@ -36,6 +36,7 @@ void Server::_setMimeTypes() {
     _mimeTypes[".js"] = "text/javascript";
     _mimeTypes[".json"] = "application/json";
     _mimeTypes[".mp3"] = "audio/mpeg";
+    _mimeTypes[".mp4"] = "video/mp4";
     _mimeTypes[".mpeg"] = "video/mpeg";
     _mimeTypes[".png"] = "image/png";
     _mimeTypes[".pdf"] = "application/pdf";
@@ -163,26 +164,32 @@ void Server::_handleRequest(pollfdsVectorIterator_t it) {
         }
 
 
-    cout << "buffer: " << buffer_ << endl;
-    requestBuffer_ = string(buffer_, bytesRead_);
-    HttpParser::e_status status = _clientHttpParserMap[it->fd].push(requestBuffer_);
 
-    if (status == HttpParser::FAILED){
-        std::cout << "FAILED" << std::endl;
-        return;
-    }
-    else if (status == HttpParser::DONE)
-    {
-        std::cout << "DONE" << std::endl;
-        _request = _clientHttpParserMap[it->fd].into_request();
-        std::cout << "=== REQUEST RECEIVED ===" << std::endl;
-        _request.print();
-        std::cout << "=== END OF REQUEST ===\n\n\n" << std::endl;
+//    cout << "buffer: " << buffer_ << endl;
+//    requestBuffer_ = string(buffer_, bytesRead_);
+//    HttpParser::e_status status = _clientHttpParserMap[it->fd].push(requestBuffer_);
+//
+//    if (status == HttpParser::FAILED){
+//        std::cout << "FAILED" << std::endl;
+//        return;
+//    }
+//    else if (status == HttpParser::DONE)
+//    {
+//        std::cout << "DONE" << std::endl;
+//        _request = _clientHttpParserMap[it->fd].into_request();
+//        std::cout << "=== REQUEST RECEIVED ===" << std::endl;
+//        _request.print();
+//        std::cout << "=== END OF REQUEST ===\n\n\n" << std::endl;
 
         // Match the port and host to the correct server
 
-        virtualServerMapIterator_t vserverIter_ = _virtualServer.find(_request.getHost().second);
-        subServersIterator_t subServerIter_ = vserverIter_->second.matchSubServer(_request.getHost().first);
+//        _request.setRequest();
+    std::cout << "I'm Here: " << __LINE__ << _getBasename(__FILE__) << std::endl;
+    virtualServerMapIterator_t vserverIter_ = _virtualServer.find(1337);
+//    virtualServerMapIterator_t vserverIter_ = _virtualServer.find(_request.getHost().second);
+    subServersIterator_t subServerIter_ = vserverIter_->second.matchSubServer("localhost");
+
+//    subServersIterator_t subServerIter_ = vserverIter_->second.matchSubServer(_request.getHost().first);
 
 
 //    subServerIter_->printData();
@@ -194,10 +201,10 @@ void Server::_handleRequest(pollfdsVectorIterator_t it) {
         } else if (_request.getMethod() == "DELETE") {
             _handleDELETE(it->fd,subServerIter_,  _request);
         }
-    } else if (status == HttpParser::CONTINUE) {
-        cout << "CONTINUE" << endl;
-        return;
-    }
+//    } else if (status == HttpParser::CONTINUE) {
+//        cout << "CONTINUE" << endl;
+//        return;
+//    }
 
 
 
@@ -268,38 +275,62 @@ string Server::_extractExtension(const string &path) const {
 void sendResponseHeaders(int fd, const Response& response) {
     // send HTTP response header
     std::stringstream response_stream;
+//    string response_stream;
+//    int i = 0;
+
     response_stream << "HTTP/1.1 200 OK\r\n"; //TODO: change to response.getStatus()
     std::map<std::string, std::string>::const_iterator headerIter_ = response.getHeaders().begin();
     std::map<std::string, std::string>::const_iterator headerIterEnd_ = response.getHeaders().end();
     for (; headerIter_ != headerIterEnd_; ++headerIter_) {
-        response_stream << headerIter_->first << ": " << headerIter_->second << "\r\n";
+        response_stream << headerIter_->first  << ": " << headerIter_->second << "\r\n";
     }
-    response_stream << "\r\n";
-    std::string response_header = response_stream.str();
-    send(fd, response_header.c_str(), response_header.length(), 0);
+
+    std::cout << "response_stream: " << response_stream << std::endl;
+
+    response_stream <<  "\r\n";
+//    std::string response_header = response_tream.str();
+    send(fd, response_stream.str().c_str(), response_stream.str().length(), 0);
 
 }
 
 void sendResponseBody(int fd, const string& resourcePath) {
 
-    std::stringstream body_stream;
-    std::ifstream file_stream(resourcePath.c_str(), std::ios::binary);
-    body_stream << file_stream.rdbuf();
-    const size_t CHUNK_SIZE = 1024;
-    char buffer[CHUNK_SIZE];
+////    std::stringstream body_stream;
+//    std::ifstream file_stream(resourcePath.c_str(), std::ios::in | std::ios::binary);
+////    body_stream << file_stream.rdbuf();
+//    const size_t CHUNK_SIZE = 1024;
+//    char buffer[CHUNK_SIZE];
+//
+//
+//    while (file_stream.good()) {
+//        file_stream.read(buffer, CHUNK_SIZE);
+//        size_t bytes_read = file_stream.gcount();
+//        if (bytes_read <= 0) {
+//            break;
+//        }
+//        send(fd, buffer, bytes_read, 0);
+//    }
+//    std::cout << "DONE SENDING" << std::endl;
+////    file_stream.clear();
+//    file_stream.close();
+//    // send HTTP response body
+#define BUFFER_SIZE  1024
 
+    ifstream fileStream(resourcePath, ios::in | ios::binary);
 
-    while (body_stream.good()) {
-        body_stream.read(buffer, CHUNK_SIZE);
-        size_t bytes_read = body_stream.gcount();
-        if (bytes_read <= 0) {
-            break;
-        }
-        send(fd, buffer, bytes_read, 0);
+    if (!fileStream) {
+        cerr << "Unable to open file" << endl;
+        return;
     }
-    body_stream.clear();
-    file_stream.close();
-    // send HTTP response body
+
+    char buffer[BUFFER_SIZE];
+    while (fileStream) {
+        fileStream.read(buffer, BUFFER_SIZE);
+        int bytesRead = fileStream.gcount();
+        send(fd, buffer, bytesRead, 0);
+    }
+
+    fileStream.close();
 }
 void sendResponseBody(int fd, Response response) {
 
@@ -351,12 +382,16 @@ void Server::_handleGET(int fd, const subServersIterator_t &subServersIterator, 
     response_.setContentLength(resourcePath_);
     response_.setContentType(_extractExtension(resourcePath_), _mimeTypes);
 
+
     std::cout << "\n\nstatus code: " << response_.getStatusCode() << std::endl;
     std::cout << "content type: " << response_.getContentType() << std::endl;
     std::cout << "content length: " << response_.getContentLength() << std::endl;
 
     response_.setHeaders();
     sendResponseHeaders(fd, response_);
+//    sendResponseBody(fd, resourcePath_);
+//    char* response = "HTTP/1.1 200 OK\r\nContent-Type: video/mp4\r\n\r\n";
+//    send(fd, response, strlen(response), 0);
     sendResponseBody(fd, resourcePath_);
 
 }
