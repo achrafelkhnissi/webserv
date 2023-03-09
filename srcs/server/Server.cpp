@@ -106,9 +106,9 @@ void Server::start() {
         }
 
         // Loop through the client fds and handle requests
-        for (pollfdsVectorIterator_t it = _fds.begin() + _virtualServer.size(); it != _fds.end(); ++it) {
-            if (it->revents & POLLIN) {
-                _handleRequest(it);
+        for (::size_t it =   _virtualServer.size(); it < _fds.size(); ++it) {
+            if (_fds.at(it).revents & POLLIN) {
+                _handleRequest(_fds.begin() + it);
             }
         }
     }
@@ -165,31 +165,30 @@ void Server::_handleRequest(pollfdsVectorIterator_t it) {
 
 
 
-//    cout << "buffer: " << buffer_ << endl;
-//    requestBuffer_ = string(buffer_, bytesRead_);
-//    HttpParser::e_status status = _clientHttpParserMap[it->fd].push(requestBuffer_);
-//
-//    if (status == HttpParser::FAILED){
-//        std::cout << "FAILED" << std::endl;
-//        return;
-//    }
-//    else if (status == HttpParser::DONE)
-//    {
-//        std::cout << "DONE" << std::endl;
-//        _request = _clientHttpParserMap[it->fd].into_request();
-//        std::cout << "=== REQUEST RECEIVED ===" << std::endl;
-//        _request.print();
-//        std::cout << "=== END OF REQUEST ===\n\n\n" << std::endl;
+    cout << "buffer: " << buffer_ << endl;
+    requestBuffer_ = string(buffer_, bytesRead_);
+    HttpParser::e_status status = _clientHttpParserMap[it->fd].push(requestBuffer_);
+
+    if (status == HttpParser::FAILED){
+        std::cout << "FAILED" << std::endl;
+        return;
+    }
+    else if (status == HttpParser::DONE)
+    {
+        std::cout << "DONE" << std::endl;
+        _request = _clientHttpParserMap[it->fd].into_request();
+        std::cout << "=== REQUEST RECEIVED ===" << std::endl;
+        _request.print();
+        std::cout << "=== END OF REQUEST ===\n\n\n" << std::endl;
 
         // Match the port and host to the correct server
 
 //        _request.setRequest();
     std::cout << "I'm Here: " << __LINE__ << _getBasename(__FILE__) << std::endl;
-    virtualServerMapIterator_t vserverIter_ = _virtualServer.find(1337);
-//    virtualServerMapIterator_t vserverIter_ = _virtualServer.find(_request.getHost().second);
-    subServersIterator_t subServerIter_ = vserverIter_->second.matchSubServer("localhost");
-
-//    subServersIterator_t subServerIter_ = vserverIter_->second.matchSubServer(_request.getHost().first);
+//    virtualServerMapIterator_t vserverIter_ = _virtualServer.find(1337);
+    virtualServerMapIterator_t vserverIter_ = _virtualServer.find(_request.getHost().second);
+//    subServersIterator_t subServerIter_ = vserverIter_->second.matchSubServer("localhost");
+    subServersIterator_t subServerIter_ = vserverIter_->second.matchSubServer(_request.getHost().first);
 
 
 //    subServerIter_->printData();
@@ -201,13 +200,14 @@ void Server::_handleRequest(pollfdsVectorIterator_t it) {
         } else if (_request.getMethod() == "DELETE") {
             _handleDELETE(it->fd,subServerIter_,  _request);
         }
-//    } else if (status == HttpParser::CONTINUE) {
-//        cout << "CONTINUE" << endl;
-//        return;
-//    }
+    } else if (status == HttpParser::CONTINUE) {
+        cout << "CONTINUE" << endl;
+        return;
+    }
 
 
-
+    close(it->fd);
+    _fds.erase(it);
 
 }
 
