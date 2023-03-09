@@ -10,8 +10,8 @@ Request::Request() {
 	version = "1.1";
 	method = "GET";
 	query = "name=ismail&age=23";
-    uri = "/media/video/video.mp4";
-//    uri = "/media/image/myimage.jpg";
+//    uri = "/media/video/video.mp4";
+    uri = "/media/image/myimage.jpg";
 	body = "Hello World";
 }
 

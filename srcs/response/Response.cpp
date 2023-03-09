@@ -5,6 +5,7 @@ Response::Response() {
     protocol = "HTTP";
     version = "1.1";
     body = "Hello World";
+	content_length = 0;
 
     http_errors[400] = "Bad Request";
     http_errors[401] = "Unauthorized";
@@ -58,9 +59,7 @@ int Response::getStatusCode() const {
 
 void Response::setContentLength(string &path) {
 
-    std::ifstream file_stream(path, std::ios::binary);
-    stringstream string_stream;
-    string_stream << file_stream.rdbuf();
+    std::ifstream file_stream(path, std::ios::in | std::ios::binary);
 
     //get file size
     file_stream.seekg(0, std::ios::end);
