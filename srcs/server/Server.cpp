@@ -1,43 +1,5 @@
 #include "Server.hpp"
 
-void sendFile(int socket, const char* filePath) {
-    std::ifstream fileStream(filePath, std::ios::in | std::ios::binary);
-
-    if (!fileStream) {
-        std::cerr << "Unable to open file" << std::endl;
-        return;
-    }
-
-    // Calculate the size of the file
-    fileStream.seekg(0, std::ios::end);
-    int fileSize = fileStream.tellg();
-    fileStream.seekg(0, std::ios::beg);
-
-    // Create the HTTP response header with the Content-Length field
-    std::ostringstream responseHeader;
-//   stringstream responseHeader;
-    responseHeader << "HTTP/1.1 200 OK\r\n";
-    responseHeader << "Content-Type: video/mp4\r\n";
-//	responseHeader << "Content-Type: image/jpeg\r\n";
-    responseHeader << "Content-Length: " << std::to_string(fileSize) << "\r\n";
-    responseHeader << "\r\n";
-
-    // Send the HTTP response header
-    const std::string& response = responseHeader.str();
-    send(socket, response.c_str(), response.size(), 0);
-
-    // Send the file data
-    char buffer[BUFFER_SIZE];
-    int bytesSent = 0;
-    while (fileStream) {
-        fileStream.read(buffer, BUFFER_SIZE);
-        int bytesRead = fileStream.gcount();
-        send(socket, buffer, bytesRead, 0);
-        bytesSent += bytesRead;
-    }
-
-    fileStream.close();
-}
 
 Server::Server(Configuration config): _config(config), _request() {
 
@@ -94,11 +56,7 @@ void Server::_setupVirtualServer(VirtualServer& vserver) {
 	if (serverFd_ == -1)
 		_error("socket", 1);
 
-//	// Set the server socket to non-blocking mode
-//	if (fcntl(serverFd_, F_SETFL, O_NONBLOCK) < 0)
-//		_error("fcntl", 1);
-//
-//	// Set the server socket to reuse the address
+	// Set the server socket to reuse the address
 //	int optionValue_ = 1;
 //	if (setsockopt(serverFd_, SOL_SOCKET, SO_REUSEADDR, &optionValue_, sizeof(optionValue_)) < 0)
 //		_error("setsockopt", 1);
@@ -117,34 +75,10 @@ void Server::_setupVirtualServer(VirtualServer& vserver) {
 	if (listen(serverFd_, SOMAXCONN) == -1)
 		_error(MSG("bind()"), 1);
 
-//	struct pollfd serverPollFd_ = {};
-//	serverPollFd_.fd = serverFd_;
-//	serverPollFd_.events = POLLIN;
-//	_fds.push_back(serverPollFd_);
-
-    char _buffer[BUFFER_SIZE] = {0};
-	const char* filePath = "/Users/ael-khni/CLionProjects/webserv/www/media/video/video.mp4";
-//	const char* filePath = "/Users/ael-khni/CLionProjects/webserv/www/media/image/myimage.jpg";
-
-
-	while (true) {
-		int newFd = accept(serverFd_, (struct sockaddr *) &serverAddr_, (socklen_t *) &serverAddr_);
-		if (newFd == -1) {
-			if (errno == EWOULDBLOCK || errno == EAGAIN) {
-				break;
-			} else {
-				_error("accept", 1);
-			}
-		}
-
-		recv(newFd, _buffer, 1024, 0);
-		std::cout << _buffer << std::endl;
-		memset(_buffer, 0, 1024);
-
-		sendFile(newFd, filePath);
-
-		close(newFd);
-	}
+	struct pollfd serverPollFd_ = {};
+	serverPollFd_.fd = serverFd_;
+	serverPollFd_.events = POLLIN;
+	_fds.push_back(serverPollFd_);
 
 }
 
@@ -161,18 +95,17 @@ void Server::start() {
 		if (ready_ == 0)
 			_error("poll timeout", 1);
 
-		// Loop through the server fds and handle connections
-		for (size_t i = 0; i < _virtualServer.size(); i++) {
-			if (_fds[i].revents & POLLIN)
-				_handleConnections(_fds[i].fd);
-		}
+        for (size_t i = 0; i < _fds.size(); i++) {
+            if ((i < _virtualServer.size()) & (_fds[i].revents & POLLIN))
+                _handleConnections(_fds[i].fd);
 
-		// Loop through the client fds and handle requests
-		for (int it = _virtualServer.size(); it < _fds.size(); ++it) {
-			if (_fds.at(it).revents & POLLIN)
-				_handleRequest(_fds.begin() + it);
-		}
-	}
+                // Loop through the client fds and handle requests
+            else if (_fds.at(i).revents  & POLLIN ){
+                std::cout <<
+            }
+                _handleRequest(_fds.begin() + i);
+        }
+    }
 }
 
 Server::~Server() {
@@ -185,6 +118,7 @@ void Server::_handleConnections(int sockfd) {
 		struct sockaddr_in sockAddrIn_ = {};
 		socklen_t clientLen_ = sizeof(sockAddrIn_);
 		int clientFd_ = accept(sockfd, (struct sockaddr*)&sockAddrIn_, &clientLen_);
+        std::cout << "clientFd_ = " << clientFd_ << std::endl;
 		if (clientFd_ == -1) {
 			if (errno == EWOULDBLOCK || errno == EAGAIN) {
 				break;
@@ -192,14 +126,6 @@ void Server::_handleConnections(int sockfd) {
 				_error("accept", 1);
 			}
 		}
-
-		if (fcntl(clientFd_, F_SETFL, O_NONBLOCK) < 0)
-			_error("fcntl", 1);
-
-		// set the client socket to reuse the address
-		int optionValue_ = 1;
-		if (setsockopt(clientFd_, SOL_SOCKET, SO_REUSEADDR, &optionValue_, sizeof(optionValue_)) < 0)
-			_error("setsockopt", 1);
 
 		// Add the clientPollFd_ socket to the pollfds list
 		struct pollfd clientPollFd_ = {};
@@ -272,14 +198,6 @@ void Server::_clearPollfds() {
 	_fds.clear();
 }
 
-void Server::_sendResponse(int fd) {
-// Send the response_ to the client
-	string response_ = "HTTP/1.1 200 OK\r\n"
-					   "Content-Type: text/html\r\n\r\n"
-					   "<h1>Hello World!</h1>";
-	send(fd, response_.c_str(), response_.length(), 0);
-}
-
 bool Server::_isDirectory(const std::string &dirPath) const {
 	struct stat info = {};
 	return stat(dirPath.c_str(), &info) == 0 && (info.st_mode & S_IFDIR);
@@ -317,21 +235,13 @@ string Server::_extractExtension(const string &path) const {
 	}
 	return extension_;
 }
-//void Server::getContentTypeForGet(string& resourcePath, string& contentType) {
-//
-//
-//    _statusCode = 200;
-//}
-
 
 void sendResponseHeaders(int fd, const Response& response) {
 	// send HTTP response header
 	std::ostringstream response_stream;
-//    string response_stream;
-//    int i = 0;
 
-    response_stream << "HTTP/1.1 200 OK\r\n"; //TODO: change to response.getStatus()
-//	response_stream << "HTTP/1.1 200 OK\r\nContent-Type: image/jpeg\r\n\r\n";
+    response_stream << "HTTP/1.1 ";
+    response_stream << response.getStatusCode() << " "<< response.getHttpErrors().at(response.getStatusCode()) << "\r\n"; //TODO: change to response.getStatus()
 
     std::map<std::string, std::string>::const_iterator headerIter_ = response.getHeaders().begin();
     std::map<std::string, std::string>::const_iterator headerIterEnd_ = response.getHeaders().end();
@@ -339,39 +249,16 @@ void sendResponseHeaders(int fd, const Response& response) {
         response_stream << headerIter_->first  << ": " << headerIter_->second << "\r\n";
     }
 
-	std::cout << "response_stream: " << response_stream << std::endl;
-
     response_stream <<  "\r\n";
 
 	const string& response_header = response_stream.str();
 
 	send(fd, response_header.c_str(), response_header.size(), 0);
-//    std::string response_header = response_tream.str();
-//	send(fd, response_stream.str().c_str(), response_stream.str().length(), 0);
 
 }
 
 void sendResponseBody(int fd, const string& resourcePath) {
 
-//    std::stringstream body_stream;
-//    std::ifstream file_stream(resourcePath.c_str(), std::ios::in | std::ios::binary);
-////    body_stream << file_stream.rdbuf();
-//    const size_t CHUNK_SIZE = 1024;
-//    char buffer[CHUNK_SIZE];
-//
-//
-//    while (file_stream.good()) {
-//        file_stream.read(buffer, CHUNK_SIZE);
-//        size_t bytes_read = file_stream.gcount();
-//        if (bytes_read <= 0) {
-//            break;
-//        }
-//        send(fd, buffer, bytes_read, 0);
-//    }
-//    std::cout << "DONE SENDING" << std::endl;
-////    file_stream.clear();
-//    file_stream.close();
-	// send HTTP response body
 #define BUFFER_SIZE  1024
 
 	ifstream fileStream(resourcePath, ios::in | ios::binary);
@@ -385,7 +272,17 @@ void sendResponseBody(int fd, const string& resourcePath) {
 	while (fileStream) {
 		fileStream.read(buffer, BUFFER_SIZE);
 		int bytesRead = fileStream.gcount();
-		send(fd, buffer, bytesRead, 0);
+		int sent = send(fd, buffer, bytesRead, 0);
+        if (sent == -1) {
+            if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                // try again
+                cerr << " EWOULDBLOCK || EAGAIN Try again" << endl;
+                return ;
+            } else {
+                // error
+                cerr << "Error sending file" << endl;
+            }
+        }
 	}
 
 	fileStream.close();
@@ -449,9 +346,6 @@ void Server::_handleGET(int fd, const subServersIterator_t &subServersIterator, 
 	response_.setHeaders();
 	sendResponseHeaders(fd, response_);
     sendResponseBody(fd, resourcePath_);
-//	char* response = "HTTP/1.1 200 OK\r\nContent-Type: video/mp4\r\n\r\n";
-//    char* response = "HTTP/1.1 200 OK\r\nContent-Type: image/jpeg\r\n\r\n";
-//    send(fd, response, strlen(response), 0);
 }
 
 //void Server::_handlePOST(int clientSocket, const Request& request) {
@@ -543,21 +437,6 @@ void Server::_handleGET(int fd, const subServersIterator_t &subServersIterator, 
 //    }
 //}
 
-/*
- * @disc _handleDELETE method - This method is responsible for handling DELETE requests
- * @param fd: the file descriptor of the client socket
- */
-//void Server::_handleDELETE(int fd) {
-//    // Handle the DELETE request
-//    // ...
-//    (void)fd;
-//}
-
-/*
- * @disc _handleEerror method - This method is responsible for handling errors
- *
- * @param fd: the file descriptor of the client socket
- */
 
 void Server::_handleDELETE(int clientSocket , const subServersIterator_t &subServersIterator, const Request& request) {
 

@@ -37,6 +37,7 @@ public:
     const stringMap_t& getHeaders() const;
     size_t getContentLength() const;
     const string& getContentType() const;
+    std::map<int, string> getHttpErrors() const;
     void printData() const;
 
     bool is_regular_file(const char *path) const;

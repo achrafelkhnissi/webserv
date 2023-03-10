@@ -7,6 +7,7 @@ Response::Response() {
     body = "Hello World";
 	content_length = 0;
 
+    http_errors[200] = "OK";
     http_errors[400] = "Bad Request";
     http_errors[401] = "Unauthorized";
     http_errors[403] = "Forbidden";
@@ -35,7 +36,13 @@ void Response::setStatusCode(int statusCode) {
 }
 
 void Response::setStatusCode(const string& filePath, std::map<string, string> &mimTypes) {
-    std::string extension = filePath.substr(filePath.find_last_of(".") );
+
+    std::string extension;
+    if(filePath.find_last_of(".") == std::string::npos)
+        extension = "";
+    else
+        extension = filePath.substr(filePath.find_last_of(".") );
+
     std::string M = mimTypes[extension];
     std::ifstream file(filePath);
 
@@ -110,4 +117,8 @@ const string &Response::getBody() const {
 void Response::setBody(const string &s) {
     this->body = s;
 
+}
+
+std::map<int, string> Response::getHttpErrors() const{
+    return http_errors;
 }
