@@ -49,7 +49,6 @@ Configuration::Configuration(toml::table& config) {
 		return;
 	for (size_t i = 0; i < t.vec.size(); i++) {
 		_servers.push_back(fill_server(t[i]));
-		_servers.back().print();
 	}
 }
 
@@ -59,4 +58,13 @@ Configuration::~Configuration() {
 
 const vector<ServerConfig> &Configuration::getServers() const {
     return _servers;
+}
+
+void Configuration::print() {
+	cout << "\n<==================== Configuration ====================>" << endl;
+
+	for (int i = 0; i < _servers.size(); i++)
+		_servers[i].print();
+
+	cout << "\n<==================== END Configuration ====================>\n" << endl;
 }

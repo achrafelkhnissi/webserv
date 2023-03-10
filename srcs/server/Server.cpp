@@ -1,5 +1,44 @@
 #include "Server.hpp"
 
+void sendFile(int socket, const char* filePath) {
+    std::ifstream fileStream(filePath, std::ios::in | std::ios::binary);
+
+    if (!fileStream) {
+        std::cerr << "Unable to open file" << std::endl;
+        return;
+    }
+
+    // Calculate the size of the file
+    fileStream.seekg(0, std::ios::end);
+    int fileSize = fileStream.tellg();
+    fileStream.seekg(0, std::ios::beg);
+
+    // Create the HTTP response header with the Content-Length field
+    std::ostringstream responseHeader;
+//   stringstream responseHeader;
+    responseHeader << "HTTP/1.1 200 OK\r\n";
+    responseHeader << "Content-Type: video/mp4\r\n";
+//	responseHeader << "Content-Type: image/jpeg\r\n";
+    responseHeader << "Content-Length: " << std::to_string(fileSize) << "\r\n";
+    responseHeader << "\r\n";
+
+    // Send the HTTP response header
+    const std::string& response = responseHeader.str();
+    send(socket, response.c_str(), response.size(), 0);
+
+    // Send the file data
+    char buffer[BUFFER_SIZE];
+    int bytesSent = 0;
+    while (fileStream) {
+        fileStream.read(buffer, BUFFER_SIZE);
+        int bytesRead = fileStream.gcount();
+        send(socket, buffer, bytesRead, 0);
+        bytesSent += bytesRead;
+    }
+
+    fileStream.close();
+}
+
 Server::Server(Configuration config): _config(config), _request() {
 
 	vector<ServerConfig> servers_ = _config.getServers();
@@ -55,14 +94,14 @@ void Server::_setupVirtualServer(VirtualServer& vserver) {
 	if (serverFd_ == -1)
 		_error("socket", 1);
 
-	// Set the server socket to non-blocking mode
-	if (fcntl(serverFd_, F_SETFL, O_NONBLOCK) < 0)
-		_error("fcntl", 1);
-
-	// Set the server socket to reuse the address
-	int optionValue_ = 1;
-	if (setsockopt(serverFd_, SOL_SOCKET, SO_REUSEADDR, &optionValue_, sizeof(optionValue_)) < 0)
-		_error("setsockopt", 1);
+//	// Set the server socket to non-blocking mode
+//	if (fcntl(serverFd_, F_SETFL, O_NONBLOCK) < 0)
+//		_error("fcntl", 1);
+//
+//	// Set the server socket to reuse the address
+//	int optionValue_ = 1;
+//	if (setsockopt(serverFd_, SOL_SOCKET, SO_REUSEADDR, &optionValue_, sizeof(optionValue_)) < 0)
+//		_error("setsockopt", 1);
 
 	// Bind the socket to the port and host
 	struct sockaddr_in serverAddr_ = {};
@@ -78,10 +117,34 @@ void Server::_setupVirtualServer(VirtualServer& vserver) {
 	if (listen(serverFd_, SOMAXCONN) == -1)
 		_error(MSG("bind()"), 1);
 
-	struct pollfd serverPollFd_ = {};
-	serverPollFd_.fd = serverFd_;
-	serverPollFd_.events = POLLIN;
-	_fds.push_back(serverPollFd_);
+//	struct pollfd serverPollFd_ = {};
+//	serverPollFd_.fd = serverFd_;
+//	serverPollFd_.events = POLLIN;
+//	_fds.push_back(serverPollFd_);
+
+    char _buffer[BUFFER_SIZE] = {0};
+	const char* filePath = "/Users/ael-khni/CLionProjects/webserv/www/media/video/video.mp4";
+//	const char* filePath = "/Users/ael-khni/CLionProjects/webserv/www/media/image/myimage.jpg";
+
+
+	while (true) {
+		int newFd = accept(serverFd_, (struct sockaddr *) &serverAddr_, (socklen_t *) &serverAddr_);
+		if (newFd == -1) {
+			if (errno == EWOULDBLOCK || errno == EAGAIN) {
+				break;
+			} else {
+				_error("accept", 1);
+			}
+		}
+
+		recv(newFd, _buffer, 1024, 0);
+		std::cout << _buffer << std::endl;
+		memset(_buffer, 0, 1024);
+
+		sendFile(newFd, filePath);
+
+		close(newFd);
+	}
 
 }
 
@@ -129,6 +192,15 @@ void Server::_handleConnections(int sockfd) {
 				_error("accept", 1);
 			}
 		}
+
+		if (fcntl(clientFd_, F_SETFL, O_NONBLOCK) < 0)
+			_error("fcntl", 1);
+
+		// set the client socket to reuse the address
+		int optionValue_ = 1;
+		if (setsockopt(clientFd_, SOL_SOCKET, SO_REUSEADDR, &optionValue_, sizeof(optionValue_)) < 0)
+			_error("setsockopt", 1);
+
 		// Add the clientPollFd_ socket to the pollfds list
 		struct pollfd clientPollFd_ = {};
 		clientPollFd_.fd = clientFd_;
@@ -144,6 +216,7 @@ void Server::_handleRequest(pollfdsVectorIterator_t it) {
 	ssize_t bytesRead_ = 0;
 
 	char buffer_[BUFFER_SIZE];
+	memset(buffer_, 0, BUFFER_SIZE);
 	bytesRead_ = recv(it->fd, buffer_, BUFFER_SIZE, 0);
 
 	if (bytesRead_ == -1) {
@@ -166,9 +239,7 @@ void Server::_handleRequest(pollfdsVectorIterator_t it) {
 	} else if (status == HttpParser::DONE) {
 		std::cout << "DONE" << std::endl;
 		_request = _clientHttpParserMap[it->fd].into_request();
-		std::cout << "=== REQUEST RECEIVED ===" << std::endl;
 		_request.print();
-		std::cout << "=== END OF REQUEST ===\n\n\n" << std::endl;
 
 		// Match the port and host to the correct server
 		virtualServerMapIterator_t vserverIter_ = _virtualServer.find(_request.getHost().second);
@@ -612,3 +683,7 @@ a Host header field, the host is determined by the Host header
 3. If the host as determined by rule 1 or 2 is not a valid host on
 the server, the response MUST be a 400 (Bad Request) error message.
 */
+
+
+/* ------------------------------------------------------------------------------------------ */
+

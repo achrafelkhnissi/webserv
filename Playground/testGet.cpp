@@ -90,12 +90,19 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sstream>
+#include <vector>
+#include <poll.h>
+#include <fcntl.h>
 
-//#define PORT 4242
-#define PORT 1337
+
+#define PORT 4242
+//#define PORT 1337
 #define BUFFER_SIZE 1024
 
 using namespace std;
+
+    const char* videoFilePath = "/Users/ael-khni/CLionProjects/webserv/www/media/image/myimage.jpg";
+//	const char* videoFilePath = "/Users/ael-khni/CLionProjects/webserv/www/media/video/video.mp4";
 
 void sendFile(int socket, const char* filePath) {
     ifstream fileStream(filePath, ios::in | ios::binary);
@@ -114,9 +121,11 @@ void sendFile(int socket, const char* filePath) {
     ostringstream responseHeader;
 //   stringstream responseHeader;
     responseHeader << "HTTP/1.1 200 OK\r\n";
-    responseHeader << "Content-Type: video/mp4\r\n";
-//	responseHeader << "Content-Type: image/jpeg\r\n";
+	responseHeader << "Server: Webserv/1.0\r\n";
+//    responseHeader << "Content-Type: video/mp4\r\n";
+	responseHeader << "Content-Type: image/jpeg\r\n";
     responseHeader << "Content-Length: " << to_string(fileSize) << "\r\n";
+	responseHeader << "Connection: Keep-Alive\r\n";
     responseHeader << "\r\n";
 
     // Send the HTTP response header
@@ -129,7 +138,21 @@ void sendFile(int socket, const char* filePath) {
     while (fileStream) {
         fileStream.read(buffer, BUFFER_SIZE);
         int bytesRead = fileStream.gcount();
-        send(socket, buffer, bytesRead, 0);
+        int ret = send(socket, buffer, bytesRead, MSG_DONTWAIT);
+		if (ret < 0) {
+			std::string err = strerror(errno);
+			::perror("send");
+
+			if (errno == EAGAIN || errno == EWOULDBLOCK) {
+				cout << "EAGAIN || EWOULDBLOCK" << endl;
+				break ;
+			}
+			std::cout << "ret: " << ret << std::endl;
+			cerr << "Error sending file" << endl;
+			break;
+		}
+
+
         bytesSent += bytesRead;
     }
 
@@ -142,14 +165,24 @@ int main(int argc, char const *argv[]) {
     int opt = 1;
     int addrlen = sizeof(address);
     char buffer[BUFFER_SIZE] = {0};
-//    const char* videoFilePath = "/Users/ael-khni/CLionProjects/webserv/www/media/image/myimage.jpg";
-	const char* videoFilePath = "/Users/ael-khni/CLionProjects/webserv/www/media/video/video.mp4";
+
 
 
     if ((serverSocket = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
         perror("socket failed");
         exit(EXIT_FAILURE);
     }
+
+	if (fcntl(serverSocket, F_SETFL, O_NONBLOCK) < 0) {
+		perror("fcntl");
+		exit(EXIT_FAILURE);
+	}
+
+	int optionValue_ = 1;
+	if (setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &optionValue_, sizeof(optionValue_)) < 0) {
+		perror("setsockopt");
+		exit(EXIT_FAILURE);
+	}
 
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
@@ -165,19 +198,52 @@ int main(int argc, char const *argv[]) {
         exit(EXIT_FAILURE);
     }
 
+	std::vector<pollfd> fds;
+	struct pollfd serverPollFd_ = {};
+	serverPollFd_.fd = serverSocket;
+	serverPollFd_.events = POLLIN;
+	fds.push_back(serverPollFd_);
     while (true) {
-        if ((newSocket = accept(serverSocket, (struct sockaddr *)&address, (socklen_t*)&addrlen))<0) {
-            perror("accept");
-            exit(EXIT_FAILURE);
-        }
+		int ret = poll(&fds[0], fds.size(), -1);
 
-        recv(newSocket, buffer, BUFFER_SIZE, 0);
-        cout << buffer << endl;
+		if (ret == -1) {
+			perror("poll");
+			exit(EXIT_FAILURE);
+		}
+		if (ret == 0) {
+			continue;
+		}
+		for (size_t i = 0; i < fds.size(); ++i) {
+			if (fds[i].revents & POLLIN || fds[i].revents & POLLOUT) {
+				if (fds[i].fd == serverSocket) {
+					if ((newSocket = accept(serverSocket, (struct sockaddr *)&address, (socklen_t*)&addrlen))<0) {
+						perror("accept");
+						exit(EXIT_FAILURE);
+					}
 
-        sendFile(newSocket, videoFilePath);
+					if (fcntl(newSocket, F_SETFL, O_NONBLOCK) < 0) {
+						perror("fcntl");
+						exit(EXIT_FAILURE);
+					}
 
-        close(newSocket);
-    }
+					if (setsockopt(newSocket, SOL_SOCKET, SO_REUSEADDR, &optionValue_, sizeof(optionValue_)) < 0) {
+						perror("setsockopt");
+						exit(EXIT_FAILURE);
+					}
 
+					struct pollfd newPollFd = {};
+					newPollFd.fd = newSocket;
+					newPollFd.events = POLLIN | POLLOUT;
+					fds.push_back(newPollFd);
+				} else {
+					recv(fds[i].fd, buffer, BUFFER_SIZE, MSG_DONTWAIT);
+					cout << buffer << endl;
+					sendFile(fds[i].fd, videoFilePath);
+					close(fds[i].fd);
+					fds.erase(fds.begin() + i);
+				}
+			}
+		}
+	}
     return 0;
 }

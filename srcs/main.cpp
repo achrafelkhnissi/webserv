@@ -30,11 +30,12 @@ int main(int ac, char** av) {
 
     try {
         Configuration config(*t);
-        //	//t->print();
 
-        // Initialise the server.
-        Server server(config);
-        server.start();
+		config.print();
+
+		Server server(config);
+
+		server.start();
 
     } catch (const std::exception& e) {
         std::cerr << "Exception: " << e.what() << "\n";
