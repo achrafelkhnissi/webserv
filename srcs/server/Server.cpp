@@ -57,9 +57,9 @@ void Server::_setupVirtualServer(VirtualServer& vserver) {
 		_error("socket", 1);
 
 	// Set the server socket to reuse the address
-//	int optionValue_ = 1;
-//	if (setsockopt(serverFd_, SOL_SOCKET, SO_REUSEADDR, &optionValue_, sizeof(optionValue_)) < 0)
-//		_error("setsockopt", 1);
+	int optionValue_ = 1;
+	if (setsockopt(serverFd_, SOL_SOCKET, SO_REUSEADDR, &optionValue_, sizeof(optionValue_)) < 0)
+		_error("setsockopt", 1);
 
 	// Bind the socket to the port and host
 	struct sockaddr_in serverAddr_ = {};
@@ -96,14 +96,13 @@ void Server::start() {
 			_error("poll timeout", 1);
 
         for (size_t i = 0; i < _fds.size(); i++) {
-            if ((i < _virtualServer.size()) & (_fds[i].revents & POLLIN))
-                _handleConnections(_fds[i].fd);
-
-                // Loop through the client fds and handle requests
-            else if (_fds.at(i).revents  & POLLIN ){
-                std::cout <<
+            if (_fds[i].revents && POLLIN) {
+                if (i < _virtualServer.size()){
+                    _handleConnections(_fds[i].fd);
+                }
+                else
+                    _handleRequest(_fds.begin() + i);
             }
-                _handleRequest(_fds.begin() + i);
         }
     }
 }
@@ -114,18 +113,20 @@ Server::~Server() {
 
 void Server::_handleConnections(int sockfd) {
 
-	while (true) {
 		struct sockaddr_in sockAddrIn_ = {};
 		socklen_t clientLen_ = sizeof(sockAddrIn_);
+        std::cout << "befor accept" << std::endl;
 		int clientFd_ = accept(sockfd, (struct sockaddr*)&sockAddrIn_, &clientLen_);
+        std::cout << "after accept" << std::endl;
         std::cout << "clientFd_ = " << clientFd_ << std::endl;
 		if (clientFd_ == -1) {
 			if (errno == EWOULDBLOCK || errno == EAGAIN) {
-				break;
-			} else {
+			    cerr << "EWOULDBLOCK" << endl;
+                return;
+            } else {
 				_error("accept", 1);
 			}
-		}
+        }
 
 		// Add the clientPollFd_ socket to the pollfds list
 		struct pollfd clientPollFd_ = {};
@@ -133,7 +134,6 @@ void Server::_handleConnections(int sockfd) {
 		clientPollFd_.events = POLLIN;
 		_fds.push_back(clientPollFd_);
 		_clientHttpParserMap[clientFd_] = HttpParser();
-	}
 }
 
 void Server::_handleRequest(pollfdsVectorIterator_t it) {
@@ -241,14 +241,13 @@ void sendResponseHeaders(int fd, const Response& response) {
 	std::ostringstream response_stream;
 
     response_stream << "HTTP/1.1 ";
-    response_stream << response.getStatusCode() << " "<< response.getHttpErrors().at(response.getStatusCode()) << "\r\n"; //TODO: change to response.getStatus()
+    response_stream << response.getStatusCode() << " "<< response.getHttpErrors().at(response.getStatusCode()) << "\r\n" ; //TODO: change to response.getStatus()
 
     std::map<std::string, std::string>::const_iterator headerIter_ = response.getHeaders().begin();
     std::map<std::string, std::string>::const_iterator headerIterEnd_ = response.getHeaders().end();
     for (; headerIter_ != headerIterEnd_; ++headerIter_) {
         response_stream << headerIter_->first  << ": " << headerIter_->second << "\r\n";
     }
-
     response_stream <<  "\r\n";
 
 	const string& response_header = response_stream.str();
