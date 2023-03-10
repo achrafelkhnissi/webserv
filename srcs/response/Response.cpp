@@ -74,6 +74,10 @@ void Response::setContentLength(string &path) {
 void Response::setHeaders() {
     headers["Content-Type"] = content_type;
     headers["Content-Length"] = std::to_string(content_length);
+    headers["Server"] = "Webserv/1.0";
+    headers["Date"] = "Tue, 15 Nov 1994 08:12:31 GMT";
+    headers["Connection"] = "Keep-Alive";
+//    headers["Keep-Alive"] = "timeout=5, max=100";
 }
 
 const stringMap_t& Response::getHeaders() const {

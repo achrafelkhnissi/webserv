@@ -266,7 +266,11 @@ void sendResponseHeaders(int fd, const Response& response) {
 
     stream << "HTTP/1.1 200 OK\r\n" ;
     stream << "Content-Type: " << response.getContentType() << "\r\n";
-    stream << "Content-Length: " << response.getContentLength() << "\r\n";
+//    stream << "Content-Length: " << response.getContentLength() << "\r\n";
+    stream << "Connection: Keep-Alive\r\n";
+    stream << "Keep-Alive: timeout=5, max=100\r\n";
+    stream << "Server: Webserv/1.0\r\n";
+    stream << "Accept-Ranges: bytes\r\n";
     stream << "\r\n";
 
     const string& res = stream.str();
