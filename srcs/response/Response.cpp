@@ -69,13 +69,17 @@ void Response::setContentLength(const string &path) {
 
 void Response::setHeaders(const Request &request,  std::map<string, string> &mimTypes, const string &path) {
 
+    if (_statusCode == 200){
+        setContentType(path, mimTypes);
+        setContentLength(path);
+        setLastModified(path);
+    }
     setProtocol(request.getProtocol());
     setVersion(request.getVersion());
     setContentType(path, mimTypes);
     setContentLength(path);
     setDate();
     setServer("webserv 1.0");
-    setLastModified(path);
     setAcceptRanges("bytes");
     setConnection("Keep-Alive");
 
