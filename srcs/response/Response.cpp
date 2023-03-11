@@ -1,22 +1,21 @@
 #include "Response.hpp"
 
 Response::Response() {
-    statusCode = 200;
-    protocol = "HTTP";
-    version = "1.1";
-    body = "Hello World";
-	content_length = 0;
+    _statusCode = 200;
+    _protocol = "HTTP";
+    _version = "1.1";
+    _body = "<h1>Hello World</h1>";
 
-    http_errors[200] = "OK";
-    http_errors[400] = "Bad Request";
-    http_errors[401] = "Unauthorized";
-    http_errors[403] = "Forbidden";
-    http_errors[404] = "Not Found";
-    http_errors[405] = "Method Not Allowed";
-    http_errors[415] = "Unsupported Media Type";
-    http_errors[500] = "Internal Server Error";
-    http_errors[501] = "Not Implemented";
-    http_errors[503] = "Service Unavailable";
+    _httpErrors[200] = "OK";
+    _httpErrors[400] = "Bad Request";
+    _httpErrors[401] = "Unauthorized";
+    _httpErrors[403] = "Forbidden";
+    _httpErrors[404] = "Not Found";
+    _httpErrors[405] = "Method Not Allowed";
+    _httpErrors[415] = "Unsupported Media Type";
+    _httpErrors[500] = "Internal Server Error";
+    _httpErrors[501] = "Not Implemented";
+    _httpErrors[503] = "Service Unavailable";
 }
 
 Response::~Response() {}
@@ -32,62 +31,63 @@ bool Response::is_regular_file(const char* path) const {
 }
 
 void Response::setStatusCode(int statusCode) {
-    this->statusCode = statusCode;
+    this->_statusCode = statusCode;
 }
 
 void Response::setStatusCode(const string& filePath, std::map<string, string> &mimTypes) {
 
-    std::string extension;
-    if(filePath.find_last_of(".") == std::string::npos)
-        extension = "";
-    else
-        extension = filePath.substr(filePath.find_last_of(".") );
-
-    std::string M = mimTypes[extension];
+    std::string M = mimTypes[_extractExtension(filePath)];
     std::ifstream file(filePath);
 
     //TODO: check if we should support a file with no extension
     if (M.empty()) {
-        statusCode = 415;
-    }
-    if (!is_regular_file(filePath.c_str()) || !file.is_open()) {
-        statusCode = 404;
-    }
-    else {
-        statusCode = 200;
+        _statusCode = 415;
+        if (!is_regular_file(filePath.c_str()) || !file.is_open())
+            _statusCode = 404;
+    } else {
+        _statusCode = 200;
     }
 
     file.close();
 }
 
 int Response::getStatusCode() const {
-    return statusCode;
+    return _statusCode;
 }
 
-void Response::setContentLength(string &path) {
+void Response::setContentLength(const string &path) {
 
     std::ifstream file_stream(path, std::ios::in | std::ios::binary);
 
     //get file size
     file_stream.seekg(0, std::ios::end);
-    content_length = file_stream.tellg();
+    _headers["Content-Length"] = std::to_string(file_stream.tellg());
     file_stream.seekg(0, std::ios::beg);
 
     file_stream.close();
 }
 
-void Response::setHeaders() {
-    headers["Content-Type"] = content_type;
-    headers["Content-Length"] = std::to_string(content_length);
+void Response::setHeaders(const Request &request,  std::map<string, string> &mimTypes, const string &path) {
+
+    setProtocol(request.getProtocol());
+    setVersion(request.getVersion());
+    setContentType(path, mimTypes);
+    setContentLength(path);
+    setDate();
+    setServer("webserv 1.0");
+    setLastModified(path);
+    setAcceptRanges("bytes");
+    setConnection("Keep-Alive");
+
 }
 
 const stringMap_t& Response::getHeaders() const {
 //    for (std::map<string, string>::const_iterator it = headers.begin(); it != headers.end(); ++it) {
 //        std::cout << it->first << " : " << it->second << std::endl;
 //    }
-    return headers;
+    return _headers;
 }
-void Response::setContentType(const string& extension, std::map<string, string> &mimTypes) {
+void Response::setContentType(const string& path, std::map<string, string> &mimTypes) {
 
     // todo: check if the content type doesn't exist
     // if it doesn't exist, set it to text/plain or respond with the following
@@ -99,26 +99,96 @@ void Response::setContentType(const string& extension, std::map<string, string> 
 	 * file_stream.close();
 	 * response_stream.clear();
      */
-    content_type =  mimTypes[extension];
+    _headers["Content-Type"] =  mimTypes[_extractExtension(path)];
 
 }
 
-size_t Response::getContentLength() const{
-    return content_length;
+size_t Response::getContentLength() {
+    return ::atoi(_headers["Content-Length"].c_str());
 }
-const string& Response::getContentType() const{
-    return content_type;
+const string& Response::getContentType() {
+    return _headers["Content-Type"];
 }
 
 const string &Response::getBody() const {
-    return body;
+    return _body;
 }
 
 void Response::setBody(const string &s) {
-    this->body = s;
+    this->_body = s;
+}
 
+void Response::setDate() {
+    std::time_t now = std::time(NULL);
+    std::tm *gmt = std::gmtime(&now);
+
+    char buf[80];
+    std::strftime(buf, sizeof(buf), "%a, %d %b %Y %H:%M:%S GMT", gmt);
+
+    _headers["Date"] = buf;
+}
+
+void Response::setServer(const string& server) {
+    _headers["Server"] = server;
+}
+
+void Response::setLastModified(const string &path) {
+
+    struct stat file_stat;
+    char date_str[30];
+
+    if (stat(path.c_str(), &file_stat) == 0) {
+        // Convert the last modification time to a string in the Last-Modified format
+        time_t mod_time = file_stat.st_mtime;
+        struct tm *tm_info = gmtime(&mod_time);
+        strftime(date_str, 30, "%a, %d %b %Y %H:%M:%S GMT", tm_info);
+    }
+
+    _headers["Last-Modified"] = string(date_str);
+}
+
+void Response::setProtocol(const string &prtcl) {
+    this->_protocol = prtcl;
+}
+
+void Response::setVersion(const string &v) {
+    this->_version = v;
+}
+
+void Response::setAcceptRanges(const string &acceptRanges) {
+    _headers["Accept-Ranges"] = acceptRanges;
+}
+
+void Response::setConnection(const string &cnx) {
+
+    /**
+     * HTTP/1.1
+     * 1. By default connection is Keep-Alive
+     * 2. if the client sends a Connection: close header, then the connection is closed
+     * 3. if the client sends a Connection: keep-alive header, then the connection is kept alive
+     */
+
+    _headers["Connection"] = cnx;
 }
 
 std::map<int, string> Response::getHttpErrors() const{
-    return http_errors;
+    return _httpErrors;
+}
+
+string Response::_extractExtension(const string &path) const {
+    string extension_ = "";
+
+    std::size_t found_ = path.find_last_of('.');
+    if (found_ != std::string::npos){
+        extension_ = path.substr(found_);
+    }
+    return extension_;
+}
+
+const string &Response::getProtocol() const {
+    return _protocol;
+}
+
+const string &Response::getVersion() const {
+    return _version;
 }
