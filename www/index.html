@@ -84,7 +84,7 @@
 	<title>Delete Request Example</title>
 	<script>
 		function sendDeleteRequest() {
-			fetch('/delete.txt', {method: 'DELETE'})
+			fetch('/delete', {method: 'DELETE'})
 				.then(response => {
 					console.log(response.status);
 				})
