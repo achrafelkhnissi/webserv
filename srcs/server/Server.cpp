@@ -219,7 +219,7 @@ location_t* matchLocation(const locationVector_t &locations, const std::string &
 	string str_ = uri;
 
 	do {
-		locationVectorConstIterator_t locIter_ = locations.begin();
+        locationVectorConstIterator_t locIter_ = locations.begin();
 		locationVectorConstIterator_t locIterEnd_ = locations.end();
 		for (; locIter_ != locIterEnd_; ++locIter_) {
 			if (locIter_->prefix == str_) {
@@ -229,6 +229,7 @@ location_t* matchLocation(const locationVector_t &locations, const std::string &
 		}
 		std::size_t found_ = str_.find_last_of('/');
 		if (found_ != std::string::npos){
+            found_ = found_ == 0 ? 1 : found_;
 			str_ = str_.substr(0, found_);
 		}
 
@@ -270,6 +271,7 @@ void sendResponseBody(int fd, const string& resourcePath) {
 
 	char buffer[BUFFER_SIZE];
 	while (fileStream) {
+        std::cout << "sending file" << std::endl;
 		fileStream.read(buffer, BUFFER_SIZE);
 		int bytesRead = fileStream.gcount();
 		int sent = send(fd, buffer, bytesRead, 0);
@@ -462,31 +464,27 @@ void Server::_handleDELETE(int clientSocket , const subServersIterator_t &subSer
 	// Match the uri to the correct location
 	location_t *location_ = matchLocation(subServersIterator->getLocation(), uri_);
 
-	if (location_ != nullptr){
+	if (location_ != nullptr)
 		root_ = location_->root;
-		index_ = location_->index;
-	}
 
 	string resourcePath_ = root_ + uri_;
 	Response response_   = Response();
-	// check if the file is regular file
 
-	response_.setStatusCode(resourcePath_.c_str(), _mimeTypes);
-
-	if (remove(resourcePath_.c_str()) != 0) {
-		response_.setStatusCode(404);
-	}
+    // check if to delete is allowed
+    if (find(location_->allowedMethods.begin(), location_->allowedMethods.end(), "DELETE") == location_->allowedMethods.end()) {
+        response_.setStatusCode(405);
+    } else {
+        response_.setStatusCode(resourcePath_.c_str(), _mimeTypes);
+        if (remove(resourcePath_.c_str()) != 0)
+            response_.setStatusCode(404);
+    }
     response_.setHeaders(request, _mimeTypes, resourcePath_);
-	response_.setBody("<html><body><h1>File Deleted Successfully</h1></body></html>");
 	sendResponseHeaders(clientSocket, response_);
-	sendResponseBody(clientSocket, response_);
-	// create response message
-
 }
+
 string Server::_getErrorPage(int code) const {
-	return "www/errors/404/error-" + std::to_string(code) + ".html";
+	return "www/error_pages/" + std::to_string(code) + ".html";
 }
-
 
 //void Server::_handleEerror(int fd) {
 //    // Handle the error
