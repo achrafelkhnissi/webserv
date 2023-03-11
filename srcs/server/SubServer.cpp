@@ -10,6 +10,8 @@ SubServer::SubServer(const ServerConfig &config) {
     _root = config.root;
     _errorPages = config.error_page;
     _clientMaxBodySize = config.client_max_body_size;
+    _allowedMethods = config.allowed_methods;
+    _index = config.index;
 
     std::vector<LocationConfig>::const_iterator iter_ = config.locations.begin();
     std::vector<LocationConfig>::const_iterator iterEnd_ = config.locations.end();
@@ -58,8 +60,9 @@ void SubServer::fillLocation(const  LocationConfig& locationConfig, location_t& 
     location.index = locationConfig.index;
     location.clientMaxBodySize = locationConfig.client_max_body_size;
     location.errorPages = locationConfig.error_page;
-    location.prefix = locationConfig.path;
+    location.prefix = locationConfig.prefix;
     location.autoIndex = locationConfig.autoindex == "on";
+    location.allowedMethods = locationConfig.allowed_methods; // todo: wait for ismail to add it.
 }
 
 void SubServer::printData() const {
@@ -76,6 +79,14 @@ void SubServer::printData() const {
     std::cout << "\t- index: " << _index[0] << std::endl; // todo: print all index
     std::cout << "\t- _errorPages: " << _errorPages << std::endl;
     std::cout << "\t- _clientMaxBodySize: " << _clientMaxBodySize << std::endl;
+
+    std::cout << "\t- Allowed methods: ";
+    stringVectorConstIterator_t ittt = _allowedMethods.begin();
+    stringVectorConstIterator_t ittte = _allowedMethods.end();
+    for (; ittt != ittte; ++ittt) {
+        std::cout << *ittt << ", ";
+    }
+
     std::cout << "\t- location: " << std::endl;
     locationVectorConstIterator_t it = _locations.begin();
     locationVectorConstIterator_t ite = _locations.end();
@@ -86,6 +97,13 @@ void SubServer::printData() const {
         std::cout << "\t\t_clientMaxBodySize: " << it->clientMaxBodySize << std::endl;
         std::cout << "\t\t_errorPages: " << it->errorPages << std::endl;
         std::cout << "\t\tauto_index: " << it->autoIndex << std::endl;
+        std::cout << "\t\tallowed_methods: ";
+        stringVectorConstIterator_t itttt = it->allowedMethods.begin();
+        stringVectorConstIterator_t itttte = it->allowedMethods.end();
+        for (; itttt != itttte; ++itttt) {
+            std::cout << *itttt << ", ";
+        }
+        std::cout << std::endl;
         ++it;
     }
     std::cout << "\t--- End Sub server ---" << std::endl;

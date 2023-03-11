@@ -32,6 +32,7 @@ private:
 	stringVector_t      _index;
 	string              _errorPages;
 	string              _clientMaxBodySize;
+    stringVector_t     _allowedMethods;
     // TODO: add Cgi
 
 public:
