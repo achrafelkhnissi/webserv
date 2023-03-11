@@ -91,7 +91,7 @@ HttpParser::e_status HttpParser::push(std::string& chunk) {
 			case HttpParser::p_headers:
 				get_encoding();
 
-				if (method == "GET")
+                if (method == "GET" || method == "DELETE")
 					return (DONE);
 				break;
 			case HttpParser::p_body: {
