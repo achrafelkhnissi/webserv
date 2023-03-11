@@ -1,6 +1,6 @@
 
 [[server]]
-port = "1337"
+port = "4242"
 host = "10.0.0.1"
 server_name = ["example.com", "example2.com", "example3.com"]
 error_page = "404 /404.html"
