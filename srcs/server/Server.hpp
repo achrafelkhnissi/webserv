@@ -54,7 +54,7 @@ private:
     void    _handlePOST(int, const Request&);
 	void 	_handleDELETE(int clientSocket, const subServersIterator_t &subServersIterator, const Request& request);
 	bool 	is_regular_file(const char* path) const;
-    void    _handleEerror(int fd);
+    void    _handleError(int fd);
     void    _clearPollfds();
     void    _error(const string& msg, int err) const;
     void    _setupVirtualServer(VirtualServer& vserver);
@@ -62,7 +62,6 @@ private:
     void    _setCGIEnv(const Request& request, const location_t& location, const string& path);
     string  _getErrorPage(int code) const;
     string  _getFileContent(const string& path) const;
-    string  _extractExtension(const string& path) const;
     void    _setMimeTypes();
 
     string _getBasename(const string &path) const;
