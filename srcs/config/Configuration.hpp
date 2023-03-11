@@ -14,7 +14,7 @@ using namespace std;
 
 typedef vector<string> string_vector;
 struct LocationConfig {
-	string path;
+	string prefix;
 	string root;
 	string autoindex;
 	string upload_path;
@@ -25,10 +25,11 @@ struct LocationConfig {
 	string client_max_body_size;
 	string error_page;
 	vector<string> index;
+    vector<string> allowed_methods;
 
 	void print(int indent = 0) {
 		string s(indent, ' ');
-		cout << s << "\t\tpath: " << path << endl;
+		cout << s << "\t\tprefix: " << prefix << endl;
 		cout << s << "\t\troot: " << root << endl;
 		ITER_FOREACH(vector<string>, index, it) {
 			cout << "\t\t" << *it << " ";
@@ -53,6 +54,8 @@ struct ServerConfig {
 	string root;
 	string error_page;
 	string client_max_body_size;
+    vector<string> allowed_methods;
+    vector<string> index;
 
 	vector<LocationConfig> locations;
 
