@@ -22,7 +22,7 @@ public:
     Response();
     ~Response();
 
-    void setStatusCode(const string& filePath, std::map<string, string> &mimTypes);
+    void setStatusCode(const Request& request, const string& filePath, std::map<string, string> &mimTypes);
     void setProtocol(const string& protocol);
     void setVersion(const string& version);
     void setBody(const string& body);

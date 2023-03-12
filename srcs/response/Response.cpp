@@ -34,19 +34,28 @@ void Response::setStatusCode(int statusCode) {
     this->_statusCode = statusCode;
 }
 
-void Response::setStatusCode(const string& filePath, std::map<string, string> &mimTypes) {
+void Response::setStatusCode(const Request& request, const string& filePath, std::map<string, string> &mimTypes) {
 
     std::string M = mimTypes[_extractExtension(filePath)];
     std::ifstream file(filePath);
 
     //TODO: check if we should support a file with no extension
-    if (M.empty()) {
+    if (!is_regular_file(filePath.c_str()) || !file.is_open()) {
+        _statusCode = 404;
+    } else if (M.empty() && request.getMethod() == "GET") {
         _statusCode = 415;
-        if (!is_regular_file(filePath.c_str()) || !file.is_open())
-            _statusCode = 404;
     } else {
         _statusCode = 200;
     }
+
+//    if (M.empty())
+//   {
+//        _statusCode = 415;
+//        if (!is_regular_file(filePath.c_str()) || !file.is_open())
+//            _statusCode = 404;
+//    } else {
+//        _statusCode = 200;
+//    }
 
     file.close();
 }
