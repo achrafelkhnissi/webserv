@@ -78,26 +78,26 @@
 <!--</body>-->
 <!--</html>-->
 
-<!DOCTYPE html>
-<html>
-<head>
-	<title>Delete Request Example</title>
-	<script>
-		function sendDeleteRequest() {
-			fetch('/delete', {method: 'DELETE'})
-				.then(response => {
-					console.log(response.status);
-				})
-				.catch(error => {
-					console.error(error);
-				});
-		}
-	</script>
-</head>
-<body>
-	<button onclick="sendDeleteRequest()">Send DELETE Request</button>
-</body>
-</html>
+<!--<!DOCTYPE html>-->
+<!--<html>-->
+<!--<head>-->
+<!--	<title>Delete Request Example</title>-->
+<!--	<script>-->
+<!--		function sendDeleteRequest() {-->
+<!--			fetch('/delete', {method: 'DELETE'})-->
+<!--				.then(response => {-->
+<!--					console.log(response.status);-->
+<!--				})-->
+<!--				.catch(error => {-->
+<!--					console.error(error);-->
+<!--				});-->
+<!--		}-->
+<!--	</script>-->
+<!--</head>-->
+<!--<body>-->
+<!--	<button onclick="sendDeleteRequest()">Send DELETE Request</button>-->
+<!--</body>-->
+<!--</html>-->
 
 <!--<!DOCTYPE html>-->
 <!--<html>-->
@@ -136,3 +136,19 @@
 
 <!--</body>-->
 <!--</html>-->
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>File Upload Example</title>
+</head>
+<body>
+<h1>File Upload Example</h1>
+<form action="/upload" method="POST" enctype="multipart/form-data">
+  <label for="file">Select a file to upload:</label>
+  <input type="file" name="file" id="file"><br><br>
+  <input type="submit" value="Upload File">
+</form>
+</body>
+</html>
