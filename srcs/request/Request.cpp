@@ -114,6 +114,9 @@ void Request::setRequest() {
     std::cout << "Enter uri: "; cin >> uri;
 }
 
+multimap<string, string> Request::getHeaders() const {
+	return headers;
+}
 
 //const string &Request::getQuery() const {
 //    return query;

@@ -29,6 +29,7 @@ public:
 
 	pair<string, unsigned short> getHost() const;
 	const string &getContentType();
+    multimap<string, string> getHeaders() const;
 
 	~Request();
 
