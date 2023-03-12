@@ -1,6 +1,6 @@
 
 [[server]]
-port = "4242"
+port = "1337"
 host = "10.0.0.1"
 server_name = ["example.com", "example2.com", "example3.com"]
 index = ["index.html", "index.htm"]
