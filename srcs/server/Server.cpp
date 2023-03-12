@@ -8,7 +8,7 @@ Server::Server(Configuration config): _config(config), _request() {
 //    _mimeTypes = _config.getMimeTypes();
 //    _setupVirtualServer();
 
-    _uploadPath = "/Users/fathjami/Desktop/webserv/www/upload"; // TODO: get this from config file.
+    _uploadPath = "/Users/fathjami/Desktop/webserv/www/upload/"; // TODO: get this from config file.
 
 	vector<ServerConfig> servers_ = _config.getServers();
 
@@ -163,11 +163,6 @@ void Server::_handleRequest(pollfdsVectorIterator_t it) {
 	requestBuffer_ = string(buffer_, bytesRead_);
 	HttpParser::e_status status = _clientHttpParserMap[it->fd].push(requestBuffer_);
 
-        if (_request.getMethod() == "POST") {
-        _handlePOST(it->fd, _request);
-        exit(1);
-    }
-
 	if (status == HttpParser::FAILED){
 		std::cout << "FAILED" << std::endl;
 		return;
@@ -185,7 +180,7 @@ void Server::_handleRequest(pollfdsVectorIterator_t it) {
 		if (_request.getMethod() == "GET") {
 			_handleGET(it->fd, subServerIter_, _request);
 		} else if (_request.getMethod() == "POST") {
-//        _handlePOST(it->fd, _request);
+            _handlePOST(it->fd, _request);
 		} else if (_request.getMethod() == "DELETE") {
 			_handleDELETE(it->fd, subServerIter_, _request);
 		}
@@ -271,7 +266,6 @@ void sendResponseBody(int fd, const string& resourcePath) {
 
 	char buffer[BUFFER_SIZE];
 	while (fileStream) {
-        std::cout << "sending file" << std::endl;
 		fileStream.read(buffer, BUFFER_SIZE);
 		int bytesRead = fileStream.gcount();
 		int sent = send(fd, buffer, bytesRead, 0);
@@ -333,7 +327,7 @@ void Server::_handleGET(int fd, const subServersIterator_t &subServersIterator, 
 
 	std::cout << "resource path: " << resourcePath_ << std::endl;
 
-	response_.setStatusCode(resourcePath_, _mimeTypes);
+	response_.setStatusCode(request, resourcePath_, _mimeTypes);
     int statusCode_ = response_.getStatusCode();
 	if (statusCode_ != 200)
 		resourcePath_ = _getErrorPage(statusCode_);
@@ -344,48 +338,29 @@ void Server::_handleGET(int fd, const subServersIterator_t &subServersIterator, 
     sendResponseBody(fd, resourcePath_);
 }
 
-void Server::_handlePOST(int clientSocket, __attribute__((unused)) const Request& request) {
+void Server::_handlePOST(int clientSocket, const Request& request) {
 
     // TODO: if upload path doesn't exist, create it
+    // TODO: check why does the post request is successful only after 2 clicks.
 
     std::cout << "POST request received" << std::endl;
 
-    string request_headers;
-    char buffer[1024] = {0};
-    do {
-        recv(clientSocket, buffer, 1024, 0);
-        request_headers += buffer;
-    } while (request_headers.find("\r\n\r\n") == string::npos);
+    string request_body = request.getBody();
+    string content_type = request.getHeaders().find("Content-Type")->second;
+    int contentLength = std::stoi(request.getHeaders().find("Content-Length")->second);
+    std::cout << "body :" << request_body << std::endl;
+    std::cout << "content length :" << contentLength << std::endl;
 
-    std::cout << "request headers: " << request_headers << std::endl;
-
-    // parse request headers
-    std::string request_body = request_headers.substr(request_headers.find("\r\n\r\n") + 4);
-    std::cout << "request body: " << request_body << std::endl;
-    std::string content_length = request_headers.substr(request_headers.find("Content-Length: ") + 16);
-    content_length = content_length.substr(0, content_length.find("\r\n"));
-    std::cout << "content length: " << content_length << std::endl;
-    std::string content_type = request_headers.substr(request_headers.find("Content-Type: ") + 14);
-    content_type = content_type.substr(0, content_type.find("\r\n"));
-    std::cout << "content type: " << content_type << std::endl;
-
-    size_t contentLength = ::atoi(content_length.c_str());
-
-//    string request_body;
-//    cout << "Enter request body: ";
-//    std::cin >> request_body ;
-//
-//    size_t content_length;
-//    cout << "Enter content length: ";
-//    std::cin >> content_length;
-//
-//    string content_type;
-//    cout << "Enter content type: ";
-//    std::cin >> content_type;
+    std::string boundary = "--" + content_type.substr(content_type.find("boundary=") + 9);
+    content_type = content_type.substr(0, content_type.find(";"));
+    std::cout << "content type :" << content_type << std::endl;
+    std::cout << "boundary :" << boundary << std::endl;
 
     // handle request based on content type
     if (content_type == "application/x-www-form-urlencoded") {
-        std::cout << "I'm in line: " << __LINE__ << std::endl;
+
+        std::cout << "I'm in " << __FILE__ << " " << __LINE__ << std::endl;
+
         std::string form_data = request_body.substr(0, contentLength); // TODO: store form data
         std::stringstream response_stream;
         response_stream << "HTTP/1.1 200 OK\r\n\r\n";
@@ -394,34 +369,37 @@ void Server::_handlePOST(int clientSocket, __attribute__((unused)) const Request
         send(clientSocket, response.c_str(), response.length(), 0);
     } else if (content_type == "multipart/form-data") {
         // handle file upload
-        std::cout << "I'm in line: " << __LINE__ << std::endl;
-        std::string boundary = "--" + content_type.substr(content_type.find("boundary=") + 9);
+//        std::cout << "I'm in " << __FILE__ << " " << __LINE__ << std::endl;
+////        std::string boundary = "--" + content_type.substr(content_type.find("boundary=") + 9);
+//        std::cout << "boundary: " << boundary << std::endl;
         std::istringstream request_body_stream(std::string(&request_body[0], &request_body[0] + contentLength));
         std::string line;
         std::getline(request_body_stream, line);
+
         while (std::getline(request_body_stream, line)) {
 
-            std::cout << "loop in line: " << __LINE__ - 2 << std::endl; // todo: remove this
-
-            if (line == boundary || line == boundary + "--") {
+            if (line.compare(boundary + "--") == 0) {
                 // end of file upload
                 break;
-            } else if (line.find("Content-Disposition:") == 0) {
+            } else if (line.find("Content-Disposition:") != std::string::npos) {
                 std::string filename;
                 size_t filename_start = line.find("filename=\"") + 10;
                 size_t filename_end = line.find("\"", filename_start);
                 if (filename_start != std::string::npos && filename_end != std::string::npos) {
                     filename = line.substr(filename_start, filename_end - filename_start);
                 }
+                std::cout << "filename: " << filename << std::endl;
                 std::getline(request_body_stream, line); // skip Content-Type line
                 std::getline(request_body_stream, line); // skip empty line
                 std::ofstream file_stream(_uploadPath + filename, std::ios::binary);
                 if (file_stream.is_open()) {
+                    std::cout << "opened file stream: " << filename <<  std::endl;
                     while (std::getline(request_body_stream, line)) {
-                        if (line == boundary || line == boundary + "--") {
+                        if (line.find(boundary) != std::string::npos || line.find( boundary + "--") != std::string::npos) {
                             // end of file upload
                             break;
                         }
+                        std::cout << "appending line::" << line << " => to file::"<< filename << std::endl;
                         file_stream << line << "\n";
                     }
                     file_stream.close();
@@ -444,15 +422,16 @@ void Server::_handlePOST(int clientSocket, __attribute__((unused)) const Request
             }
         }
     } else {
-        std::cout << "I'm in line: " << __LINE__ << std::endl;
         // unsupported content type
+        std::cout << "I'm in " << __FILE__ << " " << __LINE__ << std::endl;
         std::stringstream response_stream;
         response_stream << "HTTP/1.1 400 Bad Request\r\n\r\n";
         response_stream << "<html><body><h1>Unsupported Content Type</h1></body></html>";
         std::string response = response_stream.str();
         send(clientSocket, response.c_str(), response.length(), 0);
     }
-    std::cout << "I'm in line: " << __LINE__ << std::endl;
+
+    std::cout << "End of POST request" << std::endl;
 }
 
 
@@ -470,13 +449,17 @@ void Server::_handleDELETE(int clientSocket , const subServersIterator_t &subSer
 	string resourcePath_ = root_ + uri_;
 	Response response_   = Response();
 
+    response_.setStatusCode(request, resourcePath_.c_str(), _mimeTypes);
+
     // check if to delete is allowed
-    if (find(location_->allowedMethods.begin(), location_->allowedMethods.end(), "DELETE") == location_->allowedMethods.end()) {
-        response_.setStatusCode(405);
-    } else {
-        response_.setStatusCode(resourcePath_.c_str(), _mimeTypes);
-        if (remove(resourcePath_.c_str()) != 0)
-            response_.setStatusCode(404);
+    if (response_.getStatusCode() == 200 && location_ != nullptr) {
+        if (find(location_->allowedMethods.begin(), location_->allowedMethods.end(), "DELETE") ==
+            location_->allowedMethods.end()) {
+            response_.setStatusCode(405);
+        } else {
+            if (remove(resourcePath_.c_str()) != 0)
+                response_.setStatusCode(404);
+        }
     }
     response_.setHeaders(request, _mimeTypes, resourcePath_);
 	sendResponseHeaders(clientSocket, response_);
@@ -548,7 +531,6 @@ void Server::printData() const {
 
 }
 
-
 string Server::_getFileContent(const std::string& path) const {
 	std::ifstream file_(path, std::ios::binary);
 
@@ -561,6 +543,7 @@ string Server::_getFileContent(const std::string& path) const {
 }
 
 /*
+ * todo:
 1. If Request-URI is an absoluteURI, the host is part of the
         Request-URI. Any Host header field value in the request MUST be
 ignored.
@@ -572,7 +555,3 @@ a Host header field, the host is determined by the Host header
 3. If the host as determined by rule 1 or 2 is not a valid host on
 the server, the response MUST be a 400 (Bad Request) error message.
 */
-
-
-/* ------------------------------------------------------------------------------------------ */
-
