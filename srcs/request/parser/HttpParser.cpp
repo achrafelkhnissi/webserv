@@ -73,11 +73,20 @@ HttpParser::e_status HttpParser::append(char c) {
 }
 
 HttpParser::e_status HttpParser::identity_body_parser(char c) {
-	if (chunk_size == 0)
-		return HttpParser::DONE;
-	chunk_size--;
-	chunk.push_back(c);
-	return HttpParser::CONTINUE;
+//	if (chunk_size == 0)
+//		return HttpParser::DONE;
+//	chunk_size--;
+//	chunk.push_back(c);
+//	return HttpParser::CONTINUE;
+
+    if (chunk_size == 0)
+        return HttpParser::DONE;
+    chunk_size--;
+    chunk.push_back(c);
+    if (chunk_size == 0)
+        return HttpParser::DONE;
+    return HttpParser::CONTINUE;
+
 }
 
 HttpParser::e_status HttpParser::push(std::string& chunk) {
