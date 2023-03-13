@@ -84,20 +84,19 @@ const string &Request::getContentType() {
 
 void Request::print() {
 
-	cout << "\n==================== Request ====================" << endl;
-	cout << "Method: " << method << endl;
-	cout << "URI: " << uri << endl;
-	cout << "Version: " << version << endl;
-
-	cout << "Query: " << query << endl;
-	cout << "Host: " << getHost().first << endl;
-	cout << "Port: " << getHost().second << endl;
+	cerr << "\n==================== Request ====================" << endl;
+	cerr << "Method: " << method << endl;
+	cerr << "URI: " << uri << endl;
+	cerr << "Version: " << version << endl;
+	cerr << "Query: " << query << endl;
+	cerr << "Host: " << getHost().first << endl;
+	cerr << "Port: " << getHost().second << endl;
 
 	for (multimap<string, string>::iterator it = headers.begin(); it != headers.end(); it++) {
-		cout << it->first << ": " << it->second << endl;
+		cerr << it->first << ": " << it->second << endl;
 	}
-	cout << "Body: " << body << endl;
-	cout << "==================== END Request ====================\n\n" << endl;
+	cerr << "Body: " << body << endl;
+	cerr << "==================== END Request ====================\n\n" << endl;
 }
 
 //const std::string& Request::getHost() const { return host; } // TODO: remove this
