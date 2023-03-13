@@ -7,7 +7,6 @@
 #include <poll.h>
 #include <iostream>
 
-
 class SubServer;
 class VirtualServer;
 class Server;
@@ -47,7 +46,6 @@ typedef std::vector<SubServer>                      subServerVector_t;
 typedef std::vector<SubServer>::iterator            subServersIterator_t;
 typedef std::vector<SubServer>::const_iterator      subServersConstIterator_t;
 
-
 /* Utils Typdefs */
 typedef std::vector<std::string>                    stringVector_t;
 typedef std::vector<std::string>::iterator          stringVectorIterator_t;
@@ -60,4 +58,3 @@ typedef std::vector<std::string>::const_iterator    stringVectorConstIterator_t;
 #include "Request.hpp"
 
 #endif //WEBSERV_TYPEDEFS_HPP
-
