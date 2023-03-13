@@ -14,7 +14,7 @@
 
 NAME		= webserv
 
-CC			= c++ -g
+CC			= c++
 CXXFLAGS		= # -Wall -Wextra -Werror -std=c++98
 RM			= rm -rf
 
@@ -68,7 +68,7 @@ $(NAME): $(OBJ) $(HEADERS)
 
 $(OBJDIR)/%.o: %.cpp $(HEADERS)
 	@mkdir -p $(dir $@)
-	@printf "${CURSIVE}${GRAY}	- Making object file: [ %-20s ] | from source file: [ %-20s ]${RESET}\r" $(notdir $@) $(notdir $<)
+	@printf "${CURSIVE}${WHITE}	- Making object file: [ %-20s ] | from source file: [ %-20s ]${RESET}\r" $(notdir $@) $(notdir $<)
 	@$(CC) $(INCLUDES) $(CXXFLAGS) $(OPTS) -c $< -o $@
 
 clean:
