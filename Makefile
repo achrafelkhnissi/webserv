@@ -18,20 +18,40 @@ CC			= c++ -g
 CXXFLAGS		= # -Wall -Wextra -Werror -std=c++98
 RM			= rm -rf
 
+FSANITIZE	= -fsanitize=address
+
+CXXFLAGS    += ${FSANITIZE}
+
 OBJDIR		= build
 
 INCLUDES	:= $(shell find . -name '*.hpp' -type f -exec dirname {} \; | uniq | sed 's/^/-I /' | grep -v Playground)
 SOURCES     := $(shell find . -name '*.cpp' -print -type f | grep -v Playground)
+HEADERS		:= $(shell find . -name '*.hpp' -print -type f | grep -v Playground)
 
-HEADERS		= $($SOURCES:=.hpp)
 OBJ			= $(SOURCES:%.cpp=$(OBJDIR)/%.o)
 
-#Colors:
+# Colors:
 GREEN		=	\e[92;5;118m
 YELLOW		=	\e[93;5;226m
 GRAY		=	\e[33;2;37m
+PURPLE		=	\e[35;5;141m
+BLUE		=	\e[34;5;75m
+WHITE		=	\e[97;5;255m
+RED			=	\e[91;5;196m
 RESET		=	\e[0m
+
+# Symbols:
+SUCCESS		=	\e[92;5;118m[ ✔ ]\e[0m
+ERROR		=	\e[91;5;196m[ ✘ ]\e[0m
+WARNING		=	\e[93;5;226m[ ! ]\e[0m
+INFO		=	${PURPLE}[ I ]${RESET}
+
+# Styles:
 CURSIVE		=	\e[33;3m
+BOLD		=	\e[33;1m
+UNDERLINE	=	\e[33;4m
+CROSS		=	\e[33;9m
+
 
 #Debug
 ifeq ($(DEBUG), 1)
@@ -44,18 +64,19 @@ all: $(NAME)
 
 $(NAME): $(OBJ) $(HEADERS)
 	@$(CC) $(INCLUDES) $(CXXFLAGS) $(OBJ) $(OPTS) -o $(NAME)
-	@printf "$(_SUCCESS) $(GREEN)- Executable ready.\n$(RESET)"
+	@printf "\n\n$(SUCCESS) $(GREEN)- Executable ready: $(BOLD)$(UNDERLINE)${RED}$(NAME)$(RESET)\n\n"
 
 $(OBJDIR)/%.o: %.cpp $(HEADERS)
 	@mkdir -p $(dir $@)
+	@printf "${CURSIVE}${GRAY}	- Making object file: [ %-20s ] | from source file: [ %-20s ]${RESET}\r" $(notdir $@) $(notdir $<)
 	@$(CC) $(INCLUDES) $(CXXFLAGS) $(OPTS) -c $< -o $@
 
 clean:
 	@$(RM) $(OBJDIR) $(OBJ)
-	@printf "$(YELLOW)    - Object files removed.$(RESET)\n"
+	@printf "\n${INFO}	- Object files ${BOLD}${UNDERLINE}${WHITE}removed${RESET}.\n"
 
 fclean: clean
 	@$(RM) $(NAME)
-	@printf "$(YELLOW)    - Executable removed.$(RESET)\n"
+	@printf "${INFO}	- Executable [${BOLD}${UNDERLINE}${RED}${NAME}${RESET}] removed.$(RESET)\n\n"
 
 re: fclean all
