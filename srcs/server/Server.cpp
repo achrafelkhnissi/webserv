@@ -146,29 +146,55 @@ void Server::_handleRequest(pollfdsVectorIterator_t it) {
 	string requestBuffer_;
 	ssize_t bytesRead_ = 0;
 
-	char buffer_[BUFFER_SIZE];
+
+	// Versio 1 - Recv until BUFFER_SIZE bytes of data
+	char buffer_[BUFFER_SIZE + 1];
+
 	memset(buffer_, 0, BUFFER_SIZE);
 	bytesRead_ = recv(it->fd, buffer_, BUFFER_SIZE, 0);
-
 	if (bytesRead_ == -1) {
 		_error("recv", 1);
 	}
-
 	if (bytesRead_ == 0){
 		close(it->fd);
 		_fds.erase(it);
 		return ;
 	}
-
-//	cout << "buffer: " << buffer_ << endl;
+	buffer_[bytesRead_] = '\0';
 	requestBuffer_ = string(buffer_, bytesRead_);
+
+	// Versio 2 - Recv until the end of the request
+//	char buffer_[BUFFER_SIZE + 1];
+//	int byteReceived_ = 0;
+//	do {
+//		memset(buffer_, 0, BUFFER_SIZE);
+//		bytesRead_ = recv(it->fd, buffer_, BUFFER_SIZE, 0);
+//		if (bytesRead_ == -1) {
+//			_error("recv", 1);
+//		}
+//		if (bytesRead_ == 0){
+//			close(it->fd);
+//			_fds.erase(it);
+//			return ;
+//		}
+//
+//		cout << "bytesRead_: " << bytesRead_ << endl;
+//		byteReceived_ += bytesRead_;
+//		requestBuffer_.append(buffer_, bytesRead_);
+//	} while (bytesRead_ == BUFFER_SIZE);
+//	if (bytesRead_ > 0) {
+//		buffer_[byteReceived_] = '\0';
+//		cerr << "_buffer: " << buffer_ << endl;
+//	}
+
 	HttpParser::e_status status = _clientHttpParserMap[it->fd].push(requestBuffer_);
 
 	if (status == HttpParser::FAILED){
-		std::cout << "FAILED" << std::endl;
+		std::cerr << "FAILED" << std::endl;
+		_clientHttpParserMap[it->fd].reset();
 		return;
 	} else if (status == HttpParser::DONE) {
-		std::cout << "DONE" << std::endl;
+		std::cerr << "DONE" << std::endl;
 		_request = _clientHttpParserMap[it->fd].into_request();
 		_request.print();
 
@@ -191,7 +217,7 @@ void Server::_handleRequest(pollfdsVectorIterator_t it) {
 //		_fds.erase(it);
 
 	} else if (status == HttpParser::CONTINUE) {
-		cout << "CONTINUE" << endl;
+		cerr << "CONTINUE" << endl;
 	}
 }
 
@@ -255,8 +281,6 @@ void sendResponseHeaders(int fd, const Response& response) {
 }
 
 void sendResponseBody(int fd, const string& resourcePath) {
-
-#define BUFFER_SIZE  1024
 
 	ifstream fileStream(resourcePath, ios::in | ios::binary);
 
@@ -352,7 +376,10 @@ void Server::_handlePOST(int clientSocket, const Request& request) {
 //    std::cout << "body :" << request_body << std::endl;
 
 	if (request_body.empty())
+	{
+		std::cout << "request body is empty" << std::endl;
 		return ;
+	}
 
     std::cout << "content length :" << contentLength << std::endl;
 
