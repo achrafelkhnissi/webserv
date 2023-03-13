@@ -392,7 +392,7 @@ void Server::_handlePOST(int clientSocket, const Request& request) {
                 std::getline(request_body_stream, line); // skip empty line
                 std::ofstream file_stream(_uploadPath + filename, std::ios::binary);
                 if (file_stream.is_open()) {
-                    std::cout << "opened file stream: "  filename <<  std::endl;
+                    std::cout << "opened file stream: "  << filename <<  std::endl;
 					int i = 0;
                     while (std::getline(request_body_stream, line)) {
                         if (line.find(boundary) != std::string::npos || line.find( boundary + "--") != std::string::npos) {
