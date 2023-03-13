@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <iostream>
 #include <queue>
 #include <string>
@@ -16,6 +17,18 @@ public:
 	~HttpParser();
 	HttpParser(const HttpParser& other);
 	HttpParser& operator=(const HttpParser& other);
+	
+
+	enum e_error {
+		err_none,
+		err_invalid_method,
+		err_not_implemented_method,
+		err_invalid_uri,
+		err_invalid_version,
+		err_not_implemented_version,
+		err_invalid_header,
+		err_invalid_body,
+	};
 
 	enum e_encoding {
 		none,
@@ -106,6 +119,13 @@ private:
 	string query;
 	int major_version;
 	int minor_version;
+	
+	/* error */
+	e_error error;
+	size_t err_line;
+	size_t err_position;
+
+
 	/* states */
 	e_state state; // general state
 	e_sl_state sl_state; // status line state

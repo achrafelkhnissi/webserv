@@ -8,6 +8,7 @@ HttpParser::HttpParser() {
 	state = HttpParser::p_status_line;
 	sl_state = HttpParser::sl_start;
 	encoding = HttpParser::none;
+	error = HttpParser::err_none;
 	h_state = HttpParser::h_start;
 	field.reserve(4100); // 4kb
 }
@@ -453,6 +454,7 @@ void HttpParser::reset() {
     ch_state = HttpParser::bd_start;
     encoding = HttpParser::unspecified;
     h_state = HttpParser::h_start;
+	error = HttpParser::err_none;
     body_size = 0;
     chunk_size = 0;
     method.clear();
