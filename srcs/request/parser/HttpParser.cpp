@@ -8,7 +8,7 @@ HttpParser::HttpParser() {
 	state = HttpParser::p_status_line;
 	sl_state = HttpParser::sl_start;
 	encoding = HttpParser::none;
-	error = HttpParser::err_none;
+	error = err_none;
 	h_state = HttpParser::h_start;
 	field.reserve(4100); // 4kb
 }
@@ -16,15 +16,32 @@ HttpParser::HttpParser() {
 HttpParser::~HttpParser() { }
 
 
-Request& HttpParser::into_request() {
-	Request* req = new Request();
-	req->setMethod(method);
-	req->setUri(uri);
-	req->setHeaders(headers);
-	req->setBody(chunk);
-	req->setQuery(query);
+void HttpParser::into_request() {
+	requests.push(Request());
+	Request &req = requests.back();
+	req.setError(error);
+	if (error != err_none)
+	{
+		reset();
+		return;
+	}
+	req.setMethod(method);
+	req.setUri(uri);
+	req.setHeaders(headers);
+	req.setBody(chunk);
+	req.setQuery(query);
     reset();
-	return *req;
+}
+
+bool HttpParser::has_request() {
+	cerr << "has_request: " << requests.size() << endl;
+	return !requests.empty();
+}
+
+Request HttpParser::consume_request() {
+	Request req = requests.front();
+	requests.pop();
+	return req;
 }
 
 HttpParser::e_encoding HttpParser::get_encoding() {
@@ -54,6 +71,7 @@ HttpParser::e_status HttpParser::append(char c) {
 		break;
 	}
 	case HttpParser::p_body: {
+		print();
 		switch (get_encoding()) {
 		case identity:
 			return identity_body_parser(c);
@@ -100,13 +118,11 @@ HttpParser::e_status HttpParser::push(std::string& chunk) {
 				break;
 			case HttpParser::p_headers:
 				get_encoding();
-
                 if (method == "GET" || method == "DELETE")
-					return (DONE);
+					into_request();
 				break;
 			case HttpParser::p_body: {
-				next(state);
-				return (DONE);
+				into_request();
 				break;
 			}
 			}
@@ -115,6 +131,7 @@ HttpParser::e_status HttpParser::push(std::string& chunk) {
 		}
 		case HttpParser::FAILED: {
 			err_position = i;
+			into_request();
 			return HttpParser::FAILED;
 		}
 		case HttpParser::CONTINUE:
@@ -186,7 +203,7 @@ HttpParser::e_status HttpParser::chunked_body_parser(char c) {
 			ch_state = HttpParser::bd_chunk_size;
 		} else
 		{
-			error = HttpParser::err_invalid_chunk_body;
+			error = err_invalid_chunk_body;
 			return HttpParser::FAILED;
 		}
 	}
@@ -204,7 +221,7 @@ HttpParser::e_status HttpParser::chunked_body_parser(char c) {
 			break;
 		} else if (c == ';')
 		{
-			error = HttpParser::err_invalid_chunk_body;
+			error = err_invalid_chunk_body;
 			return HttpParser::FAILED; // specific error should be returned
 		}
 		else
@@ -216,7 +233,7 @@ HttpParser::e_status HttpParser::chunked_body_parser(char c) {
 			break;
 		} else
 		{
-			error = HttpParser::err_invalid_chunk_body;
+			error = err_invalid_chunk_body;
 			return HttpParser::FAILED;
 		}
 	}
@@ -234,7 +251,7 @@ HttpParser::e_status HttpParser::chunked_body_parser(char c) {
 	case bd_chunk_data_cr: {
 		if (c != '\r')
 		{
-			error = HttpParser::err_invalid_chunk_body;
+			error = err_invalid_chunk_body;
 			return HttpParser::FAILED;
 		}
 		ch_state = HttpParser::bd_chunk_data_crlf;
@@ -243,7 +260,7 @@ HttpParser::e_status HttpParser::chunked_body_parser(char c) {
 	case bd_chunk_data_crlf: {
 		if (c != '\n')
 		{
-			error = HttpParser::err_invalid_chunk_body;
+			error = err_invalid_chunk_body;
 			return HttpParser::FAILED;
 		}
 		ch_state = HttpParser::bd_start;
@@ -262,7 +279,7 @@ HttpParser::e_status HttpParser::headers_parser(char c) {
 		} else {
 			if (strchr("!#$%&'*+-.^_`|~", c) == NULL && !isalnum(c))
 			{
-				error = HttpParser::err_invalid_header;
+				error = err_invalid_header;
 				return HttpParser::FAILED;
 			}
 			h_state = HttpParser::h_key;
@@ -276,7 +293,7 @@ HttpParser::e_status HttpParser::headers_parser(char c) {
 			field.push_back(c);
 		else
 		{
-			error = HttpParser::err_invalid_header;
+			error = err_invalid_header;
 			return HttpParser::FAILED;
 		}
 		break;
@@ -307,7 +324,7 @@ HttpParser::e_status HttpParser::headers_parser(char c) {
 			break;
 		} else
 		{
-			error = HttpParser::err_invalid_header;
+			error = err_invalid_header;
 			return HttpParser::FAILED;
 		}
 	}
@@ -320,7 +337,7 @@ HttpParser::e_status HttpParser::headers_parser(char c) {
 	case h_crlfcr: {
 		if (c == '\n')
 			return HttpParser::DONE;
-		error = HttpParser::err_invalid_header;
+		error = err_invalid_header;
 		return HttpParser::FAILED;
 		break;
 	}
@@ -333,7 +350,7 @@ HttpParser::e_status HttpParser::status_line_parser(char c) {
 	case sl_start: {
 		if (c < 'A' || c > 'Z')
 		{
-			error = HttpParser::err_invalid_method;
+			error = err_invalid_method;
 			return HttpParser::FAILED;
 		}
 		sl_state = sl_method_start;
@@ -343,14 +360,14 @@ HttpParser::e_status HttpParser::status_line_parser(char c) {
 			method.push_back(c);
 			if (is_method() == HttpParser::FAILED)
 			{
-				error = HttpParser::err_invalid_method;
+				error = err_invalid_method;
 				return HttpParser::FAILED;
 			}
 			return HttpParser::CONTINUE;
 		}
 		if (is_method() != HttpParser::DONE)
 		{
-			error = HttpParser::err_invalid_method;
+			error = err_invalid_method;
 			return HttpParser::FAILED;
 		}
 		sl_state = sl_sp_after_method;
@@ -358,7 +375,7 @@ HttpParser::e_status HttpParser::status_line_parser(char c) {
 	case sl_sp_after_method: {
 		if (c != ' ')
 		{
-			error = HttpParser::err_invalid_method;
+			error = err_invalid_method;
 			return HttpParser::FAILED;
 		}
 		sl_state = sl_uri_start;
@@ -367,7 +384,7 @@ HttpParser::e_status HttpParser::status_line_parser(char c) {
 	case sl_uri_start: {
 		if (c != '/')
 		{
-			error = HttpParser::err_invalid_uri;
+			error = err_invalid_uri;
 			return HttpParser::FAILED;
 		}
 		uri.push_back(c);
@@ -399,7 +416,7 @@ HttpParser::e_status HttpParser::status_line_parser(char c) {
 	case sl_http_start: {
 		if (c != 'H')
 		{
-			error = HttpParser::err_invalid_version;
+			error = ::err_invalid_version;
 			return HttpParser::FAILED;
 		}
 		sl_state = sl_http_H;
@@ -408,7 +425,7 @@ HttpParser::e_status HttpParser::status_line_parser(char c) {
 	case sl_http_H: {
 		if (c != 'T')
 		{
-			error = HttpParser::err_invalid_version;
+			error = err_invalid_version;
 			return HttpParser::FAILED;
 		}
 		sl_state = sl_http_HT;
@@ -417,7 +434,7 @@ HttpParser::e_status HttpParser::status_line_parser(char c) {
 	case sl_http_HT: {
 		if (c != 'T')
 		{
-			error = HttpParser::err_invalid_version;
+			error = err_invalid_version;
 			return HttpParser::FAILED;
 		}
 		sl_state = sl_http_HTT;
@@ -426,7 +443,7 @@ HttpParser::e_status HttpParser::status_line_parser(char c) {
 	case sl_http_HTT: {
 		if (c != 'P')
 		{
-			error = HttpParser::err_invalid_version;
+			error = err_invalid_version;
 			return HttpParser::FAILED;
 		}
 		sl_state = sl_http_HTTP;
@@ -435,7 +452,7 @@ HttpParser::e_status HttpParser::status_line_parser(char c) {
 	case sl_http_HTTP: {
 		if (c != '/')
 		{
-			error = HttpParser::err_invalid_version;
+			error = err_invalid_version;
 			return HttpParser::FAILED;
 		}
 		sl_state = sl_http_slash;
@@ -444,7 +461,7 @@ HttpParser::e_status HttpParser::status_line_parser(char c) {
 	case sl_http_slash: {
 		if (c != '1')
 		{
-			error = HttpParser::err_not_implemented_version;
+			error = err_not_implemented_version;
 			return HttpParser::FAILED;
 		}
 		major_version = c - '0';
@@ -454,7 +471,7 @@ HttpParser::e_status HttpParser::status_line_parser(char c) {
 	case sl_http_major: {
 		if (c != '.')
 		{
-			error = HttpParser::err_invalid_version;
+			error = err_invalid_version;
 			return HttpParser::FAILED;
 		}
 		sl_state = sl_http_dot;
@@ -463,7 +480,7 @@ HttpParser::e_status HttpParser::status_line_parser(char c) {
 	case sl_http_dot: {
 		if (c != '1')
 		{
-			error = HttpParser::err_not_implemented_version;
+			error = err_not_implemented_version;
 			return HttpParser::FAILED;
 		}
 		minor_version = c - '0';
@@ -477,14 +494,14 @@ HttpParser::e_status HttpParser::status_line_parser(char c) {
 		if (c == '\n') {
 		} else
 		{
-			error = HttpParser::err_invalid_status_line;
+			error = err_invalid_status_line;
 			return HttpParser::FAILED;
 		}
 	}
 	case sl_almost_done: {
 		if (c != '\n')
 		{
-			error = HttpParser::err_invalid_status_line;
+			error = err_invalid_status_line;
 			return HttpParser::FAILED;
 		}
 		sl_state = sl_start;
@@ -525,7 +542,7 @@ void HttpParser::reset() {
     ch_state = HttpParser::bd_start;
     encoding = HttpParser::unspecified;
     h_state = HttpParser::h_start;
-	error = HttpParser::err_none;
+	error = err_none;
     body_size = 0;
     chunk_size = 0;
     method.clear();
@@ -536,40 +553,5 @@ void HttpParser::reset() {
     field.clear();
     chunk.clear();
     headers.clear();
-}
-
-void HttpParser::debug() {
-	print();
-	string err;
-	switch (error) {
-	case HttpParser::err_none:
-		err = "err_none";
-		break;
-	case HttpParser::err_invalid_status_line:
-		err = "err_invalid_status_line";
-		break;
-	case HttpParser::err_invalid_version:
-		err = "err_invalid_version";
-		break;
-	case HttpParser::err_not_implemented_version:
-		err = "err_not_implemented_version";
-		break;
-	case HttpParser::err_invalid_method:
-		err = "err_invalid_method";
-		break;
-	case HttpParser::err_invalid_uri:
-		err = "err_invalid_uri";
-		break;
-	case HttpParser::err_invalid_header:
-		err = "err_invalid_header";
-		break;
-	case HttpParser::err_invalid_chunk_body:
-		err = "err_invalid_chunk";
-		break;
-	case HttpParser::err_not_implemented_method:
-		err = "err_not_implemented_method";
-		break;
-	}
-	cerr << "error: " << err << endl;
 }
 

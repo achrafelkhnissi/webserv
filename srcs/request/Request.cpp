@@ -1,6 +1,7 @@
 
 
 #include "Request.hpp"
+#include "HttpParser.hpp"
 #include <string>
 #include <iostream> // TODO: remove this
 
@@ -63,6 +64,18 @@ void Request::setQuery(std::string& query) {
 	this->query.swap(query);
 }
 
+void Request::setError(e_error error) {
+	this->error = error;
+}
+
+e_error Request::getError() const {
+	return error;
+}
+
+bool Request::isInvalid() const {
+	return error != err_none;
+}
+
 pair<string, unsigned short> Request::getHost() const {
 	pair<string, unsigned short> host;
 	const string &host_header = headers.find("Host")->second;
@@ -101,6 +114,40 @@ void Request::print() {
 
 //const std::string& Request::getHost() const { return host; } // TODO: remove this
 //const int& Request::getPort() const { return port; } // TODO: remove this
+
+void Request::debug_err() {
+	string err;
+	switch (error) {
+	case err_none:
+		err = "err_none";
+		break;
+	case err_invalid_status_line:
+		err = "err_invalid_status_line";
+		break;
+	case err_invalid_version:
+		err = "err_invalid_version";
+		break;
+	case err_not_implemented_version:
+		err = "err_not_implemented_version";
+		break;
+	case err_invalid_method:
+		err = "err_invalid_method";
+		break;
+	case err_invalid_uri:
+		err = "err_invalid_uri";
+		break;
+	case err_invalid_header:
+		err = "err_invalid_header";
+		break;
+	case err_invalid_chunk_body:
+		err = "err_invalid_chunk";
+		break;
+	case err_not_implemented_method:
+		err = "err_not_implemented_method";
+		break;
+	}
+	cerr << "error: " << err << endl;
+}
 
 
 Request::~Request() { }

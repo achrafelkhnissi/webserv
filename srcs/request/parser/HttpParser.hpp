@@ -17,19 +17,6 @@ public:
 	~HttpParser();
 	HttpParser(const HttpParser& other);
 	HttpParser& operator=(const HttpParser& other);
-	
-
-	enum e_error {
-		err_none,
-		err_invalid_method,
-		err_not_implemented_method,
-		err_invalid_uri,
-		err_invalid_version,
-		err_not_implemented_version,
-		err_invalid_status_line,
-		err_invalid_header,
-		err_invalid_chunk_body,
-	};
 
 	enum e_encoding {
 		none,
@@ -75,9 +62,11 @@ public:
 	e_status append(char c); // process a next char
 	e_status is_method();
 	e_encoding get_encoding();
-	Request &into_request();
+	void into_request();
+	bool has_request();
+	Request consume_request();
     void reset(); // reset parser
-	void debug(); // print debug info
+	
 
 	void print() {
 		cout << "Method: " << method << endl;
@@ -141,6 +130,7 @@ private:
 	e_status chunked_body_parser(char c);
 	e_status identity_body_parser(char c);
 	multimap<string, string> headers;
+	queue<Request> requests;
 };
 
 HttpParser::e_state& next(HttpParser::e_state& s);
