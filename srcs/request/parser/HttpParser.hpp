@@ -26,8 +26,9 @@ public:
 		err_invalid_uri,
 		err_invalid_version,
 		err_not_implemented_version,
+		err_invalid_status_line,
 		err_invalid_header,
-		err_invalid_body,
+		err_invalid_chunk_body,
 	};
 
 	enum e_encoding {
@@ -76,6 +77,7 @@ public:
 	e_encoding get_encoding();
 	Request &into_request();
     void reset(); // reset parser
+	void debug(); // print debug info
 
 	void print() {
 		cout << "Method: " << method << endl;
