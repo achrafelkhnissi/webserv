@@ -187,20 +187,19 @@ void Server::_handleRequest(pollfdsVectorIterator_t it) {
 //		cerr << "_buffer: " << buffer_ << endl;
 //	}
 
-	HttpParser::e_status status = _clientHttpParserMap[it->fd].push(requestBuffer_);
+	_clientHttpParserMap[it->fd].push(requestBuffer_);
 
-	cerr << "status: " << status << endl;
 	while (_clientHttpParserMap[it->fd].has_request())
 	{
 		_request = _clientHttpParserMap[it->fd].consume_request();
 		//_request.print();
 		if (_request.isInvalid()) {
-			cerr << "invalid " << endl;
+			cerr << "invalid Request (Bad Request)" << endl;
 			_request.debug_err();
 			//_handleInvalidRequest(it->fd, _request);
 			return ;
 		}
-		cerr << "valid " << endl;
+		cerr << "valid Request" << endl;
 
 		// Match the port and host to the correct server
 		virtualServerMapIterator_t vserverIter_ = _virtualServer.find(_request.getHost().second);
