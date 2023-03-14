@@ -205,7 +205,8 @@ void Server::_handleRequest(pollfdsVectorIterator_t it) {
 			return ;
 		}
 		cerr << "valid Request" << endl;
-
+        cout << "\nrequest: " << std::endl;
+        _request.print();
 		// Match the port and host to the correct server
 		virtualServerMapIterator_t vserverIter_ = _virtualServer.find(_request.getHost().second);
 		subServersIterator_t subServerIter_ = vserverIter_->second.matchSubServer(_request.getHost().first);
@@ -400,7 +401,9 @@ void Server::_handlePOST(int clientSocket, const Request& request) {
         std::string form_data = request_body.substr(0, contentLength); // TODO: store form data
         std::stringstream response_stream;
         response_stream << "HTTP/1.1 200 OK\r\n\r\n";
-        response_stream << "<html><body><h1>Form Submitted Successfully</h1></body></html>";
+        response_stream << "<html><body><h1>Form Submitted Successfully</h1>"
+                           << "<h2><p> -formData: " << form_data << "</p></h2>"
+                           "</body></html>";
         std::string response = response_stream.str();
         send(clientSocket, response.c_str(), response.length(), 0);
     } else if (content_type == "multipart/form-data") {
