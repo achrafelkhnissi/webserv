@@ -11,6 +11,7 @@ class SubServer;
 class VirtualServer;
 class Server;
 class Request;
+class Response;
 class HttpParser;
 
 typedef struct location_s location_t;
@@ -56,5 +57,6 @@ typedef std::vector<std::string>::const_iterator    stringVectorConstIterator_t;
 #include "SubServer.hpp"
 #include "HttpParser.hpp"
 #include "Request.hpp"
+#include "Response.hpp"
 
 #endif //WEBSERV_TYPEDEFS_HPP

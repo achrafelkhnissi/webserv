@@ -52,7 +52,7 @@ private:
     void    _sendResponse(int fd);
     void    _handleGET(int, const subServersIterator_t&, const Request&);
     void    _handlePOST(int, const subServersIterator_t&, const Request&);
-	void 	_handleDELETE(int clientSocket, const subServersIterator_t &subServersIterator, const Request& request);
+	void 	_handleDELETE(int , const subServersIterator_t &, const Request& );
 	bool 	is_regular_file(const char* path) const;
     void    _handleError(int fd);
     void    _clearPollfds();
@@ -69,6 +69,19 @@ private:
     void _handleError(int fd, int statusCode);
 
     string _getStatusMessage(int statusCode) const;
+
+
+    void sendResponseHeaders(int fd, const Response &response);
+
+    void sendResponseBody(int fd, const string &resourcePath);
+
+    void sendResponseBody(int fd, const Response& response);
+
+    const string handleFormData(const Request &request, Response &response);
+
+    const string handleFileUploads(const Request &request, Response &response, const string &uploadPath);
+
+    location_t *matchLocation(const locationVector_t &locations, const string &uri);
 };
 
 #endif
