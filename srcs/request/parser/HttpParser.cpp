@@ -71,7 +71,7 @@ HttpParser::e_status HttpParser::append(char c) {
 		break;
 	}
 	case HttpParser::p_body: {
-		print();
+//		print();
 		switch (get_encoding()) {
 		case identity:
 			return identity_body_parser(c);
