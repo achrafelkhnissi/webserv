@@ -1,5 +1,6 @@
 #include "Server.hpp"
 #include "Request.hpp"
+#include "utils.hpp"
 
 Server::Server(Configuration config): _config(config), _request() {
 
@@ -368,6 +369,14 @@ void Server::_handlePOST(int clientSocket, const Request& request) {
 
     std::cout << "POST request received" << std::endl;
 
+
+	// todo: add upload path to the root of the server
+	// check if the upload directory exists
+	if (!dirExists(_uploadPath)) {
+		if (!createDir(_uploadPath))
+			throw std::runtime_error("Failed to create upload directory");
+	}
+
     string request_body = request.getBody();
     string content_type = request.getHeaders().find("Content-Type")->second;
     int contentLength = std::stoi(request.getHeaders().find("Content-Length")->second);
@@ -440,6 +449,8 @@ void Server::_handlePOST(int clientSocket, const Request& request) {
                     std::stringstream response_stream;
                     response_stream << "HTTP/1.1 500 Internal Server Error\r\n";
                     response_stream << "Content-Type: text/html\r\n";
+					response_stream << "Content-Length: " << strlen("<html><body><h1>Internal Server Error</h1></body></html>") << "\r\n";
+					response_stream << "Connection: close\r\n";
                     response_stream << "\r\n";
                     response_stream << "<html><body><h1>Internal Server Error</h1></body></html>";
                     std::string response = response_stream.str();
@@ -451,7 +462,11 @@ void Server::_handlePOST(int clientSocket, const Request& request) {
     } else {
         // unsupported content type
         std::stringstream response_stream;
-        response_stream << "HTTP/1.1 400 Bad Request\r\n\r\n";
+        response_stream << "HTTP/1.1 400 Bad Request\r\n";
+		response_stream << "Content-Type: text/html\r\n";
+		response_stream << "Content-Length: " << strlen("<html><body><h1>Unsupported Content Type</h1></body></html>") << "\r\n";
+		response_stream << "Connection: close\r\n";
+		response_stream << "\r\n";
         response_stream << "<html><body><h1>Unsupported Content Type</h1></body></html>";
         std::string response = response_stream.str();
         send(clientSocket, response.c_str(), response.length(), 0);
