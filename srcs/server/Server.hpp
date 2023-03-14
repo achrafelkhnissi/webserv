@@ -80,6 +80,8 @@ private:
     const string handleFormData(const Request &request, Response &response);
 
     const string handleFileUploads(const Request &request, Response &response, const string &uploadPath);
+
+    location_t *matchLocation(const locationVector_t &locations, const string &uri);
 };
 
 #endif

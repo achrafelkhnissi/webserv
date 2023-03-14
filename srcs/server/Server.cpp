@@ -200,12 +200,7 @@ void Server::_clearPollfds() {
 	_fds.clear();
 }
 
-bool Server::_isDirectory(const std::string &dirPath) const {
-	struct stat info = {};
-	return stat(dirPath.c_str(), &info) == 0 && (info.st_mode & S_IFDIR);
-}
-
-location_t* matchLocation(const locationVector_t &locations, const std::string &uri) {
+location_t* Server::matchLocation(const locationVector_t &locations, const std::string &uri) {
 
 	location_t *location_ = new location_t(); //TODO FREE
 	string str_ = uri;
@@ -228,7 +223,6 @@ location_t* matchLocation(const locationVector_t &locations, const std::string &
 	} while (!str_.empty());
 	return nullptr;
 }
-
 
 void Server::sendResponseHeaders(int fd, const Response& response) {
 	// send HTTP response header
@@ -410,7 +404,6 @@ const string Server::handleFileUploads( const Request& request, Response& respon
     return "";
 }
 
-
 void Server::_handlePOST(int clientSocket, const subServersIterator_t &subServersIterator, const Request& request) {
 
     string resourcePath_ ;
@@ -450,7 +443,6 @@ void Server::_handlePOST(int clientSocket, const subServersIterator_t &subServer
 
     std::cout << "End of POST request" << std::endl;
 }
-
 
 void Server::_handleDELETE(int clientSocket , const subServersIterator_t &subServersIterator, const Request& request) {
 
@@ -517,13 +509,6 @@ string Server::_getErrorPage(int code) const {
 //    }
 //}
 
-std::string Server::_getBasename(const std::string& path) const {
-	size_t pos = path.find_last_of("/\\");
-	if (pos != std::string::npos) {
-		return path.substr(pos + 1);
-	}
-	return path;
-}
 
 void Server::_error(const std::string &msg, int err) const {
 	std::string errorMsg = msg + (!err ? "." : (std::string(" | ") + strerror(errno)));
@@ -546,17 +531,6 @@ void Server::printData() const {
 	std::cout << "----------------------------------------" << std::endl;
 	std::cout << "Server data end" << std::endl;
 
-}
-
-string Server::_getFileContent(const std::string& path) const {
-	std::ifstream file_(path, std::ios::binary);
-
-	std::stringstream fileContent_;
-	std::string line_;
-	while (std::getline(file_, line_)) {
-		fileContent_ << line_ << std::endl;
-	}
-	return fileContent_.str();
 }
 
 
