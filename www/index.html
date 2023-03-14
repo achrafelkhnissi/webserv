@@ -137,18 +137,34 @@
 <!--</body>-->
 <!--</html>-->
 
+<!--<!DOCTYPE html>-->
+<!--<html>-->
+<!--<head>-->
+<!--  <meta charset="UTF-8">-->
+<!--  <title>File Upload Example</title>-->
+<!--</head>-->
+<!--<body>-->
+<!--<h1>File Upload Example</h1>-->
+<!--<form action="/upload" method="POST" enctype="multipart/form-data">-->
+<!--  <label for="file">Select a file to upload:</label>-->
+<!--  <input type="file" name="file" id="file"><br><br>-->
+<!--  <input type="submit" value="Upload File">-->
+<!--</form>-->
+<!--</body>-->
+<!--</html>-->
+
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="UTF-8">
-  <title>File Upload Example</title>
-</head>
-<body>
-<h1>File Upload Example</h1>
-<form action="/upload" method="POST" enctype="multipart/form-data">
-  <label for="file">Select a file to upload:</label>
-  <input type="file" name="file" id="file"><br><br>
-  <input type="submit" value="Upload File">
-</form>
-</body>
+  <head>
+    <meta charset="UTF-8">
+    <title>Multiple File Upload Example</title>
+  </head>
+  <body>
+    <h1>Multiple File Upload Example</h1>
+    <form action="/upload" method="post" enctype="multipart/form-data">
+      <input type="file" name="files[]" multiple>
+      <br>
+      <input type="submit" value="Upload Files">
+    </form>
+  </body>
 </html>
