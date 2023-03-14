@@ -164,34 +164,6 @@ void Server::_handleRequest(pollfdsVectorIterator_t it) {
 	buffer_[bytesRead_] = '\0';
 	requestBuffer_ = string(buffer_, bytesRead_);
 
-
-
-	// Versio 2 - Recv until the end of the request
-//	char buffer_[BUFFER_SIZE + 1];
-//	int byteReceived_ = 0;
-//	do {
-//		memset(buffer_, 0, BUFFER_SIZE);
-//		bytesRead_ = recv(it->fd, buffer_, BUFFER_SIZE, 0);
-//		if (bytesRead_ == -1) {
-//			_error("recv", 1);
-//		}
-//		if (bytesRead_ == 0){
-//			close(it->fd);
-//			_fds.erase(it);
-//			return ;
-//		}
-//
-//		cout << "bytesRead_: " << bytesRead_ << endl;
-//		byteReceived_ += bytesRead_;
-//		requestBuffer_.append(buffer_, bytesRead_);
-//	} while (bytesRead_ == BUFFER_SIZE);
-//	if (bytesRead_ > 0) {
-//		buffer_[byteReceived_] = '\0';
-//		cerr << "_buffer: " << buffer_ << endl;
-//	}
-
-//	std::cout << "requestBuffer_: " << requestBuffer_ << std::endl;
-
 	_clientHttpParserMap[it->fd].push(requestBuffer_);
 
 	while (_clientHttpParserMap[it->fd].has_request())
@@ -214,7 +186,7 @@ void Server::_handleRequest(pollfdsVectorIterator_t it) {
 		if (_request.getMethod() == "GET") {
 			_handleGET(it->fd, subServerIter_, _request);
 		} else if (_request.getMethod() == "POST") {
-            _handlePOST(it->fd, _request);
+            _handlePOST(it->fd, subServerIter_, _request);
 		} else if (_request.getMethod() == "DELETE") {
 			_handleDELETE(it->fd, subServerIter_, _request);
 		}
@@ -354,145 +326,150 @@ void Server::_handleGET(int fd, const subServersIterator_t &subServersIterator, 
 
 	response_.setStatusCode(request, resourcePath_, _mimeTypes);
     int statusCode_ = response_.getStatusCode();
-	if (statusCode_ != 200)
-		resourcePath_ = _getErrorPage(statusCode_);
-
+    if (statusCode_ != 200)
+        resourcePath_ = _getErrorPage(statusCode_);
 	response_.setHeaders(request,  _mimeTypes, resourcePath_);
 
 	sendResponseHeaders(fd, response_);
     sendResponseBody(fd, resourcePath_);
 }
 
-void Server::_handlePOST(int clientSocket, const Request& request) {
-
-    // TODO: if upload path doesn't exist, create it
-    // TODO: check why does the post request is successful only after 2 clicks.
-
-    std::cout << "POST request received" << std::endl;
-
-
-	// todo: add upload path to the root of the server
-	// check if the upload directory exists
-	if (!dirExists(_uploadPath)) {
-		if (!createDir(_uploadPath))
-			throw std::runtime_error("Failed to create upload directory");
-	}
-
-    string request_body = request.getBody();
-    string content_type = request.getHeaders().find("Content-Type")->second;
+void handleFormData(  int clientSocket, Request request, Response& response){
     int contentLength = std::stoi(request.getHeaders().find("Content-Length")->second);
-    std::cout << "body :" << request_body << std::endl;
+    const std::string& requestBody = request.getBody();
 
-	if (request_body.empty())
-	{
-		std::cout << "request body is empty" << std::endl;
-		return ;
-	}
+    std::string form_data = requestBody.substr(0, contentLength); // TODO: store form data
+    std::stringstream response_stream;
+    response_stream << "HTTP/1.1 200 OK\r\n\r\n";
+    response_stream << "<html><body><h1>Form Submitted Successfully</h1>"
+                    << "<h2><p> -formData: " << form_data << "</p></h2>"
+                                                             "</body></html>";
+    std::string respons = response_stream.str();
+    send(clientSocket, respons.c_str(), respons.length(), 0);
 
-//    std::cout << "content length :" << contentLength << std::endl;
+}
 
-    std::string boundary = "--" + content_type.substr(content_type.find("boundary=") + 9);
+void handleFileUploads(int clientSocket, Request request, Response& response, const string& uploadPath){
+
+    string content_type = request.getHeaders().find("Content-Type")->second;
     content_type = content_type.substr(0, content_type.find(';'));
-//    std::cout << "content type :" << content_type << std::endl;
-//    std::cout << "boundary :" << boundary << std::endl;
+    string requestBody = request.getBody();
+    int contentLength = std::stoi(request.getHeaders().find("Content-Length")->second);
+    std::cout << "body :" << requestBody << std::endl;
+    std::string boundary = "--" + content_type.substr(content_type.find("boundary=") + 9);
+
+    std::istringstream request_body_stream(std::string(&requestBody[0], &requestBody[0] + contentLength));
+    std::string line;
+    std::getline(request_body_stream, line);
+
+    while (std::getline(request_body_stream, line)) {
+
+        if (line.compare(boundary + "--") == 0) {
+            // end of file upload
+            break;
+        } else if (line.find("Content-Disposition:") != std::string::npos) {
+            std::string filename;
+            if (line.find("filename=\"") != std::string::npos) {
+                // file upload
+                size_t filename_start = line.find("filename=\"") + 10;
+                size_t filename_end = line.find('\"', filename_start);
+                if (filename_start != std::string::npos && filename_end != std::string::npos) {
+                    filename = line.substr(filename_start, filename_end - filename_start);
+                }
+                std::cout << "filename: " << filename << std::endl;
+                std::getline(request_body_stream, line); // skip Content-Type line
+                std::getline(request_body_stream, line); // skip empty line
+            } else {
+                // form field
+                filename = "form_field.txt";
+                std::getline(request_body_stream, line); // skip empty line
+            }
+
+            std::ofstream file_stream(uploadPath + filename, std::ios::binary);
+            if (file_stream.is_open()) {
+                std::cout << "opened file stream: "  << filename <<  std::endl;
+                while (std::getline(request_body_stream, line)) {
+                    if (line.find(boundary) != std::string::npos || line.find( boundary + "--") != std::string::npos) {
+                        // end of file upload
+                        break;
+                    }
+//						std::cout << "line: " << line << std::endl;
+                    if (line == "\r")
+                        continue;
+                    file_stream << line << std::endl;
+                    // note: when you remove the newline all the files are getting uploaded successfully but empty.
+                }
+                file_stream.close();
+                // create response message
+                if (line.find( boundary + "--") != std::string::npos) {
+                    std::stringstream response_stream;
+
+                    response_stream << "HTTP/1.1 200 OK\r\n";
+                    response_stream << "Connection: Keep-Alive\r\n";
+                    response_stream << "Content-Type: text/html\r\n";
+                    response_stream << "Content-Length: " << strlen("<html><body><h1>Files Uploaded Successfully</h1></body></html>") << "\r\n";
+                    response_stream << "\r\n";
+                    response_stream << "<html><body><h1>Files Uploaded Successfully</h1></body></html>";
+                    std::string response = response_stream.str();
+                    ssize_t off = send(clientSocket, response.c_str(), response.length() + 1, SO_NOSIGPIPE);
+                    if (off == -1)
+                        std::cout << "error: " << strerror(errno) << std::endl;
+                    std::cout << "file uploaded successfully" << std::endl;
+                }
+
+            } else {
+                std::stringstream response_stream;
+                response_stream << "HTTP/1.1 500 Internal Server Error\r\n";
+                response_stream << "Content-Type: text/html\r\n";
+                response_stream << "Content-Length: " << strlen("<html><body><h1>Internal Server Error</h1></body></html>") << "\r\n";
+                response_stream << "Connection: Keep-Alive\r\n";
+                response_stream << "\r\n";
+                response_stream << "<html><body><h1>Internal Server Error</h1></body></html>";
+                std::string response = response_stream.str();
+                send(clientSocket, response.c_str(), response.length(), 0);
+                return;
+            }
+        }
+    }
+}
+
+void Server::_handlePOST(int clientSocket, const subServersIterator_t &subServersIterator, const Request& request) {
+
+    Response response_ = Response();
+    string root_ = subServersIterator->getRoot();
+    string uri_ = request.getUri().empty() ? "/" : request.getUri();
+    stringVector_t index_ = subServersIterator->getIndex();
+    location_t *location_ = matchLocation(subServersIterator->getLocation(), uri_);
+
+    if (location_ != nullptr){
+        if (location_->prefix.find("cgi-bin") != std::string::npos)
+            throw std::runtime_error("CGI not supported yet");
+        else if (location_->prefix.find("upload") != std::string::npos)
+            _uploadPath = location_->root + uri_;
+        else if (!dirExists(_uploadPath)) {
+            if (!createDir(_uploadPath))
+                throw std::runtime_error("Failed to create upload directory");
+        }
+    }
+    std::cout << "POST request received" << std::endl;
+    //get content type
+    string content_type = request.getHeaders().find("Content-Type")->second;
+    content_type = content_type.substr(0, content_type.find(';'));
 
     // handle request based on content type
     if (content_type == "application/x-www-form-urlencoded") {
-        std::string form_data = request_body.substr(0, contentLength); // TODO: store form data
-        std::stringstream response_stream;
-        response_stream << "HTTP/1.1 200 OK\r\n\r\n";
-        response_stream << "<html><body><h1>Form Submitted Successfully</h1>"
-                           << "<h2><p> -formData: " << form_data << "</p></h2>"
-                           "</body></html>";
-        std::string response = response_stream.str();
-        send(clientSocket, response.c_str(), response.length(), 0);
+        // handle form data
+        handleFormData(clientSocket, request, response_);
     } else if (content_type == "multipart/form-data") {
         // handle file upload
-        std::istringstream request_body_stream(std::string(&request_body[0], &request_body[0] + contentLength));
-        std::string line;
-        std::getline(request_body_stream, line);
-
-        while (std::getline(request_body_stream, line)) {
-
-            if (line.compare(boundary + "--") == 0) {
-                // end of file upload
-                break;
-            } else if (line.find("Content-Disposition:") != std::string::npos) {
-                std::string filename;
-                if (line.find("filename=\"") != std::string::npos) {
-                    // file upload
-                    size_t filename_start = line.find("filename=\"") + 10;
-                    size_t filename_end = line.find('\"', filename_start);
-                    if (filename_start != std::string::npos && filename_end != std::string::npos) {
-                        filename = line.substr(filename_start, filename_end - filename_start);
-                    }
-                    std::cout << "filename: " << filename << std::endl;
-                    std::getline(request_body_stream, line); // skip Content-Type line
-                    std::getline(request_body_stream, line); // skip empty line
-                } else {
-                    // form field
-                    filename = "form_field.txt";
-                    std::getline(request_body_stream, line); // skip empty line
-                }
-
-                std::ofstream file_stream(_uploadPath + filename, std::ios::binary);
-                if (file_stream.is_open()) {
-                    std::cout << "opened file stream: "  << filename <<  std::endl;
-                    while (std::getline(request_body_stream, line)) {
-                        if (line.find(boundary) != std::string::npos || line.find( boundary + "--") != std::string::npos) {
-                            // end of file upload
-                            break;
-                        }
-//						std::cout << "line: " << line << std::endl;
-						if (line == "\r")
-							continue;
-                        file_stream << line << std::endl;
-						// note: when you remove the newline all the files are getting uploaded successfully but empty.
-                    }
-                    file_stream.close();
-                    // create response message
-					if (line.find( boundary + "--") != std::string::npos) {
-						std::stringstream response_stream;
-
-						response_stream << "HTTP/1.1 200 OK\r\n";
-						response_stream << "Connection: Keep-Alive\r\n";
-						response_stream << "Content-Type: text/html\r\n";
-						response_stream << "Content-Length: " << strlen("<html><body><h1>Files Uploaded Successfully</h1></body></html>") << "\r\n";
-						response_stream << "\r\n";
-						response_stream << "<html><body><h1>Files Uploaded Successfully</h1></body></html>";
-						std::string response = response_stream.str();
-						ssize_t off = send(clientSocket, response.c_str(), response.length() + 1, SO_NOSIGPIPE);
-						if (off == -1)
-							std::cout << "error: " << strerror(errno) << std::endl;
-						std::cout << "file uploaded successfully" << std::endl;
-					}
-
-                } else {
-                    std::stringstream response_stream;
-                    response_stream << "HTTP/1.1 500 Internal Server Error\r\n";
-                    response_stream << "Content-Type: text/html\r\n";
-					response_stream << "Content-Length: " << strlen("<html><body><h1>Internal Server Error</h1></body></html>") << "\r\n";
-					response_stream << "Connection: Keep-Alive\r\n";
-                    response_stream << "\r\n";
-                    response_stream << "<html><body><h1>Internal Server Error</h1></body></html>";
-                    std::string response = response_stream.str();
-                    send(clientSocket, response.c_str(), response.length(), 0);
-                    return;
-                }
-            }
-        }
+        handleFileUploads(clientSocket, request, response_ , _uploadPath);
     } else {
         // unsupported content type
-        std::stringstream response_stream;
-        response_stream << "HTTP/1.1 400 Bad Request\r\n";
-		response_stream << "Content-Type: text/html\r\n";
-		response_stream << "Content-Length: " << strlen("<html><body><h1>Unsupported Content Type</h1></body></html>") << "\r\n";
-		response_stream << "Connection: Keep-Alive\r\n";
-		response_stream << "\r\n";
-        response_stream << "<html><body><h1>Unsupported Content Type</h1></body></html>";
-        std::string response = response_stream.str();
-        send(clientSocket, response.c_str(), response.length(), 0);
+        // TODO : MAKE IT DYNAMIC
+        response_.handleError(clientSocket, 400);
     }
+
+
 
     std::cout << "End of POST request" << std::endl;
 }
@@ -604,6 +581,7 @@ string Server::_getFileContent(const std::string& path) const {
 	}
 	return fileContent_.str();
 }
+
 
 /*
  * todo:

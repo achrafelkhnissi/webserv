@@ -51,7 +51,7 @@ private:
     void    _handleRequest(pollfdsVectorIterator_t it);
     void    _sendResponse(int fd);
     void    _handleGET(int, const subServersIterator_t&, const Request&);
-    void    _handlePOST(int, const Request&);
+    void    _handlePOST(int, const subServersIterator_t&, const Request&);
 	void 	_handleDELETE(int clientSocket, const subServersIterator_t &subServersIterator, const Request& request);
 	bool 	is_regular_file(const char* path) const;
     void    _handleError(int fd);
@@ -65,6 +65,10 @@ private:
     void    _setMimeTypes();
 
     string _getBasename(const string &path) const;
+
+    void _handleError(int fd, int statusCode);
+
+    string _getStatusMessage(int statusCode) const;
 };
 
 #endif
