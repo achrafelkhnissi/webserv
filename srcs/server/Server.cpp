@@ -163,6 +163,8 @@ void Server::_handleRequest(pollfdsVectorIterator_t it) {
 	buffer_[bytesRead_] = '\0';
 	requestBuffer_ = string(buffer_, bytesRead_);
 
+
+
 	// Versio 2 - Recv until the end of the request
 //	char buffer_[BUFFER_SIZE + 1];
 //	int byteReceived_ = 0;
@@ -186,6 +188,8 @@ void Server::_handleRequest(pollfdsVectorIterator_t it) {
 //		buffer_[byteReceived_] = '\0';
 //		cerr << "_buffer: " << buffer_ << endl;
 //	}
+
+	std::cout << "requestBuffer_: " << requestBuffer_ << std::endl;
 
 	HttpParser::e_status status = _clientHttpParserMap[it->fd].push(requestBuffer_);
 
@@ -420,7 +424,6 @@ void Server::_handlePOST(int clientSocket, const Request& request) {
                 std::ofstream file_stream(_uploadPath + filename, std::ios::binary);
                 if (file_stream.is_open()) {
                     std::cout << "opened file stream: "  << filename <<  std::endl;
-					int i = 0;
                     while (std::getline(request_body_stream, line)) {
                         if (line.find(boundary) != std::string::npos || line.find( boundary + "--") != std::string::npos) {
                             // end of file upload
