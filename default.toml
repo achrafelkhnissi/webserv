@@ -30,6 +30,18 @@ autoindex = "on"
 _clientMaxBodySize = "10m"
 
 [[server.location]]
+prefix = "/upload"
+root = "www"
+index = ["index.html", "index.htm"]
+try_files = "$uri $uri/ =404"
+allowed_methods = ["GET", "POST", "DELETE"]
+error_page = "404 /404.html"
+redirect = "http://example.com"
+autoindex = "on"
+_clientMaxBodySize = "10m"
+
+
+[[server.location]]
 prefix = "/html/hello"
 root = "www"
 index = ["index.html", "index.htm"]
