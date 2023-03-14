@@ -12,6 +12,7 @@ Response::Response() {
     _httpErrors[403] = "Forbidden";
     _httpErrors[404] = "Not Found";
     _httpErrors[405] = "Method Not Allowed";
+    _httpErrors[413] = "Request Entity Too Large";
     _httpErrors[415] = "Unsupported Media Type";
     _httpErrors[500] = "Internal Server Error";
     _httpErrors[501] = "Not Implemented";
@@ -205,3 +206,42 @@ const string &Response::getProtocol() const {
 const string &Response::getVersion() const {
     return _version;
 }
+
+void Response::handleError(int fd, int statusCode) {
+
+    string errorPage = _getErrorPage(statusCode);
+    string errorName = _httpErrors[statusCode];
+
+    std::ifstream file_stream(errorPage, std::ios::in | std::ios::binary);
+
+    if (!file_stream.is_open()) {
+        std::cerr << "Error: " << errorName << std::endl;
+        return;
+    }
+
+    //get file size
+
+    setContentLength(errorPage);
+
+    std::ostringstream response_stream;
+    response_stream << "HTTP/1.1 " << statusCode << " " << errorName << "\r\n";
+    response_stream << "Content-Type: text/html\r\n";
+    response_stream << "Content-Length: " << getContentLength() << "\r\n";
+    response_stream << "Connection: close\r\n\r\n";
+    response_stream << file_stream.rdbuf();
+
+    std::cout << response_stream.str() << std::endl;
+    std::string response = response_stream.str();
+    send(fd, response.c_str(), response.length(), 0);
+
+    std::cout << "handleError" << std::endl;
+    file_stream.close();
+//    send(fd, file_content.c_str(), file_content.length(), 0);
+
+}
+
+string Response::_getErrorPage(int code) const {
+    return "www/error_pages/" + std::to_string(code) + ".html";
+}
+
+

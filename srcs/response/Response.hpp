@@ -49,5 +49,9 @@ public:
     string _extractExtension(const string &path) const ;
 
 
-        void setStatusCode(int statusCode);
+    void setStatusCode(int statusCode);
+
+    void handleError(int fd, int statusCode);
+
+    string _getErrorPage(int code) const;
 };
