@@ -380,7 +380,7 @@ void Server::_handlePOST(int clientSocket, const Request& request) {
     string request_body = request.getBody();
     string content_type = request.getHeaders().find("Content-Type")->second;
     int contentLength = std::stoi(request.getHeaders().find("Content-Length")->second);
-//    std::cout << "body :" << request_body << std::endl;
+    std::cout << "body :" << request_body << std::endl;
 
 	if (request_body.empty())
 	{
@@ -416,14 +416,22 @@ void Server::_handlePOST(int clientSocket, const Request& request) {
                 break;
             } else if (line.find("Content-Disposition:") != std::string::npos) {
                 std::string filename;
-                size_t filename_start = line.find("filename=\"") + 10;
-                size_t filename_end = line.find('\"', filename_start);
-                if (filename_start != std::string::npos && filename_end != std::string::npos) {
-                    filename = line.substr(filename_start, filename_end - filename_start);
+                if (line.find("filename=\"") != std::string::npos) {
+                    // file upload
+                    size_t filename_start = line.find("filename=\"") + 10;
+                    size_t filename_end = line.find('\"', filename_start);
+                    if (filename_start != std::string::npos && filename_end != std::string::npos) {
+                        filename = line.substr(filename_start, filename_end - filename_start);
+                    }
+                    std::cout << "filename: " << filename << std::endl;
+                    std::getline(request_body_stream, line); // skip Content-Type line
+                    std::getline(request_body_stream, line); // skip empty line
+                } else {
+                    // form field
+                    filename = "form_field.txt";
+                    std::getline(request_body_stream, line); // skip empty line
                 }
-                std::cout << "filename: " << filename << std::endl;
-                std::getline(request_body_stream, line); // skip Content-Type line
-                std::getline(request_body_stream, line); // skip empty line
+
                 std::ofstream file_stream(_uploadPath + filename, std::ios::binary);
                 if (file_stream.is_open()) {
                     std::cout << "opened file stream: "  << filename <<  std::endl;
