@@ -3,6 +3,7 @@
 
 #include <vector>                       // std::vector
 #include <sys/stat.h>				   // stat
+#include "utils.hpp"
 #include "VirtualServer.hpp"                  // VirtualServer class
 #include "SubServer.hpp"                // SubServer class
 #include "Configuration.hpp"  // Configuration class
@@ -13,7 +14,7 @@
 
 #include <sstream>
 
-#define MSG(msg) (std::string(_getBasename((__FILE__)) + ":" + std::string(std::to_string(__LINE__)) + ": " + msg))
+#define MSG(msg) (std::string(getBasename((__FILE__)) + ":" + std::string(std::to_string(__LINE__)) + ": " + msg))
 
 
 
@@ -58,13 +59,11 @@ private:
     void    _clearPollfds();
     void    _error(const string& msg, int err) const;
     void    _setupVirtualServer(VirtualServer& vserver);
-	bool 	_isDirectory(const std::string &dirPath) const;
     void    _setCGIEnv(const Request& request, const location_t& location, const string& path);
     string  _getErrorPage(int code) const;
     string  _getFileContent(const string& path) const;
     void    _setMimeTypes();
 
-    string _getBasename(const string &path) const;
 
     void _handleError(int fd, int statusCode);
 

@@ -64,12 +64,12 @@ void Server::_setupVirtualServer(VirtualServer& vserver) {
 	// Create a socket
 	int serverFd_ = socket(AF_INET, SOCK_STREAM, 0);
 	if (serverFd_ == -1)
-		_error("socket", 1);
+		error("socket", 1);
 
 	// Set the server socket to reuse the address
 	int optionValue_ = 1;
 	if (setsockopt(serverFd_, SOL_SOCKET, SO_REUSEADDR, &optionValue_, sizeof(optionValue_)) < 0)
-		_error("setsockopt", 1);
+		error("setsockopt", 1);
 
 	// Bind the socket to the port and host
 	struct sockaddr_in serverAddr_ = {};
@@ -79,11 +79,11 @@ void Server::_setupVirtualServer(VirtualServer& vserver) {
 	serverAddr_.sin_port = htons(vserver.getPort());
 
 	if (bind(serverFd_, (struct sockaddr *) &serverAddr_, sizeof(serverAddr_)) == -1)
-		_error("bind", 1);
+		error("bind", 1);
 
 	// Listen for incoming connections
 	if (listen(serverFd_, SOMAXCONN) == -1)
-		_error(MSG("bind()"), 1);
+		error(MSG("bind()"), 1);
 
 	struct pollfd serverPollFd_ = {};
 	serverPollFd_.fd = serverFd_;
@@ -308,7 +308,7 @@ void Server::_handleGET(int fd, const subServersIterator_t &subServersIterator, 
 	}
 	// Check if the uri is a directory
 	string resourcePath_ = root_ + uri_;
-	if (_isDirectory(resourcePath_)){
+	if (isDirectory(resourcePath_)){
 		if (resourcePath_.back() != '/')
 			resourcePath_ += "/";
 		resourcePath_ += index_[0]; //todo: return the first index that exists
