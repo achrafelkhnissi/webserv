@@ -190,7 +190,7 @@ void Server::_handleRequest(pollfdsVectorIterator_t it) {
 //		cerr << "_buffer: " << buffer_ << endl;
 //	}
 
-	std::cout << "requestBuffer_: " << requestBuffer_ << std::endl;
+//	std::cout << "requestBuffer_: " << requestBuffer_ << std::endl;
 
 	_clientHttpParserMap[it->fd].push(requestBuffer_);
 
@@ -388,12 +388,12 @@ void Server::_handlePOST(int clientSocket, const Request& request) {
 		return ;
 	}
 
-    std::cout << "content length :" << contentLength << std::endl;
+//    std::cout << "content length :" << contentLength << std::endl;
 
     std::string boundary = "--" + content_type.substr(content_type.find("boundary=") + 9);
     content_type = content_type.substr(0, content_type.find(';'));
-    std::cout << "content type :" << content_type << std::endl;
-    std::cout << "boundary :" << boundary << std::endl;
+//    std::cout << "content type :" << content_type << std::endl;
+//    std::cout << "boundary :" << boundary << std::endl;
 
     // handle request based on content type
     if (content_type == "application/x-www-form-urlencoded") {
@@ -432,25 +432,36 @@ void Server::_handlePOST(int clientSocket, const Request& request) {
                             // end of file upload
                             break;
                         }
-                        file_stream << line << "\n";
+//						std::cout << "line: " << line << std::endl;
+						if (line == "\r")
+							continue;
+                        file_stream << line << std::endl;
+						// note: when you remove the newline all the files are getting uploaded successfully but empty.
                     }
                     file_stream.close();
                     // create response message
-                    std::stringstream response_stream;
-                    response_stream << "HTTP/1.1 200 OK\r\n";
-					response_stream << "Connection: close\r\n";
-					response_stream << "Content-Type: text/html\r\n";
-					response_stream << "Content-Length: " << strlen("<html><body><h1>File Uploaded Successfully</h1></body></html>") << "\r\n";
-					response_stream << "\r\n";
-                    response_stream << "<html><body><h1>File Uploaded Successfully</h1></body></html>";
-                    std::string response = response_stream.str();
-                    send(clientSocket, response.c_str(), response.length(), 0);
+					if (line.find( boundary + "--") != std::string::npos) {
+						std::stringstream response_stream;
+
+						response_stream << "HTTP/1.1 200 OK\r\n";
+						response_stream << "Connection: Keep-Alive\r\n";
+						response_stream << "Content-Type: text/html\r\n";
+						response_stream << "Content-Length: " << strlen("<html><body><h1>Files Uploaded Successfully</h1></body></html>") << "\r\n";
+						response_stream << "\r\n";
+						response_stream << "<html><body><h1>Files Uploaded Successfully</h1></body></html>";
+						std::string response = response_stream.str();
+						ssize_t off = send(clientSocket, response.c_str(), response.length() + 1, SO_NOSIGPIPE);
+						if (off == -1)
+							std::cout << "error: " << strerror(errno) << std::endl;
+						std::cout << "file uploaded successfully" << std::endl;
+					}
+
                 } else {
                     std::stringstream response_stream;
                     response_stream << "HTTP/1.1 500 Internal Server Error\r\n";
                     response_stream << "Content-Type: text/html\r\n";
 					response_stream << "Content-Length: " << strlen("<html><body><h1>Internal Server Error</h1></body></html>") << "\r\n";
-					response_stream << "Connection: close\r\n";
+					response_stream << "Connection: Keep-Alive\r\n";
                     response_stream << "\r\n";
                     response_stream << "<html><body><h1>Internal Server Error</h1></body></html>";
                     std::string response = response_stream.str();
@@ -465,7 +476,7 @@ void Server::_handlePOST(int clientSocket, const Request& request) {
         response_stream << "HTTP/1.1 400 Bad Request\r\n";
 		response_stream << "Content-Type: text/html\r\n";
 		response_stream << "Content-Length: " << strlen("<html><body><h1>Unsupported Content Type</h1></body></html>") << "\r\n";
-		response_stream << "Connection: close\r\n";
+		response_stream << "Connection: Keep-Alive\r\n";
 		response_stream << "\r\n";
         response_stream << "<html><body><h1>Unsupported Content Type</h1></body></html>";
         std::string response = response_stream.str();
