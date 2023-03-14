@@ -1,0 +1,152 @@
+<!--<!DOCTYPE html>-->
+<!--<html>-->
+<!--<head>-->
+<!--    <title>Submit Form</title>-->
+<!--    <style>-->
+<!--        body {-->
+<!--            display: flex;-->
+<!--            justify-content: center;-->
+<!--            align-items: center;-->
+<!--            height: 100vh;-->
+<!--            background-color: #f2f2f2;-->
+<!--        }-->
+
+<!--        form {-->
+<!--            margin: 20px;-->
+<!--            padding: 20px;-->
+<!--            border: 1px solid #ccc;-->
+<!--            border-radius: 5px;-->
+<!--            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);-->
+<!--            width: 400px;-->
+<!--        }-->
+
+<!--        label {-->
+<!--            display: block;-->
+<!--            margin-bottom: 10px;-->
+<!--        }-->
+
+<!--        input[type="text"],-->
+<!--        textarea {-->
+<!--            display: block;-->
+<!--            width: 100%;-->
+<!--            padding: 5px;-->
+<!--            margin-bottom: 10px;-->
+<!--            border-radius: 5px;-->
+<!--            border: 1px solid #ccc;-->
+<!--        }-->
+
+<!--        input[type="submit"] {-->
+<!--            background-color: #4caf50;-->
+<!--            color: #fff;-->
+<!--            border: none;-->
+<!--            border-radius: 5px;-->
+<!--            padding: 10px;-->
+<!--            cursor: pointer;-->
+<!--        }-->
+
+<!--        .success {-->
+<!--            color: #4caf50;-->
+<!--            font-weight: bold;-->
+<!--            margin-top: 20px;-->
+<!--            text-align: center;-->
+<!--            animation-name: success;-->
+<!--            animation-duration: 2s;-->
+<!--            animation-fill-mode: forwards;-->
+<!--            opacity: 0;-->
+<!--        }-->
+
+<!--        @keyframes success {-->
+<!--            0% {-->
+<!--                opacity: 0;-->
+<!--                transform: translateY(-100%);-->
+<!--            }-->
+<!--            50% {-->
+<!--                opacity: 1;-->
+<!--                transform: translateY(0);-->
+<!--            }-->
+<!--            100% {-->
+<!--                opacity: 1;-->
+<!--                transform: translateY(-50%);-->
+<!--            }-->
+<!--        }-->
+<!--    </style>-->
+<!--</head>-->
+<!--<body>-->
+<!--<form method="POST" id="myForm">-->
+<!--    <label for="name">Name:</label>-->
+<!--    <input type="text" id="name" name="name" required>-->
+
+<!--    <label for="email">Email:</label>-->
+<!--    <input type="text" id="email" name="email" required>-->
+
+<!--    <label for="message">Message:</label>-->
+<!--    <textarea id="message" name="message" rows="5" required></textarea>-->
+
+<!--    <input type="submit" value="Submit">-->
+<!--</form>-->
+
+<!--<p class="success" style="display: none;">Form submitted successfully!</p>-->
+
+<!--<script>-->
+<!--    const form = document.getElementById('myForm');-->
+<!--    const successMsg = document.querySelector('.success');-->
+
+<!--    form.addEventListener('submit', (event) => {-->
+<!--        event.preventDefault();-->
+
+<!--        // Submit form data using AJAX-->
+<!--        const xhr = new XMLHttpRequest();-->
+<!--        xhr.open('POST', '/submit-form');-->
+<!--        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');-->
+<!--        xhr.onload = () => {-->
+<!--            if (xhr.status === 200) {-->
+<!--                // Show success message-->
+<!--                successMsg.style.display = 'block';-->
+<!--            }-->
+<!--        };-->
+<!--        xhr.send(new FormData(form));-->
+<!--    });-->
+<!--</script>-->
+<!--</body>-->
+<!--</html>-->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Success Message</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #232323;
+        }
+
+        .success {
+            color: #2ecc71;
+            font-weight: bold;
+            font-size: 3rem;
+            text-align: center;
+            animation: fadein 1s ease-out forwards;
+            opacity: 0;
+        }
+
+        @keyframes fadein {
+            from {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+    </style>
+</head>
+<body>
+<p class="success">Files uploaded Successfully</p>
+</body>
+</html>
+
+
