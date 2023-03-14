@@ -1,4 +1,5 @@
 #include "Server.hpp"
+#include "Request.hpp"
 
 Server::Server(Configuration config): _config(config), _request() {
 
@@ -8,8 +9,7 @@ Server::Server(Configuration config): _config(config), _request() {
 //    _mimeTypes = _config.getMimeTypes();
 //    _setupVirtualServer();
 
-    _uploadPath = "/Users/fathjami/Desktop/webserv/www/upload/"; // TODO: get this from config file.
-	_uploadPath = "/Users/ael-khni/CLionProjects/webserv/www/upload/"; // TODO: get this from config file.
+    _uploadPath = "./upload/"; // TODO: get this from config file.
 
 	vector<ServerConfig> servers_ = _config.getServers();
 
@@ -191,22 +191,23 @@ void Server::_handleRequest(pollfdsVectorIterator_t it) {
 
 	std::cout << "requestBuffer_: " << requestBuffer_ << std::endl;
 
-	HttpParser::e_status status = _clientHttpParserMap[it->fd].push(requestBuffer_);
+	_clientHttpParserMap[it->fd].push(requestBuffer_);
 
-	if (status == HttpParser::FAILED){
-		std::cerr << "FAILED" << std::endl;
-		_clientHttpParserMap[it->fd].reset();
-		return;
-	} else if (status == HttpParser::DONE) {
-		std::cerr << "DONE" << std::endl;
-		_request = _clientHttpParserMap[it->fd].into_request();
-		_request.print();
+	while (_clientHttpParserMap[it->fd].has_request())
+	{
+		_request = _clientHttpParserMap[it->fd].consume_request();
+		//_request.print();
+		if (_request.isInvalid()) {
+			cerr << "invalid Request (Bad Request)" << endl;
+			_request.debug_err();
+			//_handleInvalidRequest(it->fd, _request);
+			return ;
+		}
+		cerr << "valid Request" << endl;
 
 		// Match the port and host to the correct server
 		virtualServerMapIterator_t vserverIter_ = _virtualServer.find(_request.getHost().second);
 		subServersIterator_t subServerIter_ = vserverIter_->second.matchSubServer(_request.getHost().first);
-
-//    subServerIter_->printData();
 
 		if (_request.getMethod() == "GET") {
 			_handleGET(it->fd, subServerIter_, _request);
@@ -215,13 +216,6 @@ void Server::_handleRequest(pollfdsVectorIterator_t it) {
 		} else if (_request.getMethod() == "DELETE") {
 			_handleDELETE(it->fd, subServerIter_, _request);
 		}
-
-        //TODO: check if it's needed
-//		close(it->fd);
-//		_fds.erase(it);
-
-	} else if (status == HttpParser::CONTINUE) {
-		cerr << "CONTINUE" << endl;
 	}
 }
 

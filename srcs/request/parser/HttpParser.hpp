@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <iostream>
 #include <queue>
 #include <string>
@@ -61,8 +62,11 @@ public:
 	e_status append(char c); // process a next char
 	e_status is_method();
 	e_encoding get_encoding();
-	Request &into_request();
+	void into_request();
+	bool has_request();
+	Request consume_request();
     void reset(); // reset parser
+	
 
 	void print() {
 		cout << "Method: " << method << endl;
@@ -106,6 +110,13 @@ private:
 	string query;
 	int major_version;
 	int minor_version;
+	
+	/* error */
+	e_error error;
+	size_t err_line;
+	size_t err_position;
+
+
 	/* states */
 	e_state state; // general state
 	e_sl_state sl_state; // status line state
@@ -119,6 +130,7 @@ private:
 	e_status chunked_body_parser(char c);
 	e_status identity_body_parser(char c);
 	multimap<string, string> headers;
+	queue<Request> requests;
 };
 
 HttpParser::e_state& next(HttpParser::e_state& s);
