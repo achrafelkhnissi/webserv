@@ -119,10 +119,10 @@ HttpParser::e_status HttpParser::push(std::string& chunk) {
 			case HttpParser::p_headers:
 				get_encoding();
                 if (method == "GET" || method == "DELETE")
-					into_request();
+					return (into_request(), HttpParser::DONE);
 				break;
 			case HttpParser::p_body: {
-				into_request();
+				return (into_request(), HttpParser::DONE);
 				break;
 			}
 			}
@@ -536,11 +536,11 @@ HttpParser& HttpParser::operator=(const HttpParser& other) {
 }
 
 void HttpParser::reset() {
-    state = HttpParser::p_status_line;
+	state = HttpParser::p_status_line;
     sl_state = HttpParser::sl_start;
     h_state = HttpParser::h_start;
     ch_state = HttpParser::bd_start;
-    encoding = HttpParser::unspecified;
+    encoding = HttpParser::none;
     h_state = HttpParser::h_start;
 	error = err_none;
     body_size = 0;

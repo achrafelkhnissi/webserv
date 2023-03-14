@@ -113,7 +113,7 @@ private:
 	
 	/* error */
 	e_error error;
-	size_t err_line;
+	size_t err_num;
 	size_t err_position;
 
 
