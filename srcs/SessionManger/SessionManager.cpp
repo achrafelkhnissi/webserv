@@ -1,59 +1,58 @@
 
 #include "SessionManager.hpp"
 
-SessionManager::SessionManager() {}
+SessionManager::SessionManager() {
+	srand(time(NULL));
+}
 
 SessionManager::~SessionManager() {
 	_sessions.clear();
 }
 
-void SessionManager::addSession(std::string key, std::string value) {
+void SessionManager::addSession(string key, t_sessionData value) {
 	_sessions[key] = value;
 }
 
-void SessionManager::removeSession(std::string key) {
+void SessionManager::removeSession(string key) {
 	_sessions.erase(key);
 }
 
-std::string SessionManager::getSession(std::string key) {
+t_sessionData SessionManager::getSession(string key) {
 	return _sessions[key];
 }
 
 void SessionManager::printSessions() {
-	std::map<std::string, std::string>::iterator it;
-	std::cout << "--- Sessions ---"
-	for (it = _sessions.begin(); it != _sessions.end(); it++) {
-		std::cout << it->first << " = " << it->second << std::endl;
-	}
+	std::cout << "--- Sessions ---";
+	for (t_sessionMap::iterator it = _sessions.begin(); it != _sessions.end(); ++it) {
+		std::cout << '\t' << it->first << " => " << it->second["userId"] << std::endl;
+    }
 	std::cout << "----------------" << std::endl;
 }
 
-bool SessionManager::isValidSession(std::string sessionId) {
-	bool result = false;
-//	if (_sessions.find(sessionId) != _sessions.end()) {
-//		result = true;
-//	}
-	if (_sessions.count(sessionId) > 0)
-		result = true;
-	return result;
+bool SessionManager::isValidSession(string sessionId) {
+	return _sessions.count(sessionId) > 0;
 }
 
-std::string SessionManager::getUserId(std::string sessionId) {
-	return _sessions[sessionId];
+string SessionManager::getUserId(string sessionId) {
+	return _sessions[sessionId]["userId"];
 }
 
 void SessionManager::clearSessions() {
 	_sessions.clear();
 }
 
-void SessionManager::createSession(std::string userId) {
-	std::string sessionId = _generateSessionId();
-	_sessions[sessionId] = userId;
+void SessionManager::createSession(string userId, t_sessionData sessionData) {
+	string sessionId = _generateSessionId();
+
+	sessionData["userId"] = userId;
+	_sessions[sessionId] = sessionData;
+
+	// todo: set cookie
 	_setCookie(sessionId);
 }
 
-std::string SessionManager::_generateSessionId() {
-	std::string sessionId;
+string SessionManager::_generateSessionId() {
+	string sessionId;
 	const int SESSION_ID_LENGTH = 32;
 	std::string charset = "0123456789"
 						  "abcdefghijklmnopqrstuvwxyz"
@@ -65,6 +64,6 @@ std::string SessionManager::_generateSessionId() {
 	return sessionId;
 }
 
-void SessionManager::_setCookie(std::string sessionId) {
+void SessionManager::_setCookie(string sessionId) {
 	std::cout << "Set-Cookie: webserv-sessionId=" << sessionId << std::endl;
 }

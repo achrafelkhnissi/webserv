@@ -26,10 +26,17 @@
  *
  */
 
+typedef std::string string;
+typedef string t_sessionId; // or t_userId
+typedef std::map<string, string> t_sessionData;
+typedef std::map <t_sessionId, t_sessionData> t_sessionMap;
+
 class SessionManager {
 
 private:
-	std::map<std::string, std::string> _sessions;
+
+	t_sessionData _sessionData;
+	t_sessionMap _sessions;
 
 	// todo: check how to store session state information
 	// std::map<std::string, std::map<std::string, std::string> > _sessionState;
@@ -39,23 +46,23 @@ public:
 	SessionManager();
 	~SessionManager();
 
-	void addSession(std::string key, std::string value);
-	void removeSession(std::string key);
-	std::string getSession(std::string key);
+	void addSession(string key, t_sessionData value);
+	void removeSession(string key);
+	t_sessionData getSession(string key);
 
 	void printSessions();
 
 	void clearSessions();
 
-	void createSession(std::string userId);
-	void deleteSession(std::string userId);
+	void createSession(string userId, t_sessionData sessionData);
+	void deleteSession(string userId);
 
-	std::string getUserId(std::string sessionId);
-	bool isValidSession(std::string sessionId);
+	string getUserId(string sessionId);
+	bool isValidSession(string sessionId);
 
 private:
-	std::string _generateSessionId();
-	void _setCookie(std::string sessionId);
+	string _generateSessionId();
+	void _setCookie(string sessionId);
 };
 
 #endif //WEBSERV_SESSIONMANAGER_HPP
