@@ -54,11 +54,12 @@ void SessionManager::createSession(std::string userId) {
 
 std::string SessionManager::_generateSessionId() {
 	std::string sessionId;
+	const int SESSION_ID_LENGTH = 32;
 	std::string charset = "0123456789"
 						  "abcdefghijklmnopqrstuvwxyz"
 						  "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 	srand(time(NULL));
-	for (int i = 0; i < 32; i++) {
+	for (int i = 0; i < SESSION_ID_LENGTH; i++) {
 		sessionId += charset[rand() % charset.length()];
 	}
 	return sessionId;
