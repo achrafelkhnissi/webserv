@@ -296,6 +296,14 @@ void Server::sendResponseBody(int fd, const Response& response) {
 
 void Server::_handleGET(int fd, const subServersIterator_t &subServersIterator, const Request& request) {
 
+	/*
+	 * todo:
+	 * 	1. check if the uri is a directory
+	 * 	2. if it is a directory, check if there's an index file
+	 * 	3. if not generate an index using IndexGenerator
+	 * 	4. Store the index in the response body
+	 */
+
 	Response response_ = Response();
 	string root_ = subServersIterator->getRoot();
 	string uri_ = request.getUri().empty() ? "/" : request.getUri();
