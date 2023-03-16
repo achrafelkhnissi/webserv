@@ -72,12 +72,14 @@ bool optional_str_arr(toml::table &table, const string &key)
 	return true;
 }
 
-Configuration::e_error validate_location(toml::table &location) {
+Configuration::e_error validate_location(toml::table &location)
+{
 	string location_keys[] = {"prefix", "root", "upload_path", "autoindex", "redirect", "allowed_methods", "index", "cgi_path", "error_page", "_clientMaxBodySize"};
 	ITER_FOREACH(toml::table::TomlMap, location.mp, it) {
 		if (find(begin(location_keys), end(location_keys), it->first) == end(location_keys))
 			return Configuration::ERROR_UNKNOWN_KEY;
 	}
+
 	if (!optional_is(location, "prefix", toml::table::STRING))
 		return Configuration::ERROR_INVALID_PORT;
 	else if (!optional_is(location, "root", toml::table::STRING))
@@ -101,7 +103,20 @@ Configuration::e_error validate_location(toml::table &location) {
 	return Configuration::ERROR_NONE;
 }
 
+Configuration::e_error validate_location_list(toml::table &location) {
+	Configuration::e_error error;
+	if (!location.is_type(toml::table::ARRAY))
+		return Configuration::ERROR_INVALID_LOCATION;
+	for (size_t i = 0; i < location.vec.size(); i++) {
+		error = validate_location(location[i]);
+		if (error != Configuration::ERROR_NONE)
+			return error;
+	}
+	return Configuration::ERROR_NONE;
+}
+
 Configuration::e_error validate_server(toml::table& server) {
+	Configuration::e_error error;
 	string server_keys[] = {"port", "host", "index", "server_name", "allowed_methods", "root", "error_page", "_clientMaxBodySize", "location"};
 	ITER_FOREACH(toml::table::TomlMap, server.mp, it) {
 		if (find(begin(server_keys), end(server_keys), it->first) == end(server_keys))
@@ -124,6 +139,8 @@ Configuration::e_error validate_server(toml::table& server) {
 		return Configuration::ERROR_INVALID_ROOT;
 	else if (!optional_str_arr(server, "error_page"))
 		return Configuration::ERROR_INVALID_ERROR_PAGE;
+	else if ((error = validate_location_list(server["location"])) != Configuration::ERROR_NONE)
+			return error;
 	return Configuration::ERROR_NONE;
 }
 
