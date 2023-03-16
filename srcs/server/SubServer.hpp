@@ -19,6 +19,8 @@ struct location_s{
 	string          errorPages;
 	string          prefix;
 	bool            autoIndex;
+    stringVector_t  cgi;
+    string          cgi_path;
     // TODO: add Cgi
 
 };

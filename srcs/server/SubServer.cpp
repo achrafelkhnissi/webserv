@@ -63,6 +63,7 @@ void SubServer::fillLocation(const  LocationConfig& locationConfig, location_t& 
     location.prefix = locationConfig.prefix;
     location.autoIndex = locationConfig.autoindex == "on";
     location.allowedMethods = locationConfig.allowed_methods; // todo: wait for ismail to add it.
+    location.cgi_path = locationConfig.cgi_path;
 }
 
 void SubServer::printData() const {
