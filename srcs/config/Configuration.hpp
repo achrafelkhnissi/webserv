@@ -84,27 +84,43 @@ struct ServerConfig {
 
 class Configuration {
 
-private:
-	vector<ServerConfig> _servers;
-//	int _port;
-//	string _host;
-//	string _root;
-//	string _log_path;
-
-	void parse_config_file(string config_file);
 
 public:
 	Configuration(toml::table& config);
     ~Configuration();
 
+	enum e_error {
+		ERROR_NONE,
+		ERROR_UNKNOWN_KEY,
+		ERROR_INVALID_SERVER,
+		ERROR_INVALID_PORT,
+		ERROR_INVALID_HOST,
+		ERROR_INVALID_SERVER_NAME,
+		ERROR_INVALID_INDEX,
+		ERROR_INVALID_ALLOWED_METHODS,
+		ERROR_INVALID_ROOT,
+		ERROR_INVALID_ERROR_PAGE,
+		ERROR_INVALID_CLIENT_MAX_BODY_SIZE,
+		ERROR_INVALID_LOCATION,
+
+	};
+	e_error error;
     const vector<ServerConfig>& getServers() const;
-//	int get_port();
-//
-//	string get_host();
-//	string get_root();
-//	string get_log_path();
 
 	void print(); // todo: remove this
+
+private:
+
+	void parse_config_file(string config_file);
+
+
+	enum e_state {
+		OK,
+		INVALID_KEY,
+		INVALID_VALUE,
+	};
+	vector<ServerConfig> _servers;
+	e_error validate_keys(toml::table &config);
 };
 
 #endif // CONFIGURATION_HPP
