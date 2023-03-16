@@ -8,8 +8,11 @@
 
 
 
-CGIHandler::CGIHandler(const stringMap_t &env, const string &body): _envMap(env), _requestBody(body) {
+CGIHandler::CGIHandler(const stringMap_t &env, const string &body, location_t* location): _envMap(env), _requestBody(body) {
 
+    _cgiPath.push_back(location->cgi_path);
+    _cgiPath.push_back("form-handler.py");
+    std::cout << "cgi path: " << location->cgi_path << std::endl;
     _envSize = env.size();
     _env = new char*[_envSize + 1];
     _env[_envSize] = NULL; // NULL terminate the array is expected by execve
@@ -24,14 +27,15 @@ string CGIHandler::getCmd() {
 
     string path_ = _envMap["PATH_INFO"];
     string scriptName_ = path_.substr(path_.find_last_of('/') + 1);
+    std::cout <<  "\n scriptname: "<< scriptName_ << std::endl;
     string extension_ = ".py";
     string cmd_ = "./www/cgi-bin/";
 
 
     stringVectorIterator_t it = find(_cgiPath.begin(), _cgiPath.end(), scriptName_);
     if (it != _cgiPath.end()) {
-        cout << "Found file with" << extension_ << " extension: " << *it << endl;
-       return  cmd_ += *it;
+       std::cout << "Found file: " << cmd_ + *it << std::endl;
+        return  cmd_ += *it;
     } else {
         std::size_t pos = path_.find_last_of('.');
         if (pos != std::string::npos) {
@@ -45,7 +49,7 @@ string CGIHandler::getCmd() {
             }
         }
     }
-    cout << "Found file with" << extension_ << " extension: " << cmd_ + "helloCGI.py" << endl;
+
    return cmd_ += "helloCGI.py" ;
 }
 
@@ -111,13 +115,13 @@ string CGIHandler::CGIExecuter() {
 
 
 CGIHandler::~CGIHandler() {
-    for(int i = 0; i < _envSize; i++) {
-        free(_env[i]);
-    }
-
-    for (int i = 0; i < 2; i++) {
-        free(_argv[i]);
-    }
-    delete[] _env;
+//    for(int i = 0; i < _envSize; i++) {
+//        free(_env[i]);
+//    }
+//
+//    for (int i = 0; i < 2; i++) {
+//        free(_argv[i]);
+//    }
+//    delete[] _env;
 }
 

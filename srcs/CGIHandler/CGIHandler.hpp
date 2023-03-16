@@ -71,7 +71,9 @@ Variables passed by user agent (HTTP_ACCEPT, HTTP_ACCEPT_LANGUAGE, HTTP_USER_AGE
 class CGIHandler {
 
 public: // make it private later
-	stringVector_t  _cgiPath;
+    CGIHandler(const stringMap_t &env, const string &body, location_t *location);
+
+    stringVector_t  _cgiPath;
 	string          _responseBody;
     string          _requestBody;
     size_t          _envSize;
