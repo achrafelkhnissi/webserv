@@ -3,8 +3,8 @@
 import cgi
 
 # Set the content type to HTML
-print("Content-Type: text/html")
-print()
+print("Content-Type: text/html\r\n\r\n")
+# print()
 
 # Get the form data from the request
 form = cgi.FieldStorage()
