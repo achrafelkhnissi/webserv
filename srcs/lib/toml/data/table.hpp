@@ -8,7 +8,6 @@
 namespace toml {
 
 class table;
-typedef std::map<std::string, table*> TomlMap;
 
 class table {
 
@@ -20,6 +19,7 @@ public:
 		NONE,
 	};
 	static table* empty_;
+	typedef std::map<std::string, table*> TomlMap;
 
 	table(enum e_toml type);
 	table(TomlMap& mp);
