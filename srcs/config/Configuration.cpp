@@ -72,6 +72,35 @@ bool optional_str_arr(toml::table &table, const string &key)
 	return true;
 }
 
+Configuration::e_error validate_location(toml::table &location) {
+	string location_keys[] = {"prefix", "root", "upload_path", "autoindex", "redirect", "allowed_methods", "index", "cgi_path", "error_page", "_clientMaxBodySize"};
+	ITER_FOREACH(toml::table::TomlMap, location.mp, it) {
+		if (find(begin(location_keys), end(location_keys), it->first) == end(location_keys))
+			return Configuration::ERROR_UNKNOWN_KEY;
+	}
+	if (!optional_is(location, "prefix", toml::table::STRING))
+		return Configuration::ERROR_INVALID_PORT;
+	else if (!optional_is(location, "root", toml::table::STRING))
+		return Configuration::ERROR_INVALID_ROOT;
+	else if (!optional_is(location, "upload_path", toml::table::STRING))
+		return Configuration::ERROR_INVALID_UPLOAD_PATH;
+	else if (!optional_is(location, "autoindex", toml::table::STRING))
+		return Configuration::ERROR_INVALID_AUTOINDEX;
+	else if (!optional_is(location, "redirect", toml::table::STRING))
+		return Configuration::ERROR_INVALID_REDIRECT;
+	else if (!optional_is(location, "client_max_body_size", toml::table::STRING))
+		return Configuration::ERROR_INVALID_CLIENT_MAX_BODY_SIZE;
+	else if (!optional_str_arr(location, "cgi_path"))
+		return Configuration::ERROR_INVALID_CGI_PATH;
+	else if (!optional_str_arr(location, "index"))
+		return Configuration::ERROR_INVALID_INDEX;
+	else if (!optional_str_arr(location, "allowed_methods"))
+		return Configuration::ERROR_INVALID_ALLOWED_METHODS;
+	else if (!optional_str_arr(location, "error_page"))
+		return Configuration::ERROR_INVALID_ERROR_PAGE;
+	return Configuration::ERROR_NONE;
+}
+
 Configuration::e_error validate_server(toml::table& server) {
 	string server_keys[] = {"port", "host", "index", "server_name", "allowed_methods", "root", "error_page", "_clientMaxBodySize", "location"};
 	ITER_FOREACH(toml::table::TomlMap, server.mp, it) {
@@ -99,7 +128,6 @@ Configuration::e_error validate_server(toml::table& server) {
 }
 
 Configuration::e_error Configuration::validate_keys(toml::table& config) {
-	//string location_keys[] = {"prefix", "root", "index", "allowed_methods", "autoindex", "upload_path", "upload_store", "cgi_path", "cgi_extension", "cgi_pass", "error_page", "_clientMaxBodySize"};
 	
 	toml::table& t = config["server"];
 	if (t.is_type(toml::table::NONE) || !t.is_type(toml::table::ARRAY))
@@ -178,6 +206,22 @@ void Configuration::print() {
 		case ERROR_INVALID_LOCATION:
 			cout << "ERROR_INVALID_LOCATION" << endl;
 			break;
+		case ERROR_INVALID_CGI_PATH:
+			cout << "ERROR_INVALID_CGI_PATH" << endl;
+			break;
+		case ERROR_INVALID_AUTOINDEX:
+			cout << "ERROR_INVALID_AUTOINDEX" << endl;
+			break;
+		case ERROR_INVALID_UPLOAD_PATH:
+			cout << "ERROR_INVALID_UPLOAD_PATH" << endl;
+			break;
+		case ERROR_INVALID_REDIRECT:
+			cout << "ERROR_INVALID_REDIRECT" << endl;
+			break;
+		case ERROR_INVALID_PREFIX:
+			cout << "ERROR_INVALID_PREFIX" << endl;
+			break;
+
 	}
 
 	cout << "\n<==================== END Configuration ====================>\n" << endl;
