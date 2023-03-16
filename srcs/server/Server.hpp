@@ -11,7 +11,7 @@
 #include "typedefs.hpp"
 #include "HttpParser.hpp"
 #include "Response.hpp"
-
+#include "CGIHandler.hpp"
 #include <sstream>
 
 #define MSG(msg) (std::string(getBasename((__FILE__)) + ":" + std::string(std::to_string(__LINE__)) + ": " + msg))
@@ -81,6 +81,11 @@ private:
     const string handleFileUploads(const Request &request, Response &response, const string &uploadPath);
 
     location_t *matchLocation(const locationVector_t &locations, const string &uri);
+
+    void
+    _handleGET(int fd, const subServersIterator_t &subServersIterator, const Request &request, location_t *location);
+
+    void _handleCGI(int fd, const subServersIterator_t &iter, const Request &request, location_t *pS);
 };
 
 #endif

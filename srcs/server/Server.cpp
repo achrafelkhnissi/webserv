@@ -302,6 +302,13 @@ void Server::_handleGET(int fd, const subServersIterator_t &subServersIterator, 
 	stringVector_t index_ = subServersIterator->getIndex();
 	location_t *location_ = matchLocation(subServersIterator->getLocation(), uri_);
 
+    if (location_->prefix.find("cgi-bin") != std::string::npos){
+        std::cout << "uri: " << uri_ << std::endl;
+
+        _handleCGI(fd, subServersIterator, request, location_);
+        return ;
+    }
+
 	if (location_ != nullptr){
 		root_ = location_->root;
 		index_ = location_->index;
@@ -412,6 +419,13 @@ void Server::_handlePOST(int clientSocket, const subServersIterator_t &subServer
     string uri_ = request.getUri().empty() ? "/" : request.getUri();
     stringVector_t index_ = subServersIterator->getIndex();
     location_t *location_ = matchLocation(subServersIterator->getLocation(), uri_);
+
+    if (location_->prefix.find("cgi-bin") != std::string::npos){
+        std::cout << "uri: " << uri_ << std::endl;
+
+        _handleCGI(clientSocket, subServersIterator, request, location_);
+        return ;
+    }
 
     if (location_ != nullptr){
         if (location_->prefix.find("cgi-bin") != std::string::npos)
@@ -531,6 +545,45 @@ void Server::printData() const {
 	std::cout << "----------------------------------------" << std::endl;
 	std::cout << "Server data end" << std::endl;
 
+}
+
+void Server::_handleCGI(int fd, const subServersIterator_t &iter, const Request &request, location_t *location) {
+
+    Response response;
+    _CGIEnv["SERVER_SOFTWARE"] = "webserv/1.0";
+    _CGIEnv["SERVER_NAME"] = "example.com";
+    _CGIEnv["GATEWAY_INTERFACE"] = "CGI/1.1";
+    _CGIEnv["SERVER_PROTOCOL"] = "HTTP/1.1";
+    _CGIEnv["SERVER_PORT"] = "1337";
+    _CGIEnv["REQUEST_METHOD"] = request.getMethod();
+    _CGIEnv["REQUEST_URI"] = request.getUri();
+    _CGIEnv["PATH_INFO"] = location->root + request.getUri();
+    _CGIEnv["SCRIPT_NAME"] = request.getUri();
+    _CGIEnv["QUERY_STRING"] = request.getQuery();
+    _CGIEnv["REMOTE_ADDR"] = "localhost";
+    _CGIEnv["REMOTE_PORT"] = " 1337";
+    _CGIEnv["CONTENT_LENGTH"] = request.getHeaders().find("Content-Length")->second;
+    _CGIEnv["CONTENT_TYPE"] = request.getHeaders().find("Content-Type")->second;
+    _CGIEnv["HTTP_ACCEPT"] = request.getHeaders().find("Accept")->second;
+    _CGIEnv["HTTP_ACCEPT_LANGUAGE"] = request.getHeaders().find("Accept-Language")->second;
+    _CGIEnv["HTTP_ACCEPT_ENCODING"] = request.getHeaders().find("Accept-Encoding")->second;
+    _CGIEnv["HTTP_CONNECTION"] = request.getHeaders().find("Connection")->second;
+    _CGIEnv["HTTP_HOST"] = request.getHeaders().find("Host")->second;
+    _CGIEnv["HTTP_USER_AGENT"] = request.getHeaders().find("User-Agent")->second;
+    _CGIEnv["HTTP_REFERER"] = request.getHeaders().find("Referer")->second;
+    _CGIEnv["HTTP_COOKIE"] = request.getHeaders().find("Cookie")->second;
+
+
+
+    CGIHandler  cgiHandler(_CGIEnv, request.getBody(), location );
+    string repo = cgiHandler.CGIExecuter();
+    std::cout << "response " <<  repo << std::endl;
+    response.setStatusCode(200);
+    response.setHeaders(request, _mimeTypes, location->root + request.getUri());
+    string s = "HTTP/1.1 200 OK\r\n";
+    s += repo;
+    std::cout << "response " <<  s << std::endl;
+    send(fd, s.c_str(), s.size(), 0);
 }
 
 
