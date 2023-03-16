@@ -42,13 +42,31 @@ _clientMaxBodySize = "10m"
 
 
 [[server.location]]
-prefix = "/html/hello"
+prefix = "/cgi-bin"
 root = "www"
-index = ["index.html", "index.htm"]
+cgi_path = "helloCGI.py"
 try_files = "$uri $uri/ =404"
-allowed_methods = ["GET", "HEAD"]
+allowed_methods = ["GET", "POST"]
 error_page = "404 /404.html"
-prefix=""
+redirect = "http://example.com"
+autoindex = "on"
+_clientMaxBodySize = "10m"
+
+[[server]]
+port = "4242"
+host = "10.0.0.1"
+server_name = ["example.com", "example2.com", "example3.com"]
+index = ["index.html", "index.htm"]
+error_page = "404 /404.html"
+_clientMaxBodySize = "10m"
+
+[[server.location]]
+prefix = "/"
+root = "www"
+index = ["index.html",  "index.htm"]
+try_files = "$uri $uri/ =404"
+allowed_methods = ["GET", "DELETE"]
+error_page = "404 /404.html"
 redirect = "http://example.com"
 autoindex = "on"
 _clientMaxBodySize = "10m"
