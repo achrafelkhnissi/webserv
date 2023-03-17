@@ -1,0 +1,29 @@
+[[server]]
+port = "1337"
+host = "localhost"
+
+[[server.location]]
+path = "/"
+allowed_methods = ["GET"]
+
+[[server.location]]
+path = "/put_test"
+allowed_methods = ["POST"]
+[[server.location.location]]
+path = "/upload"
+
+[[server.location]]
+path = "/*.bla"
+allowed_methods = ["POST"]
+cgi_path = "cgi-bin/cgi_test"
+
+[[server.location]]
+path = "/post_body"
+allowed_methods = ["POST"]
+max_body_size = 100
+
+[[server.location]]
+path = "/directory"
+allowed_methods = ["GET"]
+root = "YoupiBanane"
+index = "youpi.bad_extension"
