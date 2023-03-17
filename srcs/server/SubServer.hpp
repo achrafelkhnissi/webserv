@@ -12,7 +12,6 @@
 #include "typedefs.hpp"
 
 struct location_s{
-
 	stringVector_t  allowedMethods;
     stringVector_t  index;
 	string          redirection; // 301, 302, 307
@@ -20,10 +19,9 @@ struct location_s{
 	string          clientMaxBodySize;
 	string          errorPages;
 	string          prefix;
+    string          uploadPath;
 	bool            autoIndex;
     vector<string>  cgi_path;
-    // TODO: add Cgi
-
 };
 
 class SubServer {

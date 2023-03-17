@@ -66,6 +66,7 @@ void SubServer::fillLocation(const  LocationConfig& locationConfig, location_t& 
     location.autoIndex = locationConfig.autoindex == "on";
     location.allowedMethods = locationConfig.allowed_methods; // todo: wait for ismail to add it.
     location.cgi_path = locationConfig.cgi_path;
+    location.uploadPath = locationConfig.upload_path;
 }
 
 void SubServer::printData() const {
@@ -101,6 +102,7 @@ void SubServer::printData() const {
         std::cout << "\t\t_clientMaxBodySize: " << it->clientMaxBodySize << std::endl;
         std::cout << "\t\t_errorPages: " << it->errorPages << std::endl;
         std::cout << "\t\tauto_index: " << it->autoIndex << std::endl;
+        std::cout << "\t\tupload_path: " << it->uploadPath << std::endl;
         std::cout << "\t\tallowed_methods: ";
         stringVectorConstIterator_t itttt = it->allowedMethods.begin();
         stringVectorConstIterator_t itttte = it->allowedMethods.end();
