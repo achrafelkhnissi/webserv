@@ -18,12 +18,12 @@ LocationConfig fill_location(toml::table& location) {
     ITER_FOREACH(vector<toml::table>, location["allowed_methods"].vec, it) {
         l.allowed_methods.push_back(it->as_str(""));
     }
+    ITER_FOREACH(vector<toml::table>, location["cgi_path"].vec, it) {
+        l.cgi_path.push_back(it->as_str(""));
+    }
 	l.autoindex = location["autoindex"].as_str("off");
 	l.upload_path = location["upload_path"].as_str("www/html/upload");
 	l.upload_store = location["upload_store"].as_str("on");
-	l.cgi_path = location["cgi_path"].as_str("www/html/cgi");
-	l.cgi_extension = location["cgi_extension"].as_str(".cgi");
-	l.cgi_pass = location["cgi_pass"].as_str("");
 	l.client_max_body_size = location["_clientMaxBodySize"].as_str("10m");
 	l.error_page = location["error_page"].as_str("404 /errors/error-404.html");
 	return l;
@@ -45,8 +45,10 @@ ServerConfig fill_server(toml::table& server) {
     ITER_FOREACH(vector<toml::table>, server["allowed_methods"].vec, it) {
         s.allowed_methods.push_back(it->as_str(""));
     }
+    ITER_FOREACH(vector<toml::table>, server["error_page"].vec, it) {
+        s.error_page.push_back(it->as_str(""));
+    }
 	s.root = server["root"].as_str("www");
-	s.error_page = server["error_page"].as_str("404 /errors/error-404.html");
 	s.client_max_body_size = server["_clientMaxBodySize"].as_str("10m");
 
 	toml::table& t = server["location"];

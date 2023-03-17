@@ -19,9 +19,7 @@ struct LocationConfig {
 	string autoindex;
 	string upload_path;
 	string upload_store;
-	string cgi_path;
-	string cgi_extension;
-	string cgi_pass;
+	vector<string> cgi_path;
 	string client_max_body_size;
 	string error_page;
 	vector<string> index;
@@ -31,16 +29,19 @@ struct LocationConfig {
 		string s(indent, ' ');
 		cout << s << "\t\tprefix: " << prefix << endl;
 		cout << s << "\t\troot: " << root << endl;
+		cout << s << "\t\tindex: ";
 		ITER_FOREACH(vector<string>, index, it) {
-			cout << "\t\t" << *it << " ";
+			cout << "\t\t" << *it << ", ";
+		}
+		cout << endl;
+		cout << s << "\t\tcgi_path: ";
+		ITER_FOREACH(vector<string>, cgi_path, it) {
+			cout << "\t\t" << *it << ", ";
 		}
 		cout << endl;
 		cout << s << "\t\tautoindex: " << autoindex << endl;
 		cout << s << "\t\tupload_path: " << upload_path << endl;
 		cout << s << "\t\tupload_store: " << upload_store << endl;
-		cout << s << "\t\tcgi_path: " << cgi_path << endl;
-		cout << s << "\t\tcgi_extension: " << cgi_extension << endl;
-		cout << s << "\t\tcgi_pass: " << cgi_pass << endl;
 		cout << s << "\t\tclient_max_body_size: " << client_max_body_size << endl;
 		cout << s << "\t\terror_page: " << error_page << endl;
 	}
@@ -52,7 +53,7 @@ struct ServerConfig {
 	string host;
 	vector<string> server_name;
 	string root;
-	string error_page;
+	vector<string> error_page;
 	string client_max_body_size;
     vector<string> allowed_methods;
     vector<string> index;
@@ -70,7 +71,11 @@ struct ServerConfig {
 		}
 		cout << endl;
 		cout << "\troot: " << root << endl;
-		cout << "\terror_page: " << error_page << endl;
+		cout << "\terror_page: ";
+		for (size_t i = 0; i < error_page.size(); i++) {
+			cout << error_page[i] << " | " ;
+		}
+		cout << endl;
 		cout << "\tclient_max_body_size: " << client_max_body_size << endl;
 		for (size_t i = 0; i < locations.size(); i++) {
 			cout << "\t\t" << "==== LocationConfig ====" << endl;
