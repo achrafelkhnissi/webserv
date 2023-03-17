@@ -146,7 +146,7 @@ Configuration::e_error validate_server(toml::table& server) {
 	return Configuration::ERROR_NONE;
 }
 
-Configuration::e_error Configuration::validate_keys(toml::table& config) {
+Configuration::e_error Configuration::pre_validate(toml::table& config) {
 	
 	toml::table& t = config["server"];
 	if (t.is_type(toml::table::NONE) || !t.is_type(toml::table::ARRAY))
@@ -160,8 +160,26 @@ Configuration::e_error Configuration::validate_keys(toml::table& config) {
 	return Configuration::ERROR_NONE;
 }
 
+Configuration::e_error Configuration::post_validate() {
+	if (_servers.empty())
+		return Configuration::ERROR_INVALID_SERVER;
+	for (int i = 0; i < _servers.size(); i++) {
+		if (_servers[i].port < 0 || _servers[i].port > 65535 )
+			return Configuration::ERROR_INVALID_PORT;
+		cerr << "port: " << _servers[i].error_page.size() << endl;
+		if (_servers[i].error_page.size() < 2 && !_servers[i].error_page.empty())
+			return Configuration::ERROR_INVALID_ERROR_PAGE;
+		for (int j = 0; j < _servers[i].error_page.size() - 1; j++) {
+			int code = atoi(_servers[i].error_page[j].c_str());
+			if (code < 100 || code > 599)
+				return Configuration::ERROR_INVALID_ERROR_PAGE;
+		}
+	}
+	return Configuration::ERROR_NONE;
+}
+
 Configuration::Configuration(toml::table& config) {
-	if ((error = validate_keys(config) )!= Configuration::ERROR_NONE)
+	if ((error = pre_validate(config) )!= Configuration::ERROR_NONE)
 	{
 		print();
 		cout << "ERROR: Invalid configuration file" << endl;
@@ -170,6 +188,12 @@ Configuration::Configuration(toml::table& config) {
 	toml::table& t = config["server"];
 	for (size_t i = 0; i < t.vec.size(); i++) {
 		_servers.push_back(fill_server(t[i]));
+	}
+	error = post_validate();
+	if (error != Configuration::ERROR_NONE) {
+		print();
+		cout << "ERROR: Invalid configuration file" << endl;
+		exit(1);
 	}
 }
 

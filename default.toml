@@ -53,7 +53,7 @@ port = "4242"
 host = "10.0.0.1"
 server_name = ["example.com", "example2.com", "example3.com"]
 index = ["index.html", "index.htm"]
-error_page = ["404 /404.html"]
+error_page = ["404", "/404.html"]
 _clientMaxBodySize = "10m"
 
 	[[server.location]]

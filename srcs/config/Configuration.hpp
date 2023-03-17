@@ -130,7 +130,8 @@ private:
 		INVALID_VALUE,
 	};
 	vector<ServerConfig> _servers;
-	e_error validate_keys(toml::table &config);
+	e_error pre_validate(toml::table &config);
+	e_error post_validate();
 };
 
 #endif // CONFIGURATION_HPP
