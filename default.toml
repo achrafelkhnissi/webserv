@@ -6,37 +6,30 @@ server_name = ["example.com", "example2.com", "example3.com"]
 upload_path = "www/upload"
 index = ["index.html", "index.htm"]
 error_page = ["404", "/404.html"]
-max_body_size = "1m"
+_clientMaxBodySize = "10m"
 
 	[[server.location]]
 	prefix = "/"
 	root = "www"
 	index = ["index.html",  "index.htm"]
-	allowed_methods = ["GET", "DELETE"]
+	allowed_methods = ["GET", "POST", "DELETE"]
 	error_page = ["404 /404.html"]
 	redirect = "http://example.com"
 	autoindex = "on"
-	max_body_size = "1m"
+	_clientMaxBodySize = "10m"
+	upload_path = "www/upload"
 
 	[[server.location]]
 	prefix = "/html"
 	root = "www"
 	index = ["index.html", "index.htm"]
-	allowed_methods = ["GET", "HEAD"]
+	allowed_methods = ["GET", "HEAD", "DELETE"]
 	error_page = ["404 /404.html"]
 	redirect = "http://example.com"
 	autoindex = "on"
-	max_body_size = "1m"
+	_clientMaxBodySize = "10m"
 
-	[[server.location]]
-	prefix = "/upload"
-	root = "www"
-	index = ["index.html", "index.htm"]
-	allowed_methods = ["GET", "POST", "DELETE"]
-	error_page = ["404 /404.html"]
-	redirect = "http://example.com"
-	autoindex = "on"
-	max_body_size = "1m"
+
 
 	
 	[[server.location]]
@@ -47,7 +40,7 @@ max_body_size = "1m"
 	error_page = ["404 /404.html"]
 	redirect = "http://example.com"
 	autoindex = "on"
-	max_body_size = "1m"
+	_clientMaxBodySize = "10m"
 
 [[server]]
 port = "4242"
@@ -55,7 +48,7 @@ host = "10.0.0.1"
 server_name = ["example.com", "example2.com", "example3.com"]
 index = ["index.html", "index.htm"]
 error_page = ["404", "/404.html"]
-max_body_size = "1m"
+_clientMaxBodySize = "10m"
 
 	[[server.location]]
 	prefix = "/"
@@ -65,4 +58,4 @@ max_body_size = "1m"
 	error_page = ["404 /404.html"]
 	redirect = "http://example.com"
 	autoindex = "on"
-	max_body_size = "1m"
+	_clientMaxBodySize = "10m"
