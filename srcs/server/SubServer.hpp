@@ -6,6 +6,8 @@
 #define WEBSERV_SUBSERVER_H
 
 #include <iostream>
+#include <vector>
+#include "CGIHandler.hpp"
 #include "Configuration.hpp"  // Configuration class
 #include "typedefs.hpp"
 
@@ -20,7 +22,7 @@ struct location_s{
 	string          prefix;
 	bool            autoIndex;
     stringVector_t  cgi;
-    string          cgi_path;
+    vector<string>  cgi_path;
     // TODO: add Cgi
 
 };
@@ -32,7 +34,7 @@ private:
     locationVector_t    _locations;
 	string              _root;
 	stringVector_t      _index;
-	string              _errorPages;
+	vector<string>		_errorPages;
 	string              _clientMaxBodySize;
     stringVector_t     _allowedMethods;
     // TODO: add Cgi
@@ -45,7 +47,7 @@ public:
     void                    fillLocation(const LocationConfig& locationConfig, location_t& location);
     const string&           getRoot() const;
     const stringVector_t&   getIndex() const;
-    const string&           getErrorPages() const;
+    const vector<string>&           getErrorPages() const;
     const string&           getClientMaxBodySize() const;
     const stringVector_t&   getServerName() const;
     const locationVector_t& getLocation() const;

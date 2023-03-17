@@ -6,14 +6,9 @@
 #include <algorithm>
 
 
-
-
 CGIHandler::CGIHandler(const stringMap_t &env, const string &body, location_t* location): _envMap(env), _requestBody(body) {
 
-    _cgiPath.push_back(location->cgi_path);
-    _cgiPath.push_back("form-handler.py");
-    _cgiPath.push_back("session_management.py");
-    std::cout << "cgi path: " << location->cgi_path << std::endl;
+	_cgiPath = location->cgi_path;
     _envSize = env.size();
     _env = new char*[_envSize + 1];
     _env[_envSize] = NULL; // NULL terminate the array is expected by execve
