@@ -84,7 +84,7 @@
 <!--	<title>Delete Request Example</title>-->
 <!--	<script>-->
 <!--		function sendDeleteRequest() {-->
-<!--			fetch('/delete', {method: 'DELETE'})-->
+<!--			fetch('/www/delete', {method: 'DELETE'})-->
 <!--				.then(response => {-->
 <!--					console.log(response.status);-->
 <!--				})-->
@@ -137,69 +137,95 @@
 <!--</body>-->
 <!--</html>-->
 
+<!--<!DOCTYPE html>-->
+<!--<html lang="">-->
+<!--<head>-->
+<!--    <meta charset="UTF-8">-->
+<!--    <title>Multiple File Upload Example</title>-->
+<!--    <style>-->
+<!--        body {-->
+<!--            display: flex;-->
+<!--            justify-content: center;-->
+<!--            align-items: center;-->
+<!--            height: 100vh;-->
+<!--            background-color: #232323;-->
+<!--            font-family: Arial, sans-serif;-->
+<!--            color: #fff;-->
+<!--        }-->
+<!--        h1 {-->
+<!--            font-size: 2rem;-->
+<!--            text-align: center;-->
+<!--            margin-bottom: 2rem;-->
+<!--        }-->
+
+<!--        form {-->
+<!--            display: flex;-->
+<!--            flex-direction: column;-->
+<!--            align-items: center;-->
+<!--            background-color: #333;-->
+<!--            padding: 2rem;-->
+<!--            border-radius: 0.5rem;-->
+<!--            box-shadow: 0 0 1rem rgba(255, 255, 255, 0.1);-->
+<!--        }-->
+
+<!--        input[type="file"] {-->
+<!--            margin-bottom: 1rem;-->
+<!--            background-color: #444;-->
+<!--            color: #fff;-->
+<!--            padding: 0.5rem 1rem;-->
+<!--            border: none;-->
+<!--            border-radius: 0.25rem;-->
+<!--            box-shadow: 0 0 0.25rem rgba(255, 255, 255, 0.1);-->
+<!--        }-->
+
+<!--        input[type="submit"] {-->
+<!--            background-color: #2ecc71;-->
+<!--            color: #fff;-->
+<!--            padding: 0.5rem 1rem;-->
+<!--            border: none;-->
+<!--            border-radius: 0.25rem;-->
+<!--            box-shadow: 0 0 0.25rem rgba(0, 0, 0, 0.5);-->
+<!--            cursor: pointer;-->
+<!--            transition: background-color 0.2s ease-out;-->
+<!--        }-->
+
+<!--        input[type="submit"]:hover {-->
+<!--            background-color: #27ae60;-->
+<!--        }-->
+<!--    </style>-->
+<!--</head>-->
+<!--<body>-->
+<!--    <form action="/" method="post" enctype="multipart/form-data">-->
+<!--        <h1>Multiple File Upload Example</h1>-->
+<!--        <input type="file" name="files[]" multiple>-->
+<!--        <br>-->
+<!--        <input type="submit" value="Upload Files">-->
+<!--    </form>-->
+<!--</body>-->
+<!--</html>-->
+
 <!DOCTYPE html>
-<html lang="">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Multiple File Upload Example</title>
-    <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #232323;
-            font-family: Arial, sans-serif;
-            color: #fff;
-        }
-        h1 {
-            font-size: 2rem;
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-
-        form {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background-color: #333;
-            padding: 2rem;
-            border-radius: 0.5rem;
-            box-shadow: 0 0 1rem rgba(255, 255, 255, 0.1);
-        }
-
-        input[type="file"] {
-            margin-bottom: 1rem;
-            background-color: #444;
-            color: #fff;
-            padding: 0.5rem 1rem;
-            border: none;
-            border-radius: 0.25rem;
-            box-shadow: 0 0 0.25rem rgba(255, 255, 255, 0.1);
-        }
-
-        input[type="submit"] {
-            background-color: #2ecc71;
-            color: #fff;
-            padding: 0.5rem 1rem;
-            border: none;
-            border-radius: 0.25rem;
-            box-shadow: 0 0 0.25rem rgba(0, 0, 0, 0.5);
-            cursor: pointer;
-            transition: background-color 0.2s ease-out;
-        }
-
-        input[type="submit"]:hover {
-            background-color: #27ae60;
-        }
-    </style>
+	<title>DELETE Request Test</title>
 </head>
 <body>
-    <form action="/upload" method="post" enctype="multipart/form-data">
-        <h1>Multiple File Upload Example</h1>
-        <input type="file" name="files[]" multiple>
-        <br>
-        <input type="submit" value="Upload Files">
-    </form>
+<button type="button" onclick="sendDELETERequest()">Send DELETE Request</button>
+
+<script>
+	function sendDELETERequest() {
+		console.log("function");
+		fetch('/delete.txt', {method: 'DELETE'})
+		.then(data => {
+			console.log(data);
+			return data.text();
+		}).then(data => {
+			document.body.innerHTML = data;
+			console.log("hello");
+		}).catch(error => {
+			console.log("error");
+		});
+	}
+</script>
 </body>
 </html>
