@@ -54,4 +54,8 @@ public:
     void handleError(int fd, int statusCode);
 
     string _getErrorPage(int code) const;
+
+    void setContentLength(size_t size);
+
+    void setContentType(string type);
 };

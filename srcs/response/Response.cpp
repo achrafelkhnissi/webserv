@@ -77,6 +77,15 @@ void Response::setContentLength(const string &path) {
     file_stream.close();
 }
 
+void Response::setContentLength(::size_t size) {
+    _headers["Content-Length"] = std::to_string(size);
+
+}
+
+void Response::setContentType(string type) {
+    _headers["Content-Type"] = type;
+}
+
 void Response::setHeaders(const Request &request,  std::map<string, string> &mimTypes, const string &path) {
 
     if (_statusCode == 200){
