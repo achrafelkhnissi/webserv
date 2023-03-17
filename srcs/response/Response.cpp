@@ -88,11 +88,9 @@ void Response::setContentType(string type) {
 
 void Response::setHeaders(const Request &request,  std::map<string, string> &mimTypes, const string &path) {
 
-    if (_statusCode == 200){
-        setContentType(path, mimTypes);
-        setContentLength(path);
+    if (_statusCode == 200)
         setLastModified(path);
-    }
+
     setProtocol(request.getProtocol());
     setVersion(request.getVersion());
     setContentType(path, mimTypes);
