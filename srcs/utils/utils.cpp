@@ -3,6 +3,9 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <string>
+#include <stdexcept>
+#include <cstdlib>
 
 // function to check if a directory exists
 bool dirExists(const std::string& dirName) {
@@ -49,3 +52,31 @@ std::string getFileContent(const std::string& path)  {
     return fileContent_.str();
 }
 
+// Convert a string in the format "<number>k", "<number>m", or "<number>g" to bytes.
+size_t convertToBytes(const std::string& str)
+{
+    const size_t multiplier = 1024;
+    size_t factor = 1;
+    std::string numStr = str.substr(0, str.length() - 1); // remove the last character ("k", "m", or "g")
+    long num = strtol(numStr.c_str(), NULL, 10); // convert the number string to a long
+    if (num <= 0)
+    {
+        throw std::invalid_argument("Invalid size: " + str);
+    }
+    switch (str[str.length() - 1])
+    {
+        case 'k':
+        case 'K':
+            factor *= multiplier;
+        case 'm':
+        case 'M':
+            factor *= multiplier;
+        case 'g':
+        case 'G':
+            factor *= multiplier;
+            break;
+        default:
+            throw std::invalid_argument("Invalid size: " + str);
+    }
+    return static_cast<size_t>(num * factor);
+}
