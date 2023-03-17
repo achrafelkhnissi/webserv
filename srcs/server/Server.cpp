@@ -5,14 +5,6 @@
 
 Server::Server(Configuration config): _config(config), _request() {
 
-//    _uploadPath = _config.getUploadPath();
-//    _CGIEnv = _config.getCGIEnv();
-//    _errorPages = _config.getErrorPages();
-//    _mimeTypes = _config.getMimeTypes();
-//    _setupVirtualServer();
-
-    _uploadPath = "./upload"; // TODO: get this from config file.
-
 	vector<ServerConfig> servers_ = _config.getServers();
 
 	for (vector<ServerConfig>::iterator it_ = servers_.begin(); it_ != servers_.end(); ++it_) {
@@ -25,10 +17,6 @@ Server::Server(Configuration config): _config(config), _request() {
 	for (virtualServerMapIterator_t it_ = _virtualServer.begin(); it_ != _virtualServer.end(); ++it_) {
 		_setupVirtualServer(it_->second);
 	}
-
-//    for (virtualServerMapIterator_t it_ = _virtualServer.begin(); it_ != _virtualServer.end(); ++it_) {
-//        it_->second.printData();
-//    }
 
 	_setMimeTypes();
 }
@@ -71,7 +59,11 @@ void Server::_setupVirtualServer(VirtualServer& vserver) {
 	if (setsockopt(serverFd_, SOL_SOCKET, SO_REUSEADDR, &optionValue_, sizeof(optionValue_)) < 0)
 		error("setsockopt", 1);
 
-	// Bind the socket to the port and host
+    int nosigpipe = 1; // value for SO_NOSIGPIPE
+    if (setsockopt(serverFd_, SOL_SOCKET, SO_NOSIGPIPE, &nosigpipe, sizeof(nosigpipe)) < 0)
+        error("setsockopt", 1);
+
+    // Bind the socket to the port and host
 	struct sockaddr_in serverAddr_ = {};
 	memset(&serverAddr_, 0, sizeof(serverAddr_));
 	serverAddr_.sin_family = AF_INET;
@@ -93,11 +85,11 @@ void Server::_setupVirtualServer(VirtualServer& vserver) {
 }
 
 void Server::start() {
-//    int timeout = 60 * 1000; // 60 seconds
+    int timeout = 60 * 1000; // 60 seconds
 
 	// Start the server loop
 	while (true) {
-		int ready_ = poll(_fds.data(), _fds.size(), -1);
+		int ready_ = poll(_fds.data(), _fds.size(), timeout);
 
 		if (ready_ == -1)
 			_error("poll", 1);
@@ -106,7 +98,7 @@ void Server::start() {
 			_error("poll timeout", 1);
 
         for (size_t i = 0; i < _fds.size(); i++) {
-            if (_fds[i].revents && POLLIN) {
+            if ((_fds[i].revents & POLLIN) || (_fds[i].revents & POLLOUT)) {
                 if (i < _virtualServer.size()){
                     _handleConnections(_fds[i].fd);
                 }
@@ -167,26 +159,20 @@ void Server::_handleRequest(pollfdsVectorIterator_t it) {
 	while (_clientHttpParserMap[it->fd].has_request())
 	{
 		_request = _clientHttpParserMap[it->fd].consume_request();
-		//_request.print();
 		if (_request.isInvalid()) {
-			cerr << "invalid Request (Bad Request)" << endl;
 			_request.debug_err();
-			//_handleInvalidRequest(it->fd, _request);
 			return ;
 		}
-		cerr << "valid Request" << endl;
-        cout << "\nrequest: " << std::endl;
-//        _request.print();
 		// Match the port and host to the correct server
 		virtualServerMapIterator_t vserverIter_ = _virtualServer.find(_request.getHost().second);
 		subServersIterator_t subServerIter_ = vserverIter_->second.matchSubServer(_request.getHost().first);
 
 		if (_request.getMethod() == "GET") {
-			_handleGET(it->fd, subServerIter_, _request);
+			_handleGET(it, subServerIter_, _request);
 		} else if (_request.getMethod() == "POST") {
-            _handlePOST(it->fd, subServerIter_, _request);
+            _handlePOST(it, subServerIter_, _request);
 		} else if (_request.getMethod() == "DELETE") {
-			_handleDELETE(it->fd, subServerIter_, _request);
+			_handleDELETE(it, subServerIter_, _request);
 		}
 	}
 }
@@ -224,7 +210,7 @@ location_t* Server::matchLocation(const locationVector_t &locations, const std::
 	return nullptr;
 }
 
-void Server::sendResponseHeaders(int fd, const Response& response) {
+void Server::sendResponseHeaders(pollfdsVectorIterator_t it, const Response& response) {
 	// send HTTP response header
 	std::ostringstream response_stream;
 
@@ -240,11 +226,16 @@ void Server::sendResponseHeaders(int fd, const Response& response) {
 
 	const string& response_header = response_stream.str();
 
-	send(fd, response_header.c_str(), response_header.size(), 0);
+	int ret = send(it->fd, response_header.c_str(), response_header.size(), 0);
+    if (ret == -1 || ret == 0) {
+        close(it->fd);
+        _fds.erase(it);
+        return ;
+    }
 
 }
 
-void Server::sendResponseBody(int fd, const string& resourcePath) {
+void Server::sendResponseBody(pollfdsVectorIterator_t it, const string& resourcePath) {
 
 	ifstream fileStream(resourcePath, ios::in | ios::binary);
 
@@ -253,27 +244,25 @@ void Server::sendResponseBody(int fd, const string& resourcePath) {
 		return;
 	}
 
+
 	char buffer[BUFFER_SIZE];
 	while (fileStream) {
+        ::memset(buffer, 0, BUFFER_SIZE);
 		fileStream.read(buffer, BUFFER_SIZE);
+
 		int bytesRead = fileStream.gcount();
-		int sent = send(fd, buffer, bytesRead, 0);
-        if (sent == -1) {
-            if (errno == EAGAIN || errno == EWOULDBLOCK) {
-                // try again
-                cerr << " EWOULDBLOCK || EAGAIN Try again" << endl;
-                return ;
-            } else {
-                // error
-                cerr << "Error sending file" << endl;
-            }
+		int sent = send(it->fd, buffer, bytesRead, 0);
+        if (sent == -1 || sent == 0) {
+            close(it->fd);
+            _fds.erase(it);
+            break;
         }
 	}
 
 	fileStream.close();
 }
 
-void Server::sendResponseBody(int fd, const Response& response) {
+void Server::sendResponseBody(pollfdsVectorIterator_t it, const Response& response) {
 
 	std::stringstream body_stream;
 	std::ifstream file_stream(response.getBody().c_str(), std::ios::binary);
@@ -288,57 +277,58 @@ void Server::sendResponseBody(int fd, const Response& response) {
 		if (bytes_read <= 0) {
 			break;
 		}
-		send(fd, buffer, bytes_read, 0);
+		int ret = send(it->fd, buffer, bytes_read, 0);
+        if (ret == -1 || ret == 0) {
+            close(it->fd);
+            _fds.erase(it);
+            break;
+        }
 	}
 	body_stream.clear();
 	file_stream.close();
 }
 
-void Server::_handleGET(int fd, const subServersIterator_t &subServersIterator, const Request& request) {
+void Server::_handleGET(pollfdsVectorIterator_t it, const subServersIterator_t &subServersIterator, const Request& request) {
 
-	/*
-	 * todo:
-	 * 	1. check if the uri is a directory
-	 * 	2. if it is a directory, check if there's an index file
-	 * 	3. if not generate an index using IndexGenerator
-	 * 	4. Store the index in the response body
-	 */
+    Response response_ = Response();
+    string resourcePath_;
+    string root_ = subServersIterator->getRoot();
+    string uri_ = request.getUri().empty() ? "/" : request.getUri();
+    stringVector_t index_ = subServersIterator->getIndex();
+    location_t *location_ = matchLocation(subServersIterator->getLocation(), uri_);
 
-	Response response_ = Response();
-	string root_ = subServersIterator->getRoot();
-	string uri_ = request.getUri().empty() ? "/" : request.getUri();
-	stringVector_t index_ = subServersIterator->getIndex();
-	location_t *location_ = matchLocation(subServersIterator->getLocation(), uri_);
-
-    if (location_->prefix.find("cgi-bin") != std::string::npos){
-        std::cout << "uri: " << uri_ << std::endl;
-
-        _handleCGI(fd, subServersIterator, request, location_);
-        return ;
+    if (location_->prefix.find("cgi-bin") != std::string::npos) {
+        _handleCGI(it, subServersIterator, request, location_);
+        return;
     }
 
-	if (location_ != nullptr){
-		root_ = location_->root;
-		index_ = location_->index;
-	}
-	// Check if the uri is a directory
-	string resourcePath_ = root_ + uri_;
-	if (isDirectory(resourcePath_)){
-		if (resourcePath_.back() != '/')
-			resourcePath_ += "/";
-		resourcePath_ += index_[0]; //todo: return the first index that exists
-	}
+    if (location_ != nullptr) {
+        root_ = location_->root;
+        index_ = location_->index;
+    }
+    if (find(location_->allowedMethods.begin(), location_->allowedMethods.end(), "GET") ==
+        location_->allowedMethods.end()) {
+        response_.setStatusCode(405);
+        response_.setHeaders(request, _mimeTypes, _getErrorPage(405));
+        resourcePath_ = _getErrorPage(405);
+    } else {
+        // Check if the uri is a directory
+        resourcePath_ = root_ + uri_;
+        if (isDirectory(resourcePath_)) {
+            if (resourcePath_.back() != '/')
+                resourcePath_ += "/";
+            resourcePath_ += index_[0]; //todo: return the first index that exists
+        }
 
-	std::cout << "resource path: " << resourcePath_ << std::endl;
+        response_.setStatusCode(request, resourcePath_, _mimeTypes);
+        int statusCode_ = response_.getStatusCode();
+        if (statusCode_ != 200)
+            resourcePath_ = _getErrorPage(statusCode_);
+        response_.setHeaders(request, _mimeTypes, resourcePath_);
 
-	response_.setStatusCode(request, resourcePath_, _mimeTypes);
-    int statusCode_ = response_.getStatusCode();
-    if (statusCode_ != 200)
-        resourcePath_ = _getErrorPage(statusCode_);
-	response_.setHeaders(request,  _mimeTypes, resourcePath_);
-
-	sendResponseHeaders(fd, response_);
-    sendResponseBody(fd, resourcePath_);
+    }
+        sendResponseHeaders(it, response_);
+        sendResponseBody(it, resourcePath_);
 }
 
 const string Server::handleFormData(  const Request& request, Response& response){
@@ -405,7 +395,6 @@ const string Server::handleFileUploads( const Request& request, Response& respon
 
                     response.setStatusCode(200);
                     response.setHeaders(request, _mimeTypes, "www/html/success_upload.html");
-                    std::cout << "file uploaded successfully" << std::endl;
                     return "www/html/success_upload.html";
                 }
 
@@ -419,7 +408,7 @@ const string Server::handleFileUploads( const Request& request, Response& respon
     return "";
 }
 
-void Server::_handlePOST(int clientSocket, const subServersIterator_t &subServersIterator, const Request& request) {
+void Server::_handlePOST(pollfdsVectorIterator_t it, const subServersIterator_t &subServersIterator, const Request& request) {
 
     string resourcePath_ ;
     Response response_ = Response();
@@ -428,45 +417,45 @@ void Server::_handlePOST(int clientSocket, const subServersIterator_t &subServer
     stringVector_t index_ = subServersIterator->getIndex();
     location_t *location_ = matchLocation(subServersIterator->getLocation(), uri_);
 
-    if (location_->prefix.find("cgi-bin") != std::string::npos){
-        std::cout << "uri: " << uri_ << std::endl;
-
-        _handleCGI(clientSocket, subServersIterator, request, location_);
-        return ;
-    }
-
-    if (location_ != nullptr){
-        if (location_->prefix.find("cgi-bin") != std::string::npos)
-            throw std::runtime_error("CGI not supported yet");
-        else if (location_->prefix.find("upload") != std::string::npos)
+    if (location_ != nullptr) {
+        if (find(location_->allowedMethods.begin(), location_->allowedMethods.end(), "POST") ==
+        location_->allowedMethods.end()) {
+        response_.setStatusCode(405);
+        response_.setHeaders(request, _mimeTypes, _getErrorPage(405));
+        resourcePath_ = _getErrorPage(405);
+        } else if (request.getBody().size() > convertToBytes(location_->clientMaxBodySize)){
+            response_.setStatusCode(413);
+            response_.setHeaders(request, _mimeTypes, _getErrorPage(413));
+            resourcePath_ = _getErrorPage(413);
+        } else if (location_->prefix.find("cgi-bin") != std::string::npos) {
+            _handleCGI(it, subServersIterator, request, location_);
+            return;
+        } else if (location_->prefix.find("upload") != std::string::npos)
             _uploadPath = location_->root + uri_;
         else if (!dirExists(_uploadPath)) {
             if (!createDir(_uploadPath))
                 throw std::runtime_error("Failed to create upload directory");
         }
     }
-    std::cout << "POST request received" << std::endl;
     string content_type = request.getHeaders().find("Content-Type")->second;
     content_type = content_type.substr(0, content_type.find(';'));
 
     if (content_type == "application/x-www-form-urlencoded") {
         resourcePath_ = handleFormData(request, response_);
     } else if (content_type == "multipart/form-data") {
-        resourcePath_ = handleFileUploads( request, response_ , _uploadPath);
+        resourcePath_ = handleFileUploads(request, response_, _uploadPath);
     } else {
         // unsupported content type
         response_.setStatusCode(400);
         response_.setHeaders(request, _mimeTypes, _getErrorPage(400));
         resourcePath_ = _getErrorPage(400);
     }
+    sendResponseHeaders(it, response_);
+    sendResponseBody(it, resourcePath_);
 
-    sendResponseHeaders(clientSocket, response_);
-    sendResponseBody(clientSocket, resourcePath_);
-
-    std::cout << "End of POST request" << std::endl;
 }
 
-void Server::_handleDELETE(int clientSocket , const subServersIterator_t &subServersIterator, const Request& request) {
+void Server::_handleDELETE(pollfdsVectorIterator_t it, const subServersIterator_t &subServersIterator, const Request& request) {
 
 	string root_ = subServersIterator->getRoot();
 	string uri_ = request.getUri().empty() ? "/" : request.getUri();
@@ -493,44 +482,12 @@ void Server::_handleDELETE(int clientSocket , const subServersIterator_t &subSer
         }
     }
     response_.setHeaders(request, _mimeTypes, resourcePath_);
-	sendResponseHeaders(clientSocket, response_);
+	sendResponseHeaders(it, response_);
 }
 
 string Server::_getErrorPage(int code) const {
 	return "www/error_pages/" + std::to_string(code) + ".html";
 }
-
-//void Server::_handleEerror(int fd) {
-//    // Handle the error
-//    // ...
-//    (void)fd;
-//
-//    // TODO: Structure to handle errors (not completed yet)
-//    int status_code = 200;
-//    switch (status_code) {
-//        case 200:
-//            std::cout << "HTTP/1.1 200 OK\r\n\r\n";
-//            std::cout << "<html><body><h1>Hello, world!</h1></body></html>";
-//            break;
-//        case 403:
-//            std::cout << "HTTP/1.1 403 Forbidden\r\n\r\n";
-//            std::cout << "<html><body><h1>403 Forbidden</h1></body></html>";
-//            break;
-//        case 404:
-//            std::cout << "HTTP/1.1 404 Not Found\r\n\r\n";
-//            std::cout << "<html><body><h1>404 Not Found</h1></body></html>";
-//            break;
-//        case 500:
-//            std::cout << "HTTP/1.1 500 Internal Server Error\r\n\r\n";
-//            std::cout << "<html><body><h1>500 Internal Server Error</h1></body></html>";
-//            break;
-//        default:
-//            std::cout << "HTTP/1.1 400 Bad Request\r\n\r\n";
-//            std::cout << "<html><body><h1>400 Bad Request</h1></body></html>";
-//            break;
-//    }
-//}
-
 
 void Server::_error(const std::string &msg, int err) const {
 	std::string errorMsg = msg + (!err ? "." : (std::string(" | ") + strerror(errno)));
@@ -555,21 +512,21 @@ void Server::printData() const {
 
 }
 
-void Server::_handleCGI(int fd, const subServersIterator_t &iter, const Request &request, location_t *location) {
+void Server::_handleCGI(pollfdsVectorIterator_t it, const subServersIterator_t &iter, const Request &request, location_t *location) {
 
     Response response;
     _CGIEnv["SERVER_SOFTWARE"] = "webserv/1.0";
-    _CGIEnv["SERVER_NAME"] = "example.com";
+    _CGIEnv["SERVER_NAME"] = request.getHost().first;
     _CGIEnv["GATEWAY_INTERFACE"] = "CGI/1.1";
     _CGIEnv["SERVER_PROTOCOL"] = "HTTP/1.1";
-    _CGIEnv["SERVER_PORT"] = "1337";
+    _CGIEnv["SERVER_PORT"] = request.getHost().second;
     _CGIEnv["REQUEST_METHOD"] = request.getMethod();
     _CGIEnv["REQUEST_URI"] = request.getUri();
     _CGIEnv["PATH_INFO"] = location->root + request.getUri();
     _CGIEnv["SCRIPT_NAME"] = request.getUri();
     _CGIEnv["QUERY_STRING"] = request.getQuery();
-    _CGIEnv["REMOTE_ADDR"] = "localhost";
-    _CGIEnv["REMOTE_PORT"] = " 1337";
+//    _CGIEnv["REMOTE_ADDR"] = request.getHost().first;
+//    _CGIEnv["REMOTE_PORT"] = request.getHost().second;
     _CGIEnv["CONTENT_LENGTH"] = request.getHeaders().find("Content-Length")->second;
     _CGIEnv["CONTENT_TYPE"] = request.getHeaders().find("Content-Type")->second;
     _CGIEnv["HTTP_ACCEPT"] = request.getHeaders().find("Accept")->second;
@@ -584,27 +541,20 @@ void Server::_handleCGI(int fd, const subServersIterator_t &iter, const Request 
 
 
     CGIHandler  cgiHandler(_CGIEnv, request.getBody(), location );
-    string repo = cgiHandler.CGIExecuter();
-    std::cout << "response " <<  repo << std::endl;
+    string response_body = cgiHandler.CGIExecuter();
     response.setStatusCode(200);
-    response.setHeaders(request, _mimeTypes, location->root + request.getUri());
-    string s = "HTTP/1.1 200 OK\r\n";
-    s += repo;
-    std::cout << "response " <<  s << std::endl;
-    send(fd, s.c_str(), s.size(), 0);
+    response.setContentLength(response_body.size());
+    response.setContentType("text/html");
+    response.setConnection(request.getHeaders().find("Connection")->second);
+    response.setDate();
+    response.setServer("webserv/1.0");
+    response.setBody(response_body);
+
+    sendResponseHeaders(it, response);
+    int ret = send(it->fd, response.getBody().c_str(), response.getBody().size(), 0);
+    if (ret == -1 || ret == 0) {
+        close(it->fd);
+        _fds.erase(it);
+    }
 }
 
-
-/*
- * todo:
-1. If Request-URI is an absoluteURI, the host is part of the
-        Request-URI. Any Host header field value in the request MUST be
-ignored.
-
-2. If the Request-URI is not an absoluteURI, and the request includes
-a Host header field, the host is determined by the Host header
-        field value.
-
-3. If the host as determined by rule 1 or 2 is not a valid host on
-the server, the response MUST be a 400 (Bad Request) error message.
-*/

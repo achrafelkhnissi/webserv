@@ -31,38 +31,55 @@
 class Server {
 
 private:
-    virtualServerMap_t      _virtualServer;
-    Configuration           _config;
-    pollfdsVector_t         _fds;
-	errorPagesMap_t 	    _errorPages;
-    Request                 _request;
-    string                  _uploadPath;
-    stringMap_t             _CGIEnv;
-    clientHttpParserMap_t   _clientHttpParserMap;
+    virtualServerMap_t _virtualServer;
+    Configuration _config;
+    pollfdsVector_t _fds;
+    errorPagesMap_t _errorPages;
+    size_t _maxBodySize;
+    Request _request;
+    string _uploadPath;
+    stringMap_t _CGIEnv;
+    clientHttpParserMap_t _clientHttpParserMap;
     std::map<string, string> _mimeTypes;
 public:
     Server(Configuration config);
+
     ~Server();
 
-    void    start();
-    void    printData() const;
+    void start();
+
+    void printData() const;
 
 private:
-    void    _handleConnections(int fd);
-    void    _handleRequest(pollfdsVectorIterator_t it);
-    void    _sendResponse(int fd);
-    void    _handleGET(int, const subServersIterator_t&, const Request&);
-    void    _handlePOST(int, const subServersIterator_t&, const Request&);
-	void 	_handleDELETE(int , const subServersIterator_t &, const Request& );
-	bool 	is_regular_file(const char* path) const;
-    void    _handleError(int fd);
-    void    _clearPollfds();
-    void    _error(const string& msg, int err) const;
-    void    _setupVirtualServer(VirtualServer& vserver);
-    void    _setCGIEnv(const Request& request, const location_t& location, const string& path);
-    string  _getErrorPage(int code) const;
-    string  _getFileContent(const string& path) const;
-    void    _setMimeTypes();
+    void _handleConnections(int fd);
+
+    void _handleRequest(pollfdsVectorIterator_t it);
+
+    void _sendResponse(int fd);
+
+    void _handleGET(pollfdsVectorIterator_t, const subServersIterator_t &, const Request &);
+
+    void _handlePOST(pollfdsVectorIterator_t, const subServersIterator_t &, const Request &);
+
+    void _handleDELETE(pollfdsVectorIterator_t, const subServersIterator_t &, const Request &);
+
+    bool is_regular_file(const char *path) const;
+
+    void _handleError(int fd);
+
+    void _clearPollfds();
+
+    void _error(const string &msg, int err) const;
+
+    void _setupVirtualServer(VirtualServer &vserver);
+
+    void _setCGIEnv(const Request &request, const location_t &location, const string &path);
+
+    string _getErrorPage(int code) const;
+
+    string _getFileContent(const string &path) const;
+
+    void _setMimeTypes();
 
 
     void _handleError(int fd, int statusCode);
@@ -70,11 +87,11 @@ private:
     string _getStatusMessage(int statusCode) const;
 
 
-    void sendResponseHeaders(int fd, const Response &response);
+    void sendResponseHeaders(pollfdsVectorIterator_t, const Response &response);
 
-    void sendResponseBody(int fd, const string &resourcePath);
+    void sendResponseBody(pollfdsVectorIterator_t, const string &resourcePath);
 
-    void sendResponseBody(int fd, const Response& response);
+    void sendResponseBody(pollfdsVectorIterator_t, const Response &response);
 
     const string handleFormData(const Request &request, Response &response);
 
@@ -82,10 +99,7 @@ private:
 
     location_t *matchLocation(const locationVector_t &locations, const string &uri);
 
-    void
-    _handleGET(int fd, const subServersIterator_t &subServersIterator, const Request &request, location_t *location);
+    void _handleCGI(pollfdsVectorIterator_t, const subServersIterator_t &iter, const Request &request, location_t *pS);
 
-    void _handleCGI(int fd, const subServersIterator_t &iter, const Request &request, location_t *pS);
 };
-
 #endif
