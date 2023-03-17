@@ -1,28 +1,40 @@
 #!/usr/bin/python
 
-# Import modules for CGI handling 
-import cgi, cgitb 
+print(""""
 
-# Create instance of FieldStorage 
-form = cgi.FieldStorage() 
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Hello CGI</title>
+	<style>
+		body {
+			font-family: Arial, sans-serif;
+			background-color: black;
+		}
 
-# Get data from fields
-first_name = form.getvalue('first_name')
-last_name  = form.getvalue('last_name')
+		h1 {
+			color: white;
+			font-size: 6rem;
+			text-align: center;
+			margin-top: 5rem;
+			text-shadow: 1px 1px 0px #fff, -1px -1px 0px #fff, 1px -1px 0px #fff, -1px 1px 0px #fff;
+		}
+		
+		p {
+		    color: white;
+		}
+	</style>
+</head>
+<body>
+	<h1>CGI</h1>
+	<div align="center">
+	<img src="https://www.memecreator.org/static/images/memes/4359802.jpg" alt="Hello CGI">
+	</div>
+</body>
+<footer>
+    <p align="center">webserv/1.0</p>
+</footer>
+</html>
 
-print "Content-type:text/html\r\n\r\n"
-print "<html>"
-print "<head>"
-print "<title>Hello - Second CGI Program</title>"
-print "</head>"
-print "<body>"
-print "<h2>Hello %s %s</h2>" % (first_name, last_name)
-print "</body>"
-print "</html>"
 
-import atexit
-
-@atexit.register
-def goodbye():
-    print('You are now leaving the Python sector.')
-
+""")
