@@ -45,6 +45,8 @@ public:
     void    printData() const;
 
     const subServersIterator_t  matchSubServer(const string& host);
+
+    hostPortPair_t getHostPort() const;
 };
 
 #endif //WEBSERV_VIRTUALSERVER_HPP

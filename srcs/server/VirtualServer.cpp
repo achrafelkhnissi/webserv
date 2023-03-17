@@ -49,6 +49,10 @@ int VirtualServer::getPort() const {
     return _hostPort.second;
 }
 
+hostPortPair_t VirtualServer::getHostPort() const {
+    return _hostPort;
+}
+
 const subServersIterator_t VirtualServer::matchSubServer(const string& host) {
 
     for (subServersIterator_t iter1_ = _subServers.begin(); iter1_ != _subServers.end(); ++iter1_) {
