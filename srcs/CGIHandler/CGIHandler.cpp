@@ -23,14 +23,12 @@ string CGIHandler::getCmd() {
 
     string path_ = _envMap["PATH_INFO"];
     string scriptName_ = path_.substr(path_.find_last_of('/') + 1);
-    std::cout <<  "\n scriptname: "<< scriptName_ << std::endl;
     string extension_ = ".py";
     string cmd_ = "./www/cgi-bin/";
 
 
     stringVectorIterator_t it = find(_cgiPath.begin(), _cgiPath.end(), scriptName_);
     if (it != _cgiPath.end()) {
-       std::cout << "Found file: " << cmd_ + *it << std::endl;
         return  cmd_ += *it;
     } else {
         std::size_t pos = path_.find_last_of('.');
@@ -40,7 +38,6 @@ string CGIHandler::getCmd() {
 
         for (stringVectorIterator_t it = _cgiPath.begin(); it != _cgiPath.end(); ++it) {
             if (it->size() >= extension_.length() && it->substr(it->size() - extension_.length()) == extension_) {
-                cout << "Found file with" << extension_ << " extension: " << *it << endl;
                return cmd_ += *it;
             }
         }
