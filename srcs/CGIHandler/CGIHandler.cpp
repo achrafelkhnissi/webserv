@@ -12,6 +12,7 @@ CGIHandler::CGIHandler(const stringMap_t &env, const string &body, location_t* l
 
     _cgiPath.push_back(location->cgi_path);
     _cgiPath.push_back("form-handler.py");
+    _cgiPath.push_back("session_management.py");
     std::cout << "cgi path: " << location->cgi_path << std::endl;
     _envSize = env.size();
     _env = new char*[_envSize + 1];
@@ -115,13 +116,13 @@ string CGIHandler::CGIExecuter() {
 
 
 CGIHandler::~CGIHandler() {
-//    for(int i = 0; i < _envSize; i++) {
-//        free(_env[i]);
-//    }
-//
-//    for (int i = 0; i < 2; i++) {
-//        free(_argv[i]);
-//    }
-//    delete[] _env;
+    for(int i = 0; i < _envSize; i++) {
+        free(_env[i]);
+    }
+
+    for (int i = 0; i < 2; i++) {
+        free(_argv[i]);
+    }
+    delete[] _env;
 }
 
