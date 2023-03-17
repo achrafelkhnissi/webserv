@@ -6,6 +6,7 @@
 #include <string>
 #include <stdexcept>
 #include <cstdlib>
+#include <cmath>
 
 // function to check if a directory exists
 bool dirExists(const std::string& dirName) {
@@ -56,27 +57,20 @@ std::string getFileContent(const std::string& path)  {
 size_t convertToBytes(const std::string& str)
 {
     const size_t multiplier = 1024;
-    size_t factor = 1;
+    size_t factor;
     std::string numStr = str.substr(0, str.length() - 1); // remove the last character ("k", "m", or "g")
     long num = strtol(numStr.c_str(), NULL, 10); // convert the number string to a long
     if (num <= 0)
     {
         throw std::invalid_argument("Invalid size: " + str);
     }
-    switch (str[str.length() - 1])
-    {
-        case 'k':
-        case 'K':
-            factor *= multiplier;
-        case 'm':
-        case 'M':
-            factor *= multiplier;
-        case 'g':
-        case 'G':
-            factor *= multiplier;
-            break;
-        default:
-            throw std::invalid_argument("Invalid size: " + str);
-    }
+    std::cout << "str: " << str[str.length() - 1] << std::endl;
+    char lastChar = tolower(str[str.length() - 1]); // convert the last character to lower case (to handle "K", "M", or "G"
+
+    std::string kmg = "kmg";
+    size_t pos = kmg.find(lastChar);
+
+    factor = static_cast<size_t>(pow(multiplier, pos + 1));
+
     return static_cast<size_t>(num * factor);
 }
