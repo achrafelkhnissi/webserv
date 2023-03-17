@@ -18,7 +18,6 @@ struct LocationConfig {
 	string root;
 	string autoindex;
 	string upload_path;
-	string upload_store;
 	vector<string> cgi_path;
 	string client_max_body_size;
 	string error_page;
@@ -41,7 +40,6 @@ struct LocationConfig {
 		cout << endl;
 		cout << s << "\t\tautoindex: " << autoindex << endl;
 		cout << s << "\t\tupload_path: " << upload_path << endl;
-		cout << s << "\t\tupload_store: " << upload_store << endl;
 		cout << s << "\t\tclient_max_body_size: " << client_max_body_size << endl;
 		cout << s << "\t\terror_page: " << error_page << endl;
 	}
@@ -51,10 +49,11 @@ struct ServerConfig {
 
 	unsigned short port;
 	string host;
-	vector<string> server_name;
 	string root;
-	vector<string> error_page;
 	string client_max_body_size;
+	string upload_path;
+	vector<string> server_name;
+	vector<string> error_page;
     vector<string> allowed_methods;
     vector<string> index;
 
@@ -65,6 +64,7 @@ struct ServerConfig {
 		cout << "\t==== ServerConfig ====" << endl;
 		cout << "\tlisten: " << port << endl;
 		cout << "\thost: " << host << endl;
+		cout << "\tupload_path: " << upload_path << endl;
 		cout << "\tserver_name: ";
 		ITER_FOREACH(string_vector, server_name, it) {
 			cout << "\t" << *it << " ";

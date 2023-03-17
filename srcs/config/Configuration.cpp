@@ -22,8 +22,7 @@ LocationConfig fill_location(toml::table& location) {
         l.cgi_path.push_back(it->as_str(""));
     }
 	l.autoindex = location["autoindex"].as_str("off");
-	l.upload_path = location["upload_path"].as_str("www/html/upload");
-	l.upload_store = location["upload_store"].as_str("on");
+	l.upload_path = location["upload_path"].as_str("/upload");
 	l.client_max_body_size = location["_clientMaxBodySize"].as_str("10m");
 	l.error_page = location["error_page"].as_str("404 /errors/error-404.html");
 	return l;
@@ -33,13 +32,15 @@ ServerConfig fill_server(toml::table& server) {
 	ServerConfig s;
 	s.port = server["port"].as_int(s.port);
 	s.host = server["host"].as_str("127.0.0.1");
+	s.upload_path = server["upload_path"].as_str("/upload");
+	s.root = server["root"].as_str("www");
+	s.client_max_body_size = server["_clientMaxBodySize"].as_str("10m");
 
     ITER_FOREACH(vector<toml::table>, server["index"].vec, it) {
         s.index.push_back(it->as_str("default.com"));
     }
 
 	ITER_FOREACH(vector<toml::table>, server["server_name"].vec, it) {
-//		s.server_name.push_back(it->as_str("localhost"));
 		s.server_name.push_back(it->as_str());
 	}
     ITER_FOREACH(vector<toml::table>, server["allowed_methods"].vec, it) {
@@ -48,8 +49,6 @@ ServerConfig fill_server(toml::table& server) {
     ITER_FOREACH(vector<toml::table>, server["error_page"].vec, it) {
         s.error_page.push_back(it->as_str(""));
     }
-	s.root = server["root"].as_str("www");
-	s.client_max_body_size = server["_clientMaxBodySize"].as_str("10m");
 
 	toml::table& t = server["location"];
 	for (size_t i = 0; i < t.vec.size(); i++) {
@@ -119,13 +118,15 @@ Configuration::e_error validate_location_list(toml::table &location) {
 
 Configuration::e_error validate_server(toml::table& server) {
 	Configuration::e_error error;
-	string server_keys[] = {"port", "host", "index", "server_name", "allowed_methods", "root", "error_page", "_clientMaxBodySize", "location"};
+	string server_keys[] = {"port", "host", "index", "server_name", "allowed_methods", "root", "error_page", "_clientMaxBodySize", "location", "upload_path"};
 	ITER_FOREACH(toml::table::TomlMap, server.mp, it) {
 		if (find(begin(server_keys), end(server_keys), it->first) == end(server_keys))
 			return Configuration::ERROR_UNKNOWN_KEY;
 	}
 
 	if (!optional_is(server, "port", toml::table::STRING))
+		return Configuration::ERROR_INVALID_PORT;
+	else if (!optional_is(server, "upload_path", toml::table::STRING))
 		return Configuration::ERROR_INVALID_PORT;
 	else if (!optional_is(server, "host", toml::table::STRING))
 		return Configuration::ERROR_INVALID_HOST;

@@ -3,6 +3,7 @@
 port = "1337"
 host = "10.0.0.1"
 server_name = ["example.com", "example2.com", "example3.com"]
+upload_path = "www/upload"
 index = ["index.html", "index.htm"]
 error_page = ["404", "/404.html"]
 _clientMaxBodySize = "10m"
