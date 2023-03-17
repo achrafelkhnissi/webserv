@@ -174,6 +174,13 @@ void Server::_handleRequest(pollfdsVectorIterator_t it) {
 		} else if (_request.getMethod() == "DELETE") {
 			_handleDELETE(it, subServerIter_, _request);
 		}
+        else {
+            Response response_ = Response();
+            response_.setStatusCode(501);
+            response_.setHeaders(_request, _mimeTypes, _getErrorPage(501));
+            sendResponseHeaders(it, response_);
+            sendResponseBody(it, _getErrorPage(501));
+        }
 	}
 }
 
@@ -437,18 +444,21 @@ void Server::_handlePOST(pollfdsVectorIterator_t it, const subServersIterator_t 
                 throw std::runtime_error("Failed to create upload directory");
         }
     }
-    string content_type = request.getHeaders().find("Content-Type")->second;
-    content_type = content_type.substr(0, content_type.find(';'));
 
-    if (content_type == "application/x-www-form-urlencoded") {
-        resourcePath_ = handleFormData(request, response_);
-    } else if (content_type == "multipart/form-data") {
-        resourcePath_ = handleFileUploads(request, response_, _uploadPath);
-    } else {
-        // unsupported content type
-        response_.setStatusCode(400);
-        response_.setHeaders(request, _mimeTypes, _getErrorPage(400));
-        resourcePath_ = _getErrorPage(400);
+    if (response_.getStatusCode() == 200) {
+        string content_type = request.getHeaders().find("Content-Type")->second;
+        content_type = content_type.substr(0, content_type.find(';'));
+
+        if (content_type == "application/x-www-form-urlencoded") {
+            resourcePath_ = handleFormData(request, response_);
+        } else if (content_type == "multipart/form-data") {
+            resourcePath_ = handleFileUploads(request, response_, _uploadPath);
+        } else {
+            // unsupported content type
+            response_.setStatusCode(400);
+            response_.setHeaders(request, _mimeTypes, _getErrorPage(400));
+            resourcePath_ = _getErrorPage(400);
+        }
     }
     sendResponseHeaders(it, response_);
     sendResponseBody(it, resourcePath_);
