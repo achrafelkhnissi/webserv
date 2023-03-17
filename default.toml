@@ -6,7 +6,7 @@ server_name = ["example.com", "example2.com", "example3.com"]
 upload_path = "www/upload"
 index = ["index.html", "index.htm"]
 error_page = ["404", "/404.html"]
-_clientMaxBodySize = "10m"
+max_body_size = "1m"
 
 	[[server.location]]
 	prefix = "/"
@@ -16,8 +16,8 @@ _clientMaxBodySize = "10m"
 	error_page = ["404 /404.html"]
 	redirect = "http://example.com"
 	autoindex = "on"
-	_clientMaxBodySize = "10m"
-	
+	max_body_size = "1m"
+
 	[[server.location]]
 	prefix = "/html"
 	root = "www"
@@ -26,8 +26,8 @@ _clientMaxBodySize = "10m"
 	error_page = ["404 /404.html"]
 	redirect = "http://example.com"
 	autoindex = "on"
-	_clientMaxBodySize = "10m"
-	
+	max_body_size = "1m"
+
 	[[server.location]]
 	prefix = "/upload"
 	root = "www"
@@ -36,18 +36,18 @@ _clientMaxBodySize = "10m"
 	error_page = ["404 /404.html"]
 	redirect = "http://example.com"
 	autoindex = "on"
-	_clientMaxBodySize = "10m"
-	
+	max_body_size = "1m"
+
 	
 	[[server.location]]
 	prefix = "/cgi-bin"
 	root = "www"
-	cgi_path = ["helloCGI.py"]
+	cgi_path = ["helloCGI.py", "cookies.py", "form-handler.py", "session_management.py"]
 	allowed_methods = ["GET", "POST"]
 	error_page = ["404 /404.html"]
 	redirect = "http://example.com"
 	autoindex = "on"
-	_clientMaxBodySize = "10m"
+	max_body_size = "1m"
 
 [[server]]
 port = "4242"
@@ -55,7 +55,7 @@ host = "10.0.0.1"
 server_name = ["example.com", "example2.com", "example3.com"]
 index = ["index.html", "index.htm"]
 error_page = ["404", "/404.html"]
-_clientMaxBodySize = "10m"
+max_body_size = "1m"
 
 	[[server.location]]
 	prefix = "/"
@@ -65,4 +65,4 @@ _clientMaxBodySize = "10m"
 	error_page = ["404 /404.html"]
 	redirect = "http://example.com"
 	autoindex = "on"
-	_clientMaxBodySize = "10m"
+	max_body_size = "1m"
