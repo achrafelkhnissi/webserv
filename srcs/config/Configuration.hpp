@@ -21,6 +21,7 @@ struct LocationConfig {
 	vector<string> cgi_path;
 	string client_max_body_size;
 	string error_page;
+	vector<string> redirect;
 	vector<string> index;
     vector<string> allowed_methods;
 
@@ -52,6 +53,7 @@ struct ServerConfig {
 	string root;
 	string client_max_body_size;
 	string upload_path;
+	vector<string> redirect;
 	vector<string> server_name;
 	vector<string> error_page;
     vector<string> allowed_methods;

@@ -15,6 +15,9 @@ LocationConfig fill_location(toml::table& location) {
     ITER_FOREACH(vector<toml::table>, location["index"].vec, it) {
         l.index.push_back(it->as_str("default.com"));
     }
+	ITER_FOREACH(vector<toml::table>, location["redirect"].vec, it) {
+		l.index.push_back(it->as_str(""));
+	}
     ITER_FOREACH(vector<toml::table>, location["allowed_methods"].vec, it) {
         l.allowed_methods.push_back(it->as_str(""));
     }
@@ -39,6 +42,10 @@ ServerConfig fill_server(toml::table& server) {
     ITER_FOREACH(vector<toml::table>, server["index"].vec, it) {
         s.index.push_back(it->as_str("default.com"));
     }
+
+	ITER_FOREACH(vector<toml::table>, server["redirect"].vec, it) {
+		s.index.push_back(it->as_str(""));
+	}
 
 	ITER_FOREACH(vector<toml::table>, server["server_name"].vec, it) {
 		s.server_name.push_back(it->as_str());
@@ -89,10 +96,10 @@ Configuration::e_error validate_location(toml::table &location)
 		return Configuration::ERROR_INVALID_UPLOAD_PATH;
 	else if (!optional_is(location, "autoindex", toml::table::STRING))
 		return Configuration::ERROR_INVALID_AUTOINDEX;
-	else if (!optional_is(location, "redirect", toml::table::STRING))
-		return Configuration::ERROR_INVALID_REDIRECT;
 	else if (!optional_is(location, "client_max_body_size", toml::table::STRING))
 		return Configuration::ERROR_INVALID_CLIENT_MAX_BODY_SIZE;
+	else if (!optional_str_arr(location, "redirect"))
+		return Configuration::ERROR_INVALID_REDIRECT;
 	else if (!optional_str_arr(location, "cgi_path"))
 		return Configuration::ERROR_INVALID_CGI_PATH;
 	else if (!optional_str_arr(location, "index"))
@@ -118,7 +125,7 @@ Configuration::e_error validate_location_list(toml::table &location) {
 
 Configuration::e_error validate_server(toml::table& server) {
 	Configuration::e_error error;
-	string server_keys[] = {"port", "host", "index", "server_name", "allowed_methods", "root", "error_page", "_clientMaxBodySize", "location", "upload_path"};
+	string server_keys[] = {"port", "host", "index", "server_name", "allowed_methods", "root", "error_page", "_clientMaxBodySize", "location", "upload_path", "redirect"};
 	ITER_FOREACH(toml::table::TomlMap, server.mp, it) {
 		if (find(begin(server_keys), end(server_keys), it->first) == end(server_keys))
 			return Configuration::ERROR_UNKNOWN_KEY;
@@ -132,6 +139,8 @@ Configuration::e_error validate_server(toml::table& server) {
 		return Configuration::ERROR_INVALID_HOST;
 	else if (!optional_is(server, "_clientMaxBodySize", toml::table::STRING))
 		return Configuration::ERROR_INVALID_CLIENT_MAX_BODY_SIZE;
+	else if (!optional_str_arr(server, "redirect"))
+		return Configuration::ERROR_INVALID_REDIRECT;
 	else if (!optional_str_arr(server, "index"))
 		return Configuration::ERROR_INVALID_INDEX;
 	else if (!optional_str_arr(server, "server_name"))
