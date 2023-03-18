@@ -103,8 +103,13 @@ void Server::start() {
                 if (i < _virtualServer.size()){
                     _handleConnections(_fds[i].fd);
                 }
-                else
-                    _handleRequest(_fds.begin() + i);
+                else {
+					_handleRequest(_fds.begin() + i);
+					if (_fds[i].fd > 0) {
+						close(_fds[i].fd);
+						_fds.erase(_fds.begin() + i);
+					}
+				}
             }
         }
     }
