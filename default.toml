@@ -12,7 +12,7 @@ _clientMaxBodySize = "10m"
 	prefix = "/"
 	root = "www"
 	index = ["index.html",  "index.htm"]
-	allowed_methods = ["GET", "POST", "DELETE"]
+	allowed_methods = ["GET" ,"POST", "DELETE"]
 	error_page = ["404 /404.html"]
 	redirect = "http://example.com"
 	autoindex = "on"
@@ -43,15 +43,16 @@ _clientMaxBodySize = "10m"
 	_clientMaxBodySize = "10m"
 
 [[server]]
-port = "4242"
+port = "1336"
 host = "10.0.0.1"
-server_name = ["example.com", "example2.com", "example3.com"]
+root = "www"
+server_name = ["example1.com", "example22.com", "example3.com"]
 index = ["index.html", "index.htm"]
 error_page = ["404", "/404.html"]
 _clientMaxBodySize = "10m"
 
 	[[server.location]]
-	prefix = "/"
+	prefix = "/html"
 	root = "www"
 	index = ["index.html",  "index.htm"]
 	allowed_methods = ["GET", "DELETE"]
