@@ -74,3 +74,15 @@ size_t convertToBytes(const std::string& str)
 
     return static_cast<size_t>(num * factor);
 }
+
+std::string removeTrailingSlashes(std::string str) {
+    // Find the last character that is not a forward slash
+    std::size_t lastNonSlash = str.find_last_not_of('/');
+
+    // If the last character is a forward slash, erase it and any subsequent forward slashes
+    if (lastNonSlash != std::string::npos && lastNonSlash < str.length() - 1) {
+        str.erase(lastNonSlash + 1);
+    }
+
+    return str;
+}
