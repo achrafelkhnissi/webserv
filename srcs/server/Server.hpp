@@ -101,5 +101,8 @@ private:
 
     void _handleCGI(pollfdsVectorIterator_t, const subServersIterator_t &iter, const Request &request, location_t *pS);
 
+	string _getIndexPage(const string&, const stringVector_t&) const;
+	void _generateIndexPage(const pollfdsVectorIterator_t&, const string&, const string&);
+
 };
 #endif
