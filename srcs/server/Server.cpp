@@ -2,6 +2,7 @@
 #include "Request.hpp"
 #include "utils.hpp"
 #include "Response.hpp"
+#include "IndexGenerator.hpp"
 
 Server::Server(Configuration config): _config(config), _request() {
 
@@ -323,12 +324,19 @@ void Server::_handleGET(pollfdsVectorIterator_t it, const subServersIterator_t &
         response_.setHeaders(request, _mimeTypes, _getErrorPage(405));
         resourcePath_ = _getErrorPage(405);
     } else {
-        // Check if the uri is a directory
         resourcePath_ = root_ + uri_;
+
         if (isDirectory(resourcePath_)) {
-            if (resourcePath_.back() != '/')
-                resourcePath_ += "/";
-            resourcePath_ += index_[0]; //todo: return the first index that exists
+            if (resourcePath_.back() != '/') {
+				resourcePath_ += "/";
+			}
+
+			string indexPage_ = _getIndexPage(resourcePath_, index_);
+			resourcePath_ = indexPage_.empty() ? resourcePath_ : indexPage_;
+			if (indexPage_.empty() && location_->autoIndex == "on") {
+				_generateIndexPage(it, root_, removeTrailingSlashes(uri_));
+				return ;
+			}
         }
 
         response_.setStatusCode(request, resourcePath_, _mimeTypes);
@@ -336,10 +344,9 @@ void Server::_handleGET(pollfdsVectorIterator_t it, const subServersIterator_t &
         if (statusCode_ != 200)
             resourcePath_ = _getErrorPage(statusCode_);
         response_.setHeaders(request, _mimeTypes, resourcePath_);
-
     }
-        sendResponseHeaders(it, response_);
-        sendResponseBody(it, resourcePath_);
+	sendResponseHeaders(it, response_);
+	sendResponseBody(it, resourcePath_);
 }
 
 const string Server::handleFormData(  const Request& request, Response& response){
@@ -566,3 +573,43 @@ void Server::_handleCGI(pollfdsVectorIterator_t it, const subServersIterator_t &
     }
 }
 
+string Server::_getIndexPage(const string &path_, const stringVector_t &index_) const {
+
+	stringVectorConstIterator_t it = index_.begin();
+	while (it != index_.end()) {
+		string index = path_ + *it;
+		if (access(index.c_str(), F_OK) == 0)
+			return index;
+		it++;
+	}
+	return "";
+}
+
+void Server::_generateIndexPage(const pollfdsVectorIterator_t& it, const string &root, const string &uri) {
+
+	IndexGenerator indexGenerator(root, uri);
+	string indexPage = indexGenerator.generate();
+
+	ostringstream responseHeaders;
+
+	responseHeaders << "HTTP/1.1 200 OK\r\n";
+	responseHeaders << "Content-Type: text/html\r\n";
+	responseHeaders << "Content-Length: " << indexPage.size() << "\r\n";
+	responseHeaders << "Connection: Keep-Alive\r\n";
+	responseHeaders << "Server: webserv/1.0\r\n";
+	responseHeaders << "\r\n";
+
+	int ret = send(it->fd, responseHeaders.str().c_str(), responseHeaders.str().size(), 0);
+	if (ret == -1 || ret == 0) {
+		close(it->fd);
+		_fds.erase(it);
+		return;
+	}
+
+	ret = send(it->fd, indexPage.c_str(), indexPage.size(), 0);
+	if (ret == -1 || ret == 0) {
+		close(it->fd);
+		_fds.erase(it);
+		return;
+	}
+}
