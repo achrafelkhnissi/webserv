@@ -137,7 +137,7 @@ void Server::_handleConnections(int sockfd) {
 
 void Server::_handleRequest(pollfdsVectorIterator_t it) {
 
-	string requestBuffer_;
+    string requestBuffer_;
 	ssize_t bytesRead_ = 0;
 
 	char buffer_[BUFFER_SIZE + 1];
@@ -159,6 +159,7 @@ void Server::_handleRequest(pollfdsVectorIterator_t it) {
 	{
 		_request = _clientHttpParserMap[it->fd].consume_request();
 		if (_request.isInvalid()) {
+
             Response response_ = Response();
            if (_request.getError() == err_invalid_method)
                response_.setStatusCode(501);
@@ -170,12 +171,12 @@ void Server::_handleRequest(pollfdsVectorIterator_t it) {
             response_.setHeaders(_request, _mimeTypes, _getErrorPage(response_.getStatusCode()));
             sendResponseBody(it, _getErrorPage(response_.getStatusCode()));
 			return ;
-		}
+        }
 		// Match the port and host to the correct server
-		virtualServerMapIterator_t vserverIter_ = _virtualServer.find(_request.getHost().second);
+        virtualServerMapIterator_t vserverIter_ = _virtualServer.find(_request.getHost().second);
 		subServersIterator_t subServerIter_ = vserverIter_->second.matchSubServer(_request.getHost().first);
 
-		if (_request.getMethod() == "GET") {
+        if (_request.getMethod() == "GET") {
 			_handleGET(it, subServerIter_, _request);
 		} else if (_request.getMethod() == "POST") {
             _handlePOST(it, subServerIter_, _request);
@@ -208,9 +209,11 @@ location_t* Server::matchLocation(const locationVector_t &locations, const std::
 				return location_;
 			}
 		}
+        if (str_ == "/")
+            return nullptr;
 		std::size_t found_ = str_.find_last_of('/');
 		if (found_ != std::string::npos){
-            found_ = found_ == 0 ? 1 : found_;
+            found_ = found_ == 0 ? 1 : found_; // if found_ == 0, then str_ = "/"
 			str_ = str_.substr(0, found_);
 		}
 
@@ -303,14 +306,14 @@ void Server::_handleGET(pollfdsVectorIterator_t it, const subServersIterator_t &
     string root_ = subServersIterator->getRoot();
     string uri_ = request.getUri().empty() ? "/" : request.getUri();
     stringVector_t index_ = subServersIterator->getIndex();
+
     location_t *location_ = matchLocation(subServersIterator->getLocation(), uri_);
 
-    if (location_->prefix.find("cgi-bin") != std::string::npos) {
-        _handleCGI(it, subServersIterator, request, location_);
-        return;
-    }
-
     if (location_ != nullptr) {
+        if (location_->prefix.find("cgi-bin") != std::string::npos) {
+            _handleCGI(it, subServersIterator, request, location_);
+            return;
+        }
         root_ = location_->root;
         index_ = location_->index;
     }
