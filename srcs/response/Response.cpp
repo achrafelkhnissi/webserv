@@ -49,15 +49,6 @@ void Response::setStatusCode(const Request& request, const string& filePath, std
         _statusCode = 200;
     }
 
-//    if (M.empty())
-//   {
-//        _statusCode = 415;
-//        if (!is_regular_file(filePath.c_str()) || !file.is_open())
-//            _statusCode = 404;
-//    } else {
-//        _statusCode = 200;
-//    }
-
     file.close();
 }
 
