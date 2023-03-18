@@ -14,10 +14,10 @@ _clientMaxBodySize = "10m"
 	index = ["index.html",  "index.htm"]
 	allowed_methods = ["GET" ,"POST", "DELETE"]
 	error_page = ["404 /404.html"]
-	redirect = "http://example.com"
 	autoindex = "on"
 	_clientMaxBodySize = "10m"
 	upload_path = "www/upload"
+	redirect = ["old_about.html", "about.html"]
 
 	[[server.location]]
 	prefix = "/html"
@@ -25,20 +25,15 @@ _clientMaxBodySize = "10m"
 	index = ["index.html", "index.htm"]
 	allowed_methods = ["GET", "HEAD", "DELETE"]
 	error_page = ["404 /404.html"]
-	redirect = "http://example.com"
 	autoindex = "on"
 	_clientMaxBodySize = "10m"
 
-
-
-	
 	[[server.location]]
 	prefix = "/cgi-bin"
 	root = "www"
 	cgi_path = ["helloCGI.py", "cookies.py", "form-handler.py", "session_management.py"]
 	allowed_methods = ["GET", "POST"]
 	error_page = ["404 /404.html"]
-	redirect = "http://example.com"
 	autoindex = "on"
 	_clientMaxBodySize = "10m"
 
@@ -57,6 +52,5 @@ _clientMaxBodySize = "10m"
 	index = ["index.html",  "index.htm"]
 	allowed_methods = ["GET", "DELETE"]
 	error_page = ["404 /404.html"]
-	redirect = "http://example.com"
 	autoindex = "on"
 	_clientMaxBodySize = "10m"
