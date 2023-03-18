@@ -20,7 +20,7 @@ struct location_s{
 	string          errorPages;
 	string          prefix;
     string          uploadPath;
-	bool            autoIndex;
+	string          autoIndex;
     vector<string>  cgi_path;
 };
 

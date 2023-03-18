@@ -63,7 +63,7 @@ void SubServer::fillLocation(const  LocationConfig& locationConfig, location_t& 
     location.clientMaxBodySize = locationConfig.client_max_body_size;
     location.errorPages = locationConfig.error_page;
     location.prefix = locationConfig.prefix;
-    location.autoIndex = locationConfig.autoindex == "on";
+    location.autoIndex = locationConfig.autoindex;
     location.allowedMethods = locationConfig.allowed_methods; // todo: wait for ismail to add it.
     location.cgi_path = locationConfig.cgi_path;
     location.uploadPath = locationConfig.upload_path;
