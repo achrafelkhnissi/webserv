@@ -15,7 +15,7 @@ _clientMaxBodySize = "10m"
 	allowed_methods = ["GET" ,"POST", "DELETE"]
 	error_page = ["404", "www/error_pages/404.html"]
 	autoindex = "on"
-	_clientMaxBodySize = "10m"
+	_clientMaxBodySize = "100m"
 	upload_path = "www/upload"
 	redirect = ["old_about.html", "about.html"]
 
