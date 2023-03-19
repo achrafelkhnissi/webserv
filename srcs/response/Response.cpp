@@ -7,6 +7,7 @@ Response::Response() {
     _body = "<h1>Hello World</h1>";
 
     _httpErrors[200] = "OK";
+    _httpErrors[301] = "Moved Permanently";
     _httpErrors[400] = "Bad Request";
     _httpErrors[401] = "Unauthorized";
     _httpErrors[403] = "Forbidden";
@@ -79,7 +80,7 @@ void Response::setContentType(string type) {
 
 void Response::setHeaders(const Request &request,  std::map<string, string> &mimTypes, const string &path) {
 
-    if (_statusCode == 200)
+    if (_statusCode == 200 || _statusCode == 301)
         setLastModified(path);
 
     setProtocol(request.getProtocol());
