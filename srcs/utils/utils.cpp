@@ -39,7 +39,9 @@ std::string getBasename(const std::string& path) {
 
 void error(const std::string &msg, int err)  {
     std::string errorMsg = msg + (!err ? "." : (std::string(" | ") + strerror(errno)));
-    throw std::runtime_error(errorMsg);
+//    std::cout << errorMsg << std::endl;
+//    exit(1);
+//    throw std::runtime_error(errorMsg);
 }
 
 std::string getFileContent(const std::string& path)  {
