@@ -23,17 +23,25 @@ print(""""
 		p {
 		    color: white;
 		}
-	</style>
+	footer {
+	width: 100%;
+	position: absolute;
+	bottom: 0;
+	text-align: center;
+	 }	
+	 </style>
 </head>
 <body>
 	<h1>CGI</h1>
 	<div align="center">
 	<img src="https://www.memecreator.org/static/images/memes/4359802.jpg" alt="Hello CGI">
 	</div>
-</body>
-<footer>
-    <p align="center">webserv/1.0</p>
+	
+	<footer>
+    <p>webserv/1.0</p>
 </footer>
+</body>
+
 </html>
 
 
