@@ -26,6 +26,7 @@ _clientMaxBodySize = "10m"
 	allowed_methods = ["GET", "HEAD", "DELETE"]
 	error_page = ["404", "/404.html"]
 	autoindex = "on"
+	redirect = ["/html/success.html", "/html/success_delete.html"]
 	_clientMaxBodySize = "10m"
 
 	[[server.location]]
