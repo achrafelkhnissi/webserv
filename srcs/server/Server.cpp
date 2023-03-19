@@ -3,6 +3,7 @@
 #include "utils.hpp"
 #include "Response.hpp"
 #include "IndexGenerator.hpp"
+#include <algorithm>
 
 Server::Server(Configuration config): _config(config), _request() {
 
@@ -92,24 +93,26 @@ void Server::start() {
 	while (true) {
 		int ready_ = poll(_fds.data(), _fds.size(), timeout);
 
-		if (ready_ == -1)
-			_error("poll", 1);
+		if (ready_ == -1) {
+            _error("poll", 1);
+        }
 
 		if (ready_ == 0)
 			_error("poll timeout", 1);
 
-        for (size_t i = 0; i < _fds.size(); i++) {
+        for(size_t i = 0; i < _fds.size(); i++) {
+
             if ((_fds[i].revents & POLLIN) || (_fds[i].revents & POLLOUT)) {
                 if (i < _virtualServer.size()){
                     _handleConnections(_fds[i].fd);
                 }
-                else {
-					_handleRequest(_fds.begin() + i);
-					if (_fds[i].fd > 0) {
-						close(_fds[i].fd);
-						_fds.erase(_fds.begin() + i);
-					}
-				}
+                else{
+                    _handleRequest(_fds.begin() + i);
+                    if (_fds[i].fd == -1) {
+                        _fds.erase(_fds.begin() + i);
+                        i--;
+                    }
+                }
             }
         }
     }
@@ -143,6 +146,7 @@ void Server::_handleConnections(int sockfd) {
 
 void Server::_handleRequest(pollfdsVectorIterator_t it) {
 
+    Response response_ = Response();
     string requestBuffer_;
 	ssize_t bytesRead_ = 0;
 
@@ -153,7 +157,7 @@ void Server::_handleRequest(pollfdsVectorIterator_t it) {
 
 	if (bytesRead_ == -1 || bytesRead_ == 0) {
         close(it->fd);
-        _fds.erase(it);
+        it->fd = -1;
         return ;
 	}
 	buffer_[bytesRead_] = '\0';
@@ -163,33 +167,52 @@ void Server::_handleRequest(pollfdsVectorIterator_t it) {
 
 	while (_clientHttpParserMap[it->fd].has_request())
 	{
-		_request = _clientHttpParserMap[it->fd].consume_request();
+        _request = _clientHttpParserMap[it->fd].consume_request();
 		if (_request.isInvalid()) {
+            _request.debug_err();
 
-            Response response_ = Response();
-           if (_request.getError() == err_invalid_method)
-               response_.setStatusCode(501);
-           else if (_request.getError() == err_invalid_version)
+             if (_request.getError() == err_invalid_version)
                response_.setStatusCode(505);
            else
-               response_.setStatusCode(400);
-			_request.debug_err();
-            response_.setHeaders(_request, _mimeTypes, _getErrorPage(response_.getStatusCode()));
-            sendResponseBody(it, _getErrorPage(response_.getStatusCode()));
+                response_.setStatusCode(400);
+
+            response_.setHeaders(_request, _mimeTypes, _getErrorPage(response_.getStatusCode(), stringVector_t()));
+            sendResponseHeaders(it, response_);
+            sendResponseBody(it, _getErrorPage(response_.getStatusCode(), stringVector_t()));
+            close(it->fd);
+            it->fd = -1;
 			return ;
         }
-		// Match the port and host to the correct server
-        virtualServerMapIterator_t vserverIter_ = _virtualServer.find(_request.getHost().second);
-		subServersIterator_t subServerIter_ = vserverIter_->second.matchSubServer(_request.getHost().first);
+        else {
+            virtualServerMapIterator_t vserverIter_ = _virtualServer.find(_request.getHost().second);
+            subServersIterator_t subServerIter_ = vserverIter_->second.matchSubServer(_request.getHost().first);
 
-        if (_request.getMethod() == "GET") {
-			_handleGET(it, subServerIter_, _request);
-		} else if (_request.getMethod() == "POST") {
-            _handlePOST(it, subServerIter_, _request);
-		} else if (_request.getMethod() == "DELETE") {
-			_handleDELETE(it, subServerIter_, _request);
-		}
+            if (_request.getMethod() == "GET") {
+                _handleGET(it, subServerIter_, _request);
+                close(it->fd);
+                it->fd = -1;
+            } else if (_request.getMethod() == "POST") {
+                _handlePOST(it, subServerIter_, _request);
+            } else if (_request.getMethod() == "DELETE") {
+                _handleDELETE(it, subServerIter_, _request);
+                close(it->fd);
+                it->fd = -1;
+            } else{
+                response_.setStatusCode(501);
+                response_.setHeaders(_request, _mimeTypes, _getErrorPage(response_.getStatusCode(), stringVector_t()));
+
+                sendResponseHeaders(it, response_);
+                sendResponseBody(it, _getErrorPage(response_.getStatusCode(), stringVector_t()));
+                close(it->fd);
+                it->fd = -1;
+            }
+            if (it->fd == -1)
+                break;
+        }
+		// Match the port and host to the correct server
+
 	}
+
 }
 
 void Server::_clearPollfds() {
@@ -246,8 +269,7 @@ void Server::sendResponseHeaders(pollfdsVectorIterator_t it, const Response& res
 	int ret = send(it->fd, response_header.c_str(), response_header.size(), 0);
     if (ret == -1 || ret == 0) {
         close(it->fd);
-        _fds.erase(it);
-        return ;
+        it->fd = -1;
     }
 
 }
@@ -271,7 +293,7 @@ void Server::sendResponseBody(pollfdsVectorIterator_t it, const string& resource
 		int sent = send(it->fd, buffer, bytesRead, 0);
         if (sent == -1 || sent == 0) {
             close(it->fd);
-            _fds.erase(it);
+            it->fd = -1;
             break;
         }
 	}
@@ -297,7 +319,7 @@ void Server::sendResponseBody(pollfdsVectorIterator_t it, const Response& respon
 		int ret = send(it->fd, buffer, bytes_read, 0);
         if (ret == -1 || ret == 0) {
             close(it->fd);
-            _fds.erase(it);
+            it->fd = -1;
             break;
         }
 	}
@@ -308,11 +330,12 @@ void Server::sendResponseBody(pollfdsVectorIterator_t it, const Response& respon
 void Server::_handleGET(pollfdsVectorIterator_t it, const subServersIterator_t &subServersIterator, const Request& request) {
 
     Response response_ = Response();
+    stringVector_t errorPages_ = subServersIterator->getErrorPages();
+    stringVector_t allowedMethods_ = subServersIterator->getAllowedMethods();
     string resourcePath_;
     string root_ = subServersIterator->getRoot();
     string uri_ = request.getUri().empty() ? "/" : request.getUri();
     stringVector_t index_ = subServersIterator->getIndex();
-
     location_t *location_ = matchLocation(subServersIterator->getLocation(), uri_);
 
     if (location_ != nullptr) {
@@ -322,23 +345,26 @@ void Server::_handleGET(pollfdsVectorIterator_t it, const subServersIterator_t &
         }
         root_ = location_->root;
         index_ = location_->index;
+        errorPages_ = location_->errorPages;
+        allowedMethods_ = location_->allowedMethods;
     }
-    if (location_ != nullptr && find(location_->allowedMethods.begin(), location_->allowedMethods.end(), "GET") ==
-        location_->allowedMethods.end()) {
+
+    if (!allowedMethods_.empty() && find(allowedMethods_.begin(), allowedMethods_.end(), "GET") == allowedMethods_.end()) {
         response_.setStatusCode(405);
-        response_.setHeaders(request, _mimeTypes, _getErrorPage(405));
-        resourcePath_ = _getErrorPage(405);
+        response_.setHeaders(request, _mimeTypes, _getErrorPage(405, errorPages_));
+        resourcePath_ = _getErrorPage(405, errorPages_);
+
     } else {
+
         resourcePath_ = root_ + uri_;
 
         if (isDirectory(resourcePath_)) {
             if (resourcePath_.back() != '/') {
 				resourcePath_ += "/";
 			}
-
 			string indexPage_ = _getIndexPage(resourcePath_, index_);
 			resourcePath_ = indexPage_.empty() ? resourcePath_ : indexPage_;
-			if (indexPage_.empty() && location_->autoIndex == "on") {
+			if (indexPage_.empty() && location_ != nullptr && location_->autoIndex == "on") {
 				_generateIndexPage(it, root_, removeTrailingSlashes(uri_));
 				return ;
 			}
@@ -347,14 +373,16 @@ void Server::_handleGET(pollfdsVectorIterator_t it, const subServersIterator_t &
         response_.setStatusCode(request, resourcePath_, _mimeTypes);
         int statusCode_ = response_.getStatusCode();
         if (statusCode_ != 200)
-            resourcePath_ = _getErrorPage(statusCode_);
+            resourcePath_ = _getErrorPage(statusCode_, errorPages_);
         response_.setHeaders(request, _mimeTypes, resourcePath_);
     }
 	sendResponseHeaders(it, response_);
 	sendResponseBody(it, resourcePath_);
+    if (location_ != nullptr )
+        delete location_;
 }
 
-const string Server::handleFormData(  const Request& request, Response& response){
+const string Server::handleFormData(  const Request& request, Response& response, stringVector_t errorPages){
     int contentLength = std::stoi(request.getHeaders().find("Content-Length")->second);
     const std::string& requestBody = request.getBody();
 
@@ -364,7 +392,7 @@ const string Server::handleFormData(  const Request& request, Response& response
     return "www/html/success.html";
 }
 
-const string Server::handleFileUploads( const Request& request, Response& response, const string& uploadPath){
+const string Server::handleFileUploads( const Request& request, Response& response, const string& uploadPath, stringVector_t errorPages) {
 
     string content_type = request.getHeaders().find("Content-Type")->second;
     std::string boundary = "--" + content_type.substr(content_type.find("boundary=") + 9);
@@ -420,8 +448,8 @@ const string Server::handleFileUploads( const Request& request, Response& respon
                 }
             } else {
                 response.setStatusCode(500);
-                response.setHeaders(request, _mimeTypes, _getErrorPage(500));
-                return _getErrorPage(500);
+                response.setHeaders(request, _mimeTypes, _getErrorPage(500, errorPages));
+                return _getErrorPage(500, errorPages);
             }
         }
     }
@@ -430,24 +458,35 @@ const string Server::handleFileUploads( const Request& request, Response& respon
 
 void Server::_handlePOST(pollfdsVectorIterator_t it, const subServersIterator_t &subServersIterator, const Request& request) {
 
+    std::cout << "POST" << std::endl;
     string resourcePath_ ;
     Response response_ = Response();
+    string clientMaxBodySize_ = subServersIterator->getClientMaxBodySize();
+    string uploadPath_ = subServersIterator->getUploadPath();
+    stringVector_t allowedMethods_ = subServersIterator->getAllowedMethods();
+    stringVector_t errorPages_ = subServersIterator->getErrorPages();
     string root_ = subServersIterator->getRoot();
     string uri_ = request.getUri().empty() ? "/" : request.getUri();
     stringVector_t index_ = subServersIterator->getIndex();
     location_t *location_ = matchLocation(subServersIterator->getLocation(), uri_);
 
+    if (location_ != nullptr) {
 
-        if ( location_ != nullptr && find(location_->allowedMethods.begin(), location_->allowedMethods.end(), "POST") ==
-            location_->allowedMethods.end()) {
+        uploadPath_ = location_->uploadPath;
+        allowedMethods_ = location_->allowedMethods;
+        errorPages_ = location_->errorPages;
+        root_ = location_->root;
+        clientMaxBodySize_ = location_->clientMaxBodySize;
+    }
+        if ( !allowedMethods_.empty() && find(allowedMethods_.begin(), allowedMethods_.end(), "POST") == allowedMethods_.end()) {
             response_.setStatusCode(405);
-        } else if (request.getBody().size() > convertToBytes(location_->clientMaxBodySize)) {
+        } else if (request.getBody().size() > convertToBytes(clientMaxBodySize_)) {
             response_.setStatusCode(413);
-        } else if (location_->prefix.find("cgi-bin") != std::string::npos) {
+        } else if (location_ != nullptr && location_->prefix.find("cgi-bin") != std::string::npos) {
             _handleCGI(it, subServersIterator, request, location_);
             return;
-        } else if (!dirExists(location_->uploadPath)) {
-            if (!createDir(location_->uploadPath)){
+        } else if (!dirExists(uploadPath_)) {
+            if (!createDir(uploadPath_)){
                 response_.setStatusCode(500);
             }
         }
@@ -457,35 +496,38 @@ void Server::_handlePOST(pollfdsVectorIterator_t it, const subServersIterator_t 
         content_type = content_type.substr(0, content_type.find(';'));
 
         if (content_type == "application/x-www-form-urlencoded") {
-            resourcePath_ = handleFormData(request, response_);
+            resourcePath_ = handleFormData(request, response_, errorPages_);
         } else if (content_type == "multipart/form-data") {
-            resourcePath_ = handleFileUploads(request, response_, location_->uploadPath);
+            resourcePath_ = handleFileUploads(request, response_, uploadPath_, errorPages_);
         } else {
             // unsupported content type
             response_.setStatusCode(400);
         }
     }
     if (response_.getStatusCode() != 200) {
-        resourcePath_ = _getErrorPage(response_.getStatusCode());
+        resourcePath_ = _getErrorPage(response_.getStatusCode(), errorPages_);
         response_.setHeaders(request, _mimeTypes, resourcePath_);
     }
     sendResponseHeaders(it, response_);
     sendResponseBody(it, resourcePath_);
-
+    if (location_ != nullptr )
+        delete location_;
 }
 
 void Server::_handleDELETE(pollfdsVectorIterator_t it, const subServersIterator_t &subServersIterator, const Request& request) {
 
-	string root_ = subServersIterator->getRoot();
+    Response response_   = Response();
+    stringVector_t errorPages_ = subServersIterator->getErrorPages();
+    string root_ = subServersIterator->getRoot();
 	string uri_ = request.getUri().empty() ? "/" : request.getUri();
 	stringVector_t index_ = subServersIterator->getIndex();
 	location_t *location_ = matchLocation(subServersIterator->getLocation(), uri_);
 
-	if (location_ != nullptr)
-		root_ = location_->root;
-
+	if (location_ != nullptr){
+        root_ = location_->root;
+        errorPages_ = location_->errorPages;
+    }
 	string resourcePath_ = root_ + uri_;
-	Response response_   = Response();
 
     // check if to delete is allowed
         if ((location_ != nullptr) && (find(location_->allowedMethods.begin(), location_->allowedMethods.end(), "DELETE") ==
@@ -497,21 +539,32 @@ void Server::_handleDELETE(pollfdsVectorIterator_t it, const subServersIterator_
         if (response_.getStatusCode() == 200)
             resourcePath_ = "www/html/success_delete.html";
         else
-            resourcePath_ = _getErrorPage(response_.getStatusCode());
+            resourcePath_ = _getErrorPage(response_.getStatusCode(), errorPages_);
 
     std::cout << "resourcePath_: " << resourcePath_ << std::endl;
     response_.setHeaders(request, _mimeTypes, resourcePath_);
 	sendResponseHeaders(it, response_);
     sendResponseBody(it, resourcePath_);
+
+    if (location_ != nullptr )
+        delete location_;
 }
 
-string Server::_getErrorPage(int code) const {
-	return "www/error_pages/" + std::to_string(code) + ".html";
+string Server::_getErrorPage(int code, stringVector_t error_page) const {
+    string error_page_;
+
+
+    if (!error_page.empty() && to_string(code) == error_page[0])
+        return error_page[1];
+
+    return "www/error_pages/" + std::to_string(code) + ".html";
 }
 
 void Server::_error(const std::string &msg, int err) const {
 	std::string errorMsg = msg + (!err ? "." : (std::string(" | ") + strerror(errno)));
-	throw std::runtime_error(errorMsg);
+    std::cout << errorMsg << std::endl;
+    exit(1);
+//	throw std::runtime_error(errorMsg);
 }
 
 void Server::printData() const {
@@ -574,7 +627,7 @@ void Server::_handleCGI(pollfdsVectorIterator_t it, const subServersIterator_t &
     int ret = send(it->fd, response.getBody().c_str(), response.getBody().size(), 0);
     if (ret == -1 || ret == 0) {
         close(it->fd);
-        _fds.erase(it);
+        it->fd = -1;
     }
 }
 
@@ -607,14 +660,14 @@ void Server::_generateIndexPage(const pollfdsVectorIterator_t& it, const string 
 	int ret = send(it->fd, responseHeaders.str().c_str(), responseHeaders.str().size(), 0);
 	if (ret == -1 || ret == 0) {
 		close(it->fd);
-		_fds.erase(it);
+        it->fd = -1;
 		return;
 	}
 
 	ret = send(it->fd, indexPage.c_str(), indexPage.size(), 0);
 	if (ret == -1 || ret == 0) {
 		close(it->fd);
-		_fds.erase(it);
+        it->fd = -1;
 		return;
 	}
 }

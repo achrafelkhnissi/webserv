@@ -75,7 +75,7 @@ private:
 
     void _setCGIEnv(const Request &request, const location_t &location, const string &path);
 
-    string _getErrorPage(int code) const;
+//    string _getErrorPage(int code) const;
 
     string _getFileContent(const string &path) const;
 
@@ -93,9 +93,9 @@ private:
 
     void sendResponseBody(pollfdsVectorIterator_t, const Response &response);
 
-    const string handleFormData(const Request &request, Response &response);
+    const string handleFormData(const Request &request, Response &response, stringVector_t error_page);
 
-    const string handleFileUploads(const Request &request, Response &response, const string &uploadPath);
+    const string handleFileUploads(const Request &request, Response &response, const string &uploadPath, stringVector_t error_page);
 
     location_t *matchLocation(const locationVector_t &locations, const string &uri);
 
@@ -104,5 +104,6 @@ private:
 	string _getIndexPage(const string&, const stringVector_t&) const;
 	void _generateIndexPage(const pollfdsVectorIterator_t&, const string&, const string&);
 
+    string _getErrorPage(int code, stringVector_t error_page) const;
 };
 #endif
