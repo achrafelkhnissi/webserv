@@ -14,14 +14,14 @@
 struct location_s{
 	stringVector_t  allowedMethods;
     stringVector_t  index;
-	string          redirection; // 301, 302, 307
+    stringVector_t cgi_path;
+    stringVector_t errorPages;
+	string          redirection;
 	string          root;
 	string          clientMaxBodySize;
-	string          errorPages;
 	string          prefix;
     string          uploadPath;
 	string          autoIndex;
-    vector<string>  cgi_path;
 };
 
 class SubServer {
@@ -31,9 +31,10 @@ private:
     locationVector_t    _locations;
 	string              _root;
 	stringVector_t      _index;
-	vector<string>		_errorPages;
+	stringVector_t 		_errorPages;
 	string              _clientMaxBodySize;
     stringVector_t     _allowedMethods;
+    string              _uploadPath;
     // TODO: add Cgi
 
 public:
@@ -44,10 +45,12 @@ public:
     void                    fillLocation(const LocationConfig& locationConfig, location_t& location);
     const string&           getRoot() const;
     const stringVector_t&   getIndex() const;
-    const vector<string>&           getErrorPages() const;
+    const stringVector_t&   getErrorPages() const;
     const string&           getClientMaxBodySize() const;
     const stringVector_t&   getServerName() const;
     const locationVector_t& getLocation() const;
+    const stringVector_t&   getAllowedMethods() const;
+    const string&           getUploadPath() const;
 };
 
 

@@ -14,6 +14,8 @@ SubServer::SubServer(const ServerConfig &config) {
     _clientMaxBodySize = config.client_max_body_size;
     _allowedMethods = config.allowed_methods;
     _index = config.index;
+    _uploadPath = config.upload_path;
+
 
     std::vector<LocationConfig>::const_iterator iter_ = config.locations.begin();
     std::vector<LocationConfig>::const_iterator iterEnd_ = config.locations.end();
@@ -100,7 +102,7 @@ void SubServer::printData() const {
         std::cout << "\t\troot: " << it->root << std::endl;
         std::cout << "\t\tindex: " << it->index[0] << std::endl; // todo: print all index
         std::cout << "\t\t_clientMaxBodySize: " << it->clientMaxBodySize << std::endl;
-        std::cout << "\t\t_errorPages: " << it->errorPages << std::endl;
+//        std::cout << "\t\t_errorPages: " << it->errorPages << std::endl;
         std::cout << "\t\tauto_index: " << it->autoIndex << std::endl;
         std::cout << "\t\tupload_path: " << it->uploadPath << std::endl;
         std::cout << "\t\tallowed_methods: ";
@@ -114,5 +116,13 @@ void SubServer::printData() const {
     }
     std::cout << "\t--- End Sub server ---" << std::endl;
     std::cout << std::endl;
+}
+
+const stringVector_t &SubServer::getAllowedMethods() const {
+    return _allowedMethods;
+}
+
+const string &SubServer::getUploadPath() const {
+    return _uploadPath;
 }
 
