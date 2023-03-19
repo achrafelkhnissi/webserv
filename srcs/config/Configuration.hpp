@@ -20,7 +20,7 @@ struct LocationConfig {
 	string upload_path;
 	vector<string> cgi_path;
 	string client_max_body_size;
-	string error_page;
+	vector<string> error_page;
 	vector<string> redirect;
 	vector<string> index;
     vector<string> allowed_methods;
@@ -42,7 +42,6 @@ struct LocationConfig {
 		cout << s << "\t\tautoindex: " << autoindex << endl;
 		cout << s << "\t\tupload_path: " << upload_path << endl;
 		cout << s << "\t\tclient_max_body_size: " << client_max_body_size << endl;
-		cout << s << "\t\terror_page: " << error_page << endl;
 	}
 };
 

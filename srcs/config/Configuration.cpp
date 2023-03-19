@@ -6,28 +6,33 @@
 #include <iterator>
 #include <sys/_types/_size_t.h>
 
-LocationConfig fill_location(toml::table& location) {
+void fill_array(toml::table& t, string key, vector<string>& v, ServerConfig& s) {
+    if (t[key].is_type(toml::table::NONE))
+    {
+        v = s.allowed_methods;
+        return;
+    }
+    ITER_FOREACH(vector<toml::table>, t[key].vec, it) {
+        v.push_back(it->as_str(""));
+    }
+}
+
+LocationConfig fill_location(toml::table& location, ServerConfig& s) {
 	(void)location;
 	LocationConfig l;
 
 	l.prefix = location["prefix"].as_str("/");
-	l.root = location["root"].as_str("/var/www/html");
-    ITER_FOREACH(vector<toml::table>, location["index"].vec, it) {
-        l.index.push_back(it->as_str("default.com"));
-    }
-	ITER_FOREACH(vector<toml::table>, location["redirect"].vec, it) {
-		l.index.push_back(it->as_str(""));
-	}
-    ITER_FOREACH(vector<toml::table>, location["allowed_methods"].vec, it) {
-        l.allowed_methods.push_back(it->as_str(""));
-    }
-    ITER_FOREACH(vector<toml::table>, location["cgi_path"].vec, it) {
-        l.cgi_path.push_back(it->as_str(""));
-    }
+	l.root = location["root"].as_str("s.root");
+
+    fill_array(location, "index", l.index, s);
+    fill_array(location, "allowed_methods", l.allowed_methods, s);
+    fill_array(location, "error_page", l.error_page, s);
+    fill_array(location, "redirect", l.redirect, s);
+    fill_array(location, "cgi_path", l.cgi_path, s);
+
 	l.autoindex = location["autoindex"].as_str("off");
-	l.upload_path = location["upload_path"].as_str("www/upload");
-	l.client_max_body_size = location["_clientMaxBodySize"].as_str("10m");
-	l.error_page = location["error_page"].as_str("404 /errors/error-404.html");
+	l.upload_path = location["upload_path"].as_str(s.upload_path);
+	l.client_max_body_size = location["_clientMaxBodySize"].as_str(s.client_max_body_size);
 	return l;
 }
 
@@ -35,7 +40,7 @@ ServerConfig fill_server(toml::table& server) {
 	ServerConfig s;
 	s.port = server["port"].as_int(s.port);
 	s.host = server["host"].as_str("127.0.0.1");
-	s.upload_path = server["upload_path"].as_str("/upload");
+	s.upload_path = server["upload_path"].as_str("www/upload");
 	s.root = server["root"].as_str("www");
 	s.client_max_body_size = server["_clientMaxBodySize"].as_str("1m");
 
@@ -44,7 +49,7 @@ ServerConfig fill_server(toml::table& server) {
     }
 
 	ITER_FOREACH(vector<toml::table>, server["redirect"].vec, it) {
-		s.index.push_back(it->as_str(""));
+		s.redirect.push_back(it->as_str(""));
 	}
 
 	ITER_FOREACH(vector<toml::table>, server["server_name"].vec, it) {
@@ -59,7 +64,7 @@ ServerConfig fill_server(toml::table& server) {
 
 	toml::table& t = server["location"];
 	for (size_t i = 0; i < t.vec.size(); i++) {
-		s.locations.push_back(fill_location(t[i]));
+		s.locations.push_back(fill_location(t[i], s));
 	}
 	return s;
 }
