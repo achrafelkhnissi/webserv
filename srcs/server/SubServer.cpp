@@ -15,6 +15,7 @@ SubServer::SubServer(const ServerConfig &config) {
     _allowedMethods = config.allowed_methods;
     _index = config.index;
     _uploadPath = config.upload_path;
+    _redirect = config.redirect;
 
 
     std::vector<LocationConfig>::const_iterator iter_ = config.locations.begin();
@@ -69,6 +70,7 @@ void SubServer::fillLocation(const  LocationConfig& locationConfig, location_t& 
     location.allowedMethods = locationConfig.allowed_methods; // todo: wait for ismail to add it.
     location.cgi_path = locationConfig.cgi_path;
     location.uploadPath = locationConfig.upload_path;
+    location.redirect = locationConfig.redirect;
 }
 
 void SubServer::printData() const {
@@ -124,5 +126,9 @@ const stringVector_t &SubServer::getAllowedMethods() const {
 
 const string &SubServer::getUploadPath() const {
     return _uploadPath;
+}
+
+const stringVector_t &SubServer::getRedirect() const {
+    return _redirect;
 }
 

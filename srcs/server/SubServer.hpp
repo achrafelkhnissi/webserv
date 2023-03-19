@@ -14,8 +14,9 @@
 struct location_s{
 	stringVector_t  allowedMethods;
     stringVector_t  index;
-    stringVector_t cgi_path;
-    stringVector_t errorPages;
+    stringVector_t  cgi_path;
+    stringVector_t  errorPages;
+    stringVector_t  redirect;
 	string          redirection;
 	string          root;
 	string          clientMaxBodySize;
@@ -28,6 +29,7 @@ class SubServer {
 
 private:
 	stringVector_t      _serverName;
+    stringVector_t      _redirect;
     locationVector_t    _locations;
 	string              _root;
 	stringVector_t      _index;
@@ -51,6 +53,7 @@ public:
     const locationVector_t& getLocation() const;
     const stringVector_t&   getAllowedMethods() const;
     const string&           getUploadPath() const;
+    const stringVector_t&   getRedirect() const;
 };
 
 
