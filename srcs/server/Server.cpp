@@ -330,6 +330,8 @@ void Server::sendResponseBody(pollfdsVectorIterator_t it, const Response& respon
 void Server::_handleGET(pollfdsVectorIterator_t it, const subServersIterator_t &subServersIterator, const Request& request) {
 
     Response response_ = Response();
+    int redirected_ = 0;
+    stringVector_t redirect_ = subServersIterator->getRedirect();
     stringVector_t errorPages_ = subServersIterator->getErrorPages();
     stringVector_t allowedMethods_ = subServersIterator->getAllowedMethods();
     string resourcePath_;
@@ -347,6 +349,7 @@ void Server::_handleGET(pollfdsVectorIterator_t it, const subServersIterator_t &
         index_ = location_->index;
         errorPages_ = location_->errorPages;
         allowedMethods_ = location_->allowedMethods;
+        redirect_ = location_->redirect;
     }
 
     if (!allowedMethods_.empty() && find(allowedMethods_.begin(), allowedMethods_.end(), "GET") == allowedMethods_.end()) {
@@ -355,7 +358,10 @@ void Server::_handleGET(pollfdsVectorIterator_t it, const subServersIterator_t &
         resourcePath_ = _getErrorPage(405, errorPages_);
 
     } else {
-
+        if (!redirect_.empty() && redirect_.at(0) == request.getUri()) {
+            uri_  = redirect_.at(1);
+            redirected_ = 1;
+        }
         resourcePath_ = root_ + uri_;
 
         if (isDirectory(resourcePath_)) {
@@ -374,6 +380,8 @@ void Server::_handleGET(pollfdsVectorIterator_t it, const subServersIterator_t &
         int statusCode_ = response_.getStatusCode();
         if (statusCode_ != 200)
             resourcePath_ = _getErrorPage(statusCode_, errorPages_);
+        else if (redirected_)
+            response_.setStatusCode(301);
         response_.setHeaders(request, _mimeTypes, resourcePath_);
     }
 	sendResponseHeaders(it, response_);
