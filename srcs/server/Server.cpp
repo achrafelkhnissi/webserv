@@ -458,7 +458,6 @@ const string Server::handleFileUploads( const Request& request, Response& respon
 
 void Server::_handlePOST(pollfdsVectorIterator_t it, const subServersIterator_t &subServersIterator, const Request& request) {
 
-    std::cout << "POST" << std::endl;
     string resourcePath_ ;
     Response response_ = Response();
     string clientMaxBodySize_ = subServersIterator->getClientMaxBodySize();
@@ -541,7 +540,6 @@ void Server::_handleDELETE(pollfdsVectorIterator_t it, const subServersIterator_
         else
             resourcePath_ = _getErrorPage(response_.getStatusCode(), errorPages_);
 
-    std::cout << "resourcePath_: " << resourcePath_ << std::endl;
     response_.setHeaders(request, _mimeTypes, resourcePath_);
 	sendResponseHeaders(it, response_);
     sendResponseBody(it, resourcePath_);
