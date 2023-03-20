@@ -188,14 +188,22 @@ void Server::_handleRequest(pollfdsVectorIterator_t it) {
 
             if (_request.getMethod() == "GET") {
                 _handleGET(it, subServerIter_, _request);
-                close(it->fd);
-                it->fd = -1;
+                if (it->fd != -1) {
+                    close(it->fd);
+                    it->fd = -1;
+                }
             } else if (_request.getMethod() == "POST") {
                 _handlePOST(it, subServerIter_, _request);
+                if (it->fd != -1) {
+                    close(it->fd);
+                    it->fd = -1;
+                }
             } else if (_request.getMethod() == "DELETE") {
                 _handleDELETE(it, subServerIter_, _request);
-                close(it->fd);
-                it->fd = -1;
+                if (it->fd != -1) {
+                    close(it->fd);
+                    it->fd = -1;
+                }
             } else{
                 response_.setStatusCode(501);
                 response_.setHeaders(_request, _mimeTypes, _getErrorPage(response_.getStatusCode(), stringVector_t()));
