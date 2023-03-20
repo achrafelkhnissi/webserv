@@ -35,7 +35,6 @@ private:
     Configuration _config;
     pollfdsVector_t _fds;
     errorPagesMap_t _errorPages;
-    size_t _maxBodySize;
     Request _request;
     string _uploadPath;
     stringMap_t _CGIEnv;
