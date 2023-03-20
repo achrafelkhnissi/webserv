@@ -122,6 +122,9 @@ Server::~Server() {
 }
 
 void Server::_handleConnections(int sockfd) {
+    struct timeval tv;
+    tv.tv_sec = 10; // 10 seconds
+    tv.tv_usec = 0;
 
 		struct sockaddr_in sockAddrIn_ = {};
 		socklen_t clientLen_ = sizeof(sockAddrIn_);
@@ -134,7 +137,15 @@ void Server::_handleConnections(int sockfd) {
 				_error("accept", 1);
 			}
         }
+    if (setsockopt(clientFd_, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof(tv)) < 0) {
+        std::cerr << "Error setting timeout\n";
+        exit(1);
+    }
 
+    if (setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, (const char*)&tv, sizeof(tv)) < 0) {
+        std::cerr << "Error setting timeout\n";
+        exit(1);
+    }
 		// Add the clientPollFd_ socket to the pollfds list
 		struct pollfd clientPollFd_ = {};
 		clientPollFd_.fd = clientFd_;
@@ -644,23 +655,17 @@ void Server::_generateIndexPage(const pollfdsVectorIterator_t& it, const string 
 	IndexGenerator indexGenerator(root, uri);
 	string indexPage = indexGenerator.generate();
 
-	ostringstream responseHeaders;
+	ostringstream response;
 
-	responseHeaders << "HTTP/1.1 200 OK\r\n";
-	responseHeaders << "Content-Type: text/html\r\n";
-	responseHeaders << "Content-Length: " << indexPage.size() << "\r\n";
-	responseHeaders << "Connection: Keep-Alive\r\n";
-	responseHeaders << "Server: webserv/1.0\r\n";
-	responseHeaders << "\r\n";
+	response << "HTTP/1.1 200 OK\r\n";
+	response << "Content-Type: text/html\r\n";
+	response << "Content-Length: " << indexPage.size() << "\r\n";
+	response << "Connection: Keep-Alive\r\n";
+	response << "Server: webserv/1.0\r\n";
+	response << "\r\n";
+    response << indexPage;
 
-	int ret = send(it->fd, responseHeaders.str().c_str(), responseHeaders.str().size(), 0);
-	if (ret == -1 || ret == 0) {
-		close(it->fd);
-        it->fd = -1;
-		return;
-	}
-
-	ret = send(it->fd, indexPage.c_str(), indexPage.size(), 0);
+	int ret = send(it->fd, response.str().c_str(), response.str().size(), 0);
 	if (ret == -1 || ret == 0) {
 		close(it->fd);
         it->fd = -1;
