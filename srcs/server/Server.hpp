@@ -105,5 +105,9 @@ private:
 	void _generateIndexPage(const pollfdsVectorIterator_t&, const string&, const string&);
 
     string _getErrorPage(int code, stringVector_t error_page) const;
+
+    void sendResponse(pollfdsVectorIterator_t it, const string &resourcePath, const Response &response);
+
+    void sendCGIResponse(pollfdsVectorIterator_t it, const Response &response, const string &body);
 };
 #endif

@@ -46,7 +46,6 @@ void Server::_setMimeTypes() {
 	_mimeTypes[".txt"] = "text/plain";
 	_mimeTypes[".weba"] = "audio/webm";
 	_mimeTypes[".webm"] = "video/webm";
-//	_mimeTypes[".ico"] = "image/x-icon";
 
 }
 
@@ -87,7 +86,7 @@ void Server::_setupVirtualServer(VirtualServer& vserver) {
 }
 
 void Server::start() {
-    int timeout = 60 * 1000; // 60 seconds
+    int timeout = -1; //60 * 1000; // 60 seconds
 
 	// Start the server loop
 	while (true) {
@@ -177,8 +176,8 @@ void Server::_handleRequest(pollfdsVectorIterator_t it) {
                 response_.setStatusCode(400);
 
             response_.setHeaders(_request, _mimeTypes, _getErrorPage(response_.getStatusCode(), stringVector_t()));
-            sendResponseHeaders(it, response_);
-            sendResponseBody(it, _getErrorPage(response_.getStatusCode(), stringVector_t()));
+
+            sendResponse(it, _getErrorPage(response_.getStatusCode(), stringVector_t()),response_);
             close(it->fd);
             it->fd = -1;
 			return ;
@@ -201,8 +200,7 @@ void Server::_handleRequest(pollfdsVectorIterator_t it) {
                 response_.setStatusCode(501);
                 response_.setHeaders(_request, _mimeTypes, _getErrorPage(response_.getStatusCode(), stringVector_t()));
 
-                sendResponseHeaders(it, response_);
-                sendResponseBody(it, _getErrorPage(response_.getStatusCode(), stringVector_t()));
+                sendResponse(it, _getErrorPage(response_.getStatusCode(), stringVector_t()),response_);
                 close(it->fd);
                 it->fd = -1;
             }
@@ -250,9 +248,9 @@ location_t* Server::matchLocation(const locationVector_t &locations, const std::
 	return nullptr;
 }
 
-void Server::sendResponseHeaders(pollfdsVectorIterator_t it, const Response& response) {
-	// send HTTP response header
-	std::ostringstream response_stream;
+void Server::sendResponse(pollfdsVectorIterator_t it, const string& resourcePath, const Response& response) {
+
+    std::ostringstream response_stream;
 
     response_stream << response.getProtocol() + "/" + response.getVersion() << " ";
     response_stream << response.getStatusCode() << " "<< response.getHttpErrors().at(response.getStatusCode()) << "\r\n" ; //TODO: change to response.getStatus()
@@ -264,67 +262,39 @@ void Server::sendResponseHeaders(pollfdsVectorIterator_t it, const Response& res
     }
     response_stream <<  "\r\n";
 
-	const string& response_header = response_stream.str();
+    const string& response_header = response_stream.str();
 
-	int ret = send(it->fd, response_header.c_str(), response_header.size(), 0);
-    if (ret == -1 || ret == 0) {
+    ifstream fileStream(resourcePath, ios::in | ios::binary);
+
+    if (!fileStream) {
+        cerr << "Unable to open file" << endl;
+        return;
+    }
+
+    const size_t response_header_size = response_header.size();
+
+    fileStream.seekg(0, std::ios::end);
+    ::size_t file_size = fileStream.tellg();
+    fileStream.seekg(0, std::ios::beg);
+    // Send the response header and the file contents in a single call to send.
+    const size_t total_size = response_header_size + file_size;
+    char* buffer = new char[total_size];
+
+    // Copy the response header to the buffer.
+    ::memcpy(buffer, response_header.c_str(), response_header_size);
+
+    // Copy the file contents to the buffer.
+    fileStream.read(buffer + response_header_size, file_size);
+
+    fileStream.close();
+
+    // Send the buffer in a single call to send.
+    int sent = send(it->fd, buffer, total_size, 0);
+    if (sent == -1 || sent == 0) {
         close(it->fd);
         it->fd = -1;
     }
-
-}
-
-void Server::sendResponseBody(pollfdsVectorIterator_t it, const string& resourcePath) {
-
-	ifstream fileStream(resourcePath, ios::in | ios::binary);
-
-	if (!fileStream) {
-		cerr << "Unable to open file" << endl;
-		return;
-	}
-
-
-	char buffer[BUFFER_SIZE];
-	while (fileStream) {
-        ::memset(buffer, 0, BUFFER_SIZE);
-		fileStream.read(buffer, BUFFER_SIZE);
-
-		int bytesRead = fileStream.gcount();
-		int sent = send(it->fd, buffer, bytesRead, 0);
-        if (sent == -1 || sent == 0) {
-            close(it->fd);
-            it->fd = -1;
-            break;
-        }
-	}
-
-	fileStream.close();
-}
-
-void Server::sendResponseBody(pollfdsVectorIterator_t it, const Response& response) {
-
-	std::stringstream body_stream;
-	std::ifstream file_stream(response.getBody().c_str(), std::ios::binary);
-	body_stream << file_stream.rdbuf();
-	const size_t CHUNK_SIZE = 1024;
-	char buffer[CHUNK_SIZE];
-
-
-	while (body_stream.good()) {
-		body_stream.read(buffer, CHUNK_SIZE);
-		size_t bytes_read = body_stream.gcount();
-		if (bytes_read <= 0) {
-			break;
-		}
-		int ret = send(it->fd, buffer, bytes_read, 0);
-        if (ret == -1 || ret == 0) {
-            close(it->fd);
-            it->fd = -1;
-            break;
-        }
-	}
-	body_stream.clear();
-	file_stream.close();
+    delete[] buffer;
 }
 
 void Server::_handleGET(pollfdsVectorIterator_t it, const subServersIterator_t &subServersIterator, const Request& request) {
@@ -384,8 +354,7 @@ void Server::_handleGET(pollfdsVectorIterator_t it, const subServersIterator_t &
             response_.setStatusCode(301);
         response_.setHeaders(request, _mimeTypes, resourcePath_);
     }
-	sendResponseHeaders(it, response_);
-	sendResponseBody(it, resourcePath_);
+    sendResponse(it,resourcePath_, response_);
     if (location_ != nullptr )
         delete location_;
 }
@@ -393,7 +362,6 @@ void Server::_handleGET(pollfdsVectorIterator_t it, const subServersIterator_t &
 const string Server::handleFormData(  const Request& request, Response& response, stringVector_t errorPages){
     int contentLength = std::stoi(request.getHeaders().find("Content-Length")->second);
     const std::string& requestBody = request.getBody();
-
     std::string form_data = requestBody.substr(0, contentLength); // TODO: store form data
     response.setStatusCode(200);
     response.setHeaders(request, _mimeTypes, "www/html/success.html");
@@ -515,8 +483,8 @@ void Server::_handlePOST(pollfdsVectorIterator_t it, const subServersIterator_t 
         resourcePath_ = _getErrorPage(response_.getStatusCode(), errorPages_);
         response_.setHeaders(request, _mimeTypes, resourcePath_);
     }
-    sendResponseHeaders(it, response_);
-    sendResponseBody(it, resourcePath_);
+
+    sendResponse(it, resourcePath_, response_);
     if (location_ != nullptr )
         delete location_;
 }
@@ -549,9 +517,8 @@ void Server::_handleDELETE(pollfdsVectorIterator_t it, const subServersIterator_
             resourcePath_ = _getErrorPage(response_.getStatusCode(), errorPages_);
 
     response_.setHeaders(request, _mimeTypes, resourcePath_);
-	sendResponseHeaders(it, response_);
-    sendResponseBody(it, resourcePath_);
 
+    sendResponse(it, resourcePath_, response_);
     if (location_ != nullptr )
         delete location_;
 }
@@ -591,6 +558,29 @@ void Server::printData() const {
 
 }
 
+void Server::sendCGIResponse(pollfdsVectorIterator_t it, const Response& response, const string& body) {
+
+    std::ostringstream response_stream;
+
+    response_stream << response.getProtocol() + "/" + response.getVersion() << " ";
+    response_stream << response.getStatusCode() << " "<< response.getHttpErrors().at(response.getStatusCode()) << "\r\n" ; //TODO: change to response.getStatus()
+
+    std::map<std::string, std::string>::const_iterator headerIter_ = response.getHeaders().begin();
+    std::map<std::string, std::string>::const_iterator headerIterEnd_ = response.getHeaders().end();
+    for (; headerIter_ != headerIterEnd_; ++headerIter_) {
+        response_stream << headerIter_->first  << ": " << headerIter_->second << "\r\n";
+    }
+    response_stream <<  "\r\n";
+
+    const string& resp = response_stream.str() + body;
+
+    int sent = send(it->fd, resp.c_str(), resp.size(), 0);
+    if (sent == -1 || sent == 0) {
+        close(it->fd);
+        it->fd = -1;
+    }
+}
+
 void Server::_handleCGI(pollfdsVectorIterator_t it, const subServersIterator_t &iter, const Request &request, location_t *location) {
 
     Response response;
@@ -604,8 +594,6 @@ void Server::_handleCGI(pollfdsVectorIterator_t it, const subServersIterator_t &
     _CGIEnv["PATH_INFO"] = location->root + request.getUri();
     _CGIEnv["SCRIPT_NAME"] = request.getUri();
     _CGIEnv["QUERY_STRING"] = request.getQuery();
-//    _CGIEnv["REMOTE_ADDR"] = request.getHost().first;
-//    _CGIEnv["REMOTE_PORT"] = request.getHost().second;
     _CGIEnv["CONTENT_LENGTH"] = request.getHeaders().find("Content-Length")->second;
     _CGIEnv["CONTENT_TYPE"] = request.getHeaders().find("Content-Type")->second;
     _CGIEnv["HTTP_ACCEPT"] = request.getHeaders().find("Accept")->second;
@@ -617,8 +605,6 @@ void Server::_handleCGI(pollfdsVectorIterator_t it, const subServersIterator_t &
     _CGIEnv["HTTP_REFERER"] = request.getHeaders().find("Referer")->second;
     _CGIEnv["HTTP_COOKIE"] = request.getHeaders().find("Cookie")->second;
 
-
-
     CGIHandler  cgiHandler(_CGIEnv, request.getBody(), location );
     string response_body = cgiHandler.CGIExecuter();
     response.setStatusCode(200);
@@ -629,13 +615,9 @@ void Server::_handleCGI(pollfdsVectorIterator_t it, const subServersIterator_t &
     response.setServer("webserv/1.0");
     response.setBody(response_body);
 
-    sendResponseHeaders(it, response);
-    int ret = send(it->fd, response.getBody().c_str(), response.getBody().size(), 0);
-    if (ret == -1 || ret == 0) {
-        close(it->fd);
-        it->fd = -1;
-    }
+    sendCGIResponse(it, response, response_body);
 }
+
 
 string Server::_getIndexPage(const string &path_, const stringVector_t &index_) const {
 
