@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-print(""""
+body = """"
 
 <!DOCTYPE html>
 <html>
@@ -45,4 +45,10 @@ print(""""
 </html>
 
 
-""")
+"""
+
+print "Content-type:text/html\r"
+print "Content-length: %d\r" % len(body)
+print "\r"
+print body
+
