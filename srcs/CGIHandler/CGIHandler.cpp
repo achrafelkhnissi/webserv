@@ -93,7 +93,7 @@ string CGIHandler::CGIExecuter() {
 		do {
 			::memset(buffer_, 0, 1024);
 			ret = read(fdForResponse[0], buffer_, 1024) ;
-			_responseBody += buffer_;
+			_responseBody.append(buffer_);
 
 		} while (ret > 0);
 		close(fdForResponse[0]);
