@@ -44,8 +44,8 @@ private:
     void _handlePOST(pollfdsVectorIterator_t, const subServersIterator_t &, const Request &);
     void _handleDELETE(pollfdsVectorIterator_t, const subServersIterator_t &, const Request &);
     void _setupVirtualServer(VirtualServer &vserver);
-    void _handleCGI(pollfdsVectorIterator_t, const subServersIterator_t &iter, const Request &request, location_t *pS);
-    const string handleFormData(const Request &request, Response &response, stringVector_t error_page);
+    void _handleCGI(pollfdsVectorIterator_t, const Request &request, location_t *pS);
+    const string handleFormData(const Request &request, Response &response);
     const string handleFileUploads(const Request &request, Response &response, const string &uploadPath, stringVector_t error_page);
     void _clearPollfds();
     void _error(const string &msg, int err) const;

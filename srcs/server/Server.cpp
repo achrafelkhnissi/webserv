@@ -379,10 +379,10 @@ void Server::_handleGET(pollfdsVectorIterator_t it, const subServersIterator_t &
         delete location_;
 }
 
-const string Server::handleFormData(  const Request& request, Response& response, stringVector_t errorPages){
+const string Server::handleFormData(  const Request& request, Response& response){
     int contentLength = std::stoi(request.getHeaders().find("Content-Length")->second);
     const std::string& requestBody = request.getBody();
-    std::string form_data = requestBody.substr(0, contentLength); // TODO: store form data
+    std::string form_data = requestBody.substr(0, contentLength);
     response.setStatusCode(200);
     response.setHeaders(request, _mimeTypes, "www/html/success.html");
     return "www/html/success.html";
@@ -598,7 +598,7 @@ void Server::sendCGIResponse(pollfdsVectorIterator_t it, const Response& respons
     }
 }
 
-void Server::_handleCGI(pollfdsVectorIterator_t it, const subServersIterator_t &iter, const Request &request, location_t *location) {
+void Server::_handleCGI(pollfdsVectorIterator_t it, const Request &request, location_t *location) {
 
     Response response;
     _CGIEnv["SERVER_SOFTWARE"] = "webserv/1.0";
