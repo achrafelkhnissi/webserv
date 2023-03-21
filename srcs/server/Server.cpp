@@ -589,7 +589,6 @@ void Server::sendCGIResponse(pollfdsVectorIterator_t it, const Response& respons
     for (; headerIter_ != headerIterEnd_; ++headerIter_) {
         response_stream << headerIter_->first  << ": " << headerIter_->second << "\r\n";
     }
-    response_stream <<  "\r\n";
     const string& resp = response_stream.str() + body;
 
     int sent = send(it->fd, resp.c_str(), resp.size(), 0);
@@ -626,8 +625,6 @@ void Server::_handleCGI(pollfdsVectorIterator_t it, const subServersIterator_t &
     CGIHandler  cgiHandler(_CGIEnv, request.getBody(), location );
     string response_body = cgiHandler.CGIExecuter();
     response.setStatusCode(200);
-    response.setContentLength(response_body.size());
-    response.setContentType("text/html");
     response.setConnection(request.getHeaders().find("Connection")->second);
     response.setDate();
     response.setServer("webserv/1.0");
