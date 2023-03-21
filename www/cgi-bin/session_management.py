@@ -8,7 +8,6 @@ form = cgi.FieldStorage()
 
 # Get data from fields
 first_name = form.getvalue('first_name')
-last_name  = form.getvalue('last_name')
 
 # get cookies
 import os
@@ -19,26 +18,48 @@ cookie.load(cookie_string)
 
 
 # Check if the cookie exists
+body = "aa"
 
-if cookie.has_key('user') and cookie['user'].value == first_name + ' ' + last_name:
-    print "Content-type:text/html\r\n\r\n"
-    print "Cookie exists"
-    print cookie['user'].value
-    print "<h1>Welcome back %s</h1>" % cookie['user'].value
-    exit()
+method = os.environ.get('REQUEST_METHOD', None)
+if method == "POST" and  not ' ' in first_name:
+    cookie['user'] = first_name
+    print "Set-Cookie: user=%s\r" % (first_name)
+if cookie.has_key('user'):
+    first_name = cookie['user'].value
 
-## store cookies
-cookie['user'] = first_name + ' ' + last_name
 
-print "Set-Cookie: user=%s\r\n" % (first_name + ' ' + last_name)
 
-print "Content-type:text/html\r\n\r\n"
+if not cookie.has_key('user'):
+    body="""
+    <!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>webserv index</title>
+</head>
 
-print "\n<html>"
-print "<head>"
-print "<title>Hello - Second CGI Program</title>"
-print "</head>"
-print "<body>"
-print "<h2>Hello %s %s</h2>" % (first_name, last_name)
-print "</body>"
-print "</html>"
+<form action = "/cgi-bin/session_management.py" method = "POST">
+First Name: <input type = "text" name = "first_name">  <br />
+<input type = "submit" value = "Submit" />
+</form>
+
+</html>
+    """
+
+else:
+    body = "<html>"
+    body += "<head>"
+    body += "<title>Hello - Second CGI Program</title>"
+    body += "</head>"
+    body += "<body>"
+    body += "<h2>Hello %s</h2>" % (first_name)
+    body += "</body>"
+    body += "</html>"
+
+print "Content-type:text/html\r"
+print "Content-Length: %d\r" % len(body)
+print "\r"
+print(body)
