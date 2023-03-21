@@ -66,7 +66,7 @@ $(NAME): $(OBJ) $(HEADERS)
 
 $(OBJDIR)/%.o: %.cpp $(HEADERS)
 	@mkdir -p $(dir $@)
-	@printf "${CURSIVE}${GRAY}	- Making object file: ${BOLD}${GREEN}%s${RESET}\r" $(notdir $@)
+	@printf "${CURSIVE}${GRAY}	- Making object file: ${BOLD}${GREEN}%-20s ${RESET}\r" $(notdir $@)
 	@$(CC) $(INCLUDES) $(CXXFLAGS) $(OPTS) -c $< -o $@
 
 clean:
