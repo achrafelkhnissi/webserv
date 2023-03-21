@@ -1,5 +1,6 @@
 
 #include "IndexGenerator.hpp"
+#include "utils.hpp"
 
 #include <string>
 #include <vector>
@@ -7,7 +8,12 @@
 #include <dirent.h>
 #include <sys/stat.h>
 
-IndexGenerator::IndexGenerator(const std::string& path) : _path(path) { _tab = "&#9;"; }
+IndexGenerator::IndexGenerator(const std::string& root, const std::string& uri) {
+	_tab = "&#9;";
+	_path = removeTrailingSlashes(root + uri) + "/";
+	_root = root;
+	_uri = uri;
+}
 
 std::string IndexGenerator::generate() {
 	std::vector<std::string> filenames = _listDirectoryFiles(_path);
@@ -21,15 +27,17 @@ std::string IndexGenerator::generate() {
 	html += "<hr>\n";
 
 	for (std::vector<std ::string>::iterator filename = filenames.begin(); filename != filenames.end(); ++filename) {
-		std::string filepath = _path + "/" + *filename;
+		std::string filepath = _path + *filename;
+
 		bool is_dir = _isDirectory(filepath);
 		std::string name = *filename;
-		if (is_dir) {
+		if (is_dir && name.back() != '/') {
 			name += "/";
 		}
+		std::string uri_path = (_uri == "/") ? "" : _uri;
 		std::string size_str = is_dir ? "-" : std::to_string(_getFileSize(filepath));
 		std::string mtime_str = _tab + _formatTime(_getFileMtime(filepath));
-		std::string link = "<a href=\"" + name + "\">" + name + "</a>";
+		std::string link = "<a href=\"" + uri_path + "/" + *filename + "\">" + name + "</a>";
 		html += "<span style=\"display: inline-block; width: 30em;\">" + link + "</span>";
 		html += "<span style=\"display: inline-block; width: 8em;\">" + size_str + "</span>";
 		html += "<span style=\"display: inline-block; width: 15em; text-align: right;\">" + mtime_str + "</span>\n";
@@ -39,11 +47,10 @@ std::string IndexGenerator::generate() {
 	return html;
 }
 
-
-
 // List all regular files in a directory
 std::vector<std::string> IndexGenerator::_listDirectoryFiles(const std::string& path) {
 	std::vector<std::string> filenames;
+
 	DIR* dir = opendir(path.c_str());
 	if (!dir) {
 		std::cerr << "Failed to open directory " << path << "\n";
@@ -51,9 +58,7 @@ std::vector<std::string> IndexGenerator::_listDirectoryFiles(const std::string& 
 	}
 	dirent* entry;
 	while ((entry = readdir(dir))) {
-		if (entry->d_type == DT_REG) {
-			filenames.push_back(entry->d_name);
-		}
+		filenames.push_back(entry->d_name);
 	}
 	closedir(dir);
 	return filenames;

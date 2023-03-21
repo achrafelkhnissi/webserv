@@ -1,17 +1,17 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
-#include <vector>                       // std::vector
-#include <sys/stat.h>				   // stat
+#include <vector>
+#include <sys/stat.h>
 #include "utils.hpp"
-#include "VirtualServer.hpp"                  // VirtualServer class
-#include "SubServer.hpp"                // SubServer class
-#include "Configuration.hpp"  // Configuration class
-#include "Request.hpp"       // Request class
+#include "VirtualServer.hpp"
+#include "SubServer.hpp"
+#include "Configuration.hpp"
+#include "Request.hpp"
 #include "typedefs.hpp"
 #include "HttpParser.hpp"
 #include "Response.hpp"
-
+#include "CGIHandler.hpp"
 #include <sstream>
 
 #define MSG(msg) (std::string(getBasename((__FILE__)) + ":" + std::string(std::to_string(__LINE__)) + ": " + msg))
@@ -34,53 +34,45 @@ private:
     virtualServerMap_t      _virtualServer;
     Configuration           _config;
     pollfdsVector_t         _fds;
-	errorPagesMap_t 	    _errorPages;
+    errorPagesMap_t         _errorPages;
     Request                 _request;
     string                  _uploadPath;
     stringMap_t             _CGIEnv;
     clientHttpParserMap_t   _clientHttpParserMap;
-    std::map<string, string> _mimeTypes;
+    stringMap_t             _mimeTypes;
 public:
     Server(Configuration config);
+
     ~Server();
 
-    void    start();
-    void    printData() const;
+    void start();
+
+    void printData() const;
 
 private:
-    void    _handleConnections(int fd);
-    void    _handleRequest(pollfdsVectorIterator_t it);
-    void    _sendResponse(int fd);
-    void    _handleGET(int, const subServersIterator_t&, const Request&);
-    void    _handlePOST(int, const subServersIterator_t&, const Request&);
-	void 	_handleDELETE(int , const subServersIterator_t &, const Request& );
-	bool 	is_regular_file(const char* path) const;
-    void    _handleError(int fd);
-    void    _clearPollfds();
-    void    _error(const string& msg, int err) const;
-    void    _setupVirtualServer(VirtualServer& vserver);
-    void    _setCGIEnv(const Request& request, const location_t& location, const string& path);
-    string  _getErrorPage(int code) const;
-    string  _getFileContent(const string& path) const;
-    void    _setMimeTypes();
+    void _handleConnections(int fd);
+    void _handleRequest(pollfdsVectorIterator_t it);
+    void _handleGET(pollfdsVectorIterator_t, const subServersIterator_t &, const Request &);
+    void _handlePOST(pollfdsVectorIterator_t, const subServersIterator_t &, const Request &);
+    void _handleDELETE(pollfdsVectorIterator_t, const subServersIterator_t &, const Request &);
+    void _setupVirtualServer(VirtualServer &vserver);
+    void _handleCGI(pollfdsVectorIterator_t, const subServersIterator_t &iter, const Request &request, location_t *pS);
+    const string handleFormData(const Request &request, Response &response, stringVector_t error_page);
+    const string handleFileUploads(const Request &request, Response &response, const string &uploadPath, stringVector_t error_page);
+    void _clearPollfds();
+    void _error(const string &msg, int err) const;
+    void _setMimeTypes();
 
+    string _getIndexPage(const string&, const stringVector_t&) const;
+    string _getErrorPage(int code, stringVector_t error_page) const;
 
-    void _handleError(int fd, int statusCode);
-
-    string _getStatusMessage(int statusCode) const;
-
-
-    void sendResponseHeaders(int fd, const Response &response);
-
-    void sendResponseBody(int fd, const string &resourcePath);
-
-    void sendResponseBody(int fd, const Response& response);
-
-    const string handleFormData(const Request &request, Response &response);
-
-    const string handleFileUploads(const Request &request, Response &response, const string &uploadPath);
+    void _generateIndexPage(const pollfdsVectorIterator_t&, const string&, const string&);
 
     location_t *matchLocation(const locationVector_t &locations, const string &uri);
-};
 
+
+    void sendResponse(pollfdsVectorIterator_t it, const string &resourcePath, const Response &response);
+    void sendCGIResponse(pollfdsVectorIterator_t it, const Response &response, const string &body);
+
+};
 #endif

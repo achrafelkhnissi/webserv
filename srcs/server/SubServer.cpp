@@ -1,8 +1,7 @@
-//
-// Created by Achraf El khnissi on 2/18/23.
-//
 
 #include "SubServer.hpp"
+#include "CGIHandler.hpp"
+#include <vector>
 
 SubServer::SubServer(const ServerConfig &config) {
 
@@ -12,6 +11,9 @@ SubServer::SubServer(const ServerConfig &config) {
     _clientMaxBodySize = config.client_max_body_size;
     _allowedMethods = config.allowed_methods;
     _index = config.index;
+    _uploadPath = config.upload_path;
+    _redirect = config.redirect;
+
 
     std::vector<LocationConfig>::const_iterator iter_ = config.locations.begin();
     std::vector<LocationConfig>::const_iterator iterEnd_ = config.locations.end();
@@ -39,7 +41,7 @@ const stringVector_t& SubServer::getIndex() const {
     return _index;
 }
 
-const string& SubServer::getErrorPages() const {
+const vector<string>& SubServer::getErrorPages() const {
     return _errorPages;
 }
 
@@ -55,14 +57,16 @@ const locationVector_t& SubServer::getLocation() const {
 
 void SubServer::fillLocation(const  LocationConfig& locationConfig, location_t& location) {
 
-//    _location.allowedMethods = ft::split(locationConfig.methods, ' ');
     location.root = locationConfig.root;
     location.index = locationConfig.index;
     location.clientMaxBodySize = locationConfig.client_max_body_size;
     location.errorPages = locationConfig.error_page;
     location.prefix = locationConfig.prefix;
-    location.autoIndex = locationConfig.autoindex == "on";
+    location.autoIndex = locationConfig.autoindex;
     location.allowedMethods = locationConfig.allowed_methods; // todo: wait for ismail to add it.
+    location.cgi_path = locationConfig.cgi_path;
+    location.uploadPath = locationConfig.upload_path;
+    location.redirect = locationConfig.redirect;
 }
 
 void SubServer::printData() const {
@@ -77,7 +81,8 @@ void SubServer::printData() const {
     std::cout << std::endl;
     std::cout << "\t- root: " << _root << std::endl;
     std::cout << "\t- index: " << _index[0] << std::endl; // todo: print all index
-    std::cout << "\t- _errorPages: " << _errorPages << std::endl;
+	for (int i = 1; i < _errorPages.size(); i++)
+    	std::cout << "\t- _errorPages: " << _errorPages[i] << std::endl;
     std::cout << "\t- _clientMaxBodySize: " << _clientMaxBodySize << std::endl;
 
     std::cout << "\t- Allowed methods: ";
@@ -95,8 +100,9 @@ void SubServer::printData() const {
         std::cout << "\t\troot: " << it->root << std::endl;
         std::cout << "\t\tindex: " << it->index[0] << std::endl; // todo: print all index
         std::cout << "\t\t_clientMaxBodySize: " << it->clientMaxBodySize << std::endl;
-        std::cout << "\t\t_errorPages: " << it->errorPages << std::endl;
+//        std::cout << "\t\t_errorPages: " << it->errorPages << std::endl;
         std::cout << "\t\tauto_index: " << it->autoIndex << std::endl;
+        std::cout << "\t\tupload_path: " << it->uploadPath << std::endl;
         std::cout << "\t\tallowed_methods: ";
         stringVectorConstIterator_t itttt = it->allowedMethods.begin();
         stringVectorConstIterator_t itttte = it->allowedMethods.end();
@@ -108,5 +114,17 @@ void SubServer::printData() const {
     }
     std::cout << "\t--- End Sub server ---" << std::endl;
     std::cout << std::endl;
+}
+
+const stringVector_t &SubServer::getAllowedMethods() const {
+    return _allowedMethods;
+}
+
+const string &SubServer::getUploadPath() const {
+    return _uploadPath;
+}
+
+const stringVector_t &SubServer::getRedirect() const {
+    return _redirect;
 }
 

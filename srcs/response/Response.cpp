@@ -7,6 +7,7 @@ Response::Response() {
     _body = "<h1>Hello World</h1>";
 
     _httpErrors[200] = "OK";
+    _httpErrors[301] = "Moved Permanently";
     _httpErrors[400] = "Bad Request";
     _httpErrors[401] = "Unauthorized";
     _httpErrors[403] = "Forbidden";
@@ -48,16 +49,6 @@ void Response::setStatusCode(const Request& request, const string& filePath, std
     } else {
         _statusCode = 200;
     }
-
-//    if (M.empty())
-//   {
-//        _statusCode = 415;
-//        if (!is_regular_file(filePath.c_str()) || !file.is_open())
-//            _statusCode = 404;
-//    } else {
-//        _statusCode = 200;
-//    }
-
     file.close();
 }
 
@@ -77,13 +68,20 @@ void Response::setContentLength(const string &path) {
     file_stream.close();
 }
 
+void Response::setContentLength(::size_t size) {
+    _headers["Content-Length"] = std::to_string(size);
+
+}
+
+void Response::setContentType(string type) {
+    _headers["Content-Type"] = type;
+}
+
 void Response::setHeaders(const Request &request,  std::map<string, string> &mimTypes, const string &path) {
 
-    if (_statusCode == 200){
-        setContentType(path, mimTypes);
-        setContentLength(path);
+    if (_statusCode == 200 || _statusCode == 301)
         setLastModified(path);
-    }
+
     setProtocol(request.getProtocol());
     setVersion(request.getVersion());
     setContentType(path, mimTypes);
@@ -96,23 +94,9 @@ void Response::setHeaders(const Request &request,  std::map<string, string> &mim
 }
 
 const stringMap_t& Response::getHeaders() const {
-//    for (std::map<string, string>::const_iterator it = headers.begin(); it != headers.end(); ++it) {
-//        std::cout << it->first << " : " << it->second << std::endl;
-//    }
     return _headers;
 }
 void Response::setContentType(const string& path, std::map<string, string> &mimTypes) {
-
-    // todo: check if the content type doesn't exist
-    // if it doesn't exist, set it to text/plain or respond with the following
-    /*
-     *  std::stringstream response_stream;
-     *  response_stream << "HTTP/1.1 415 Unsupported Media Type\r\n\r\n";
-     *  std::string response = response_stream.str();
-     *  send(fd, response.c_str(), response.length(), 0);
-	 * file_stream.close();
-	 * response_stream.clear();
-     */
     _headers["Content-Type"] =  mimTypes[_extractExtension(path)];
 
 }
@@ -174,14 +158,6 @@ void Response::setAcceptRanges(const string &acceptRanges) {
 }
 
 void Response::setConnection(const string &cnx) {
-
-    /**
-     * HTTP/1.1
-     * 1. By default connection is Keep-Alive
-     * 2. if the client sends a Connection: close header, then the connection is closed
-     * 3. if the client sends a Connection: keep-alive header, then the connection is kept alive
-     */
-
     _headers["Connection"] = cnx;
 }
 
@@ -205,43 +181,6 @@ const string &Response::getProtocol() const {
 
 const string &Response::getVersion() const {
     return _version;
-}
-
-void Response::handleError(int fd, int statusCode) {
-
-    string errorPage = _getErrorPage(statusCode);
-    string errorName = _httpErrors[statusCode];
-
-    std::ifstream file_stream(errorPage, std::ios::in | std::ios::binary);
-
-    if (!file_stream.is_open()) {
-        std::cerr << "Error: " << errorName << std::endl;
-        return;
-    }
-
-    //get file size
-
-    setContentLength(errorPage);
-
-    std::ostringstream response_stream;
-    response_stream << "HTTP/1.1 " << statusCode << " " << errorName << "\r\n";
-    response_stream << "Content-Type: text/html\r\n";
-    response_stream << "Content-Length: " << getContentLength() << "\r\n";
-    response_stream << "Connection: close\r\n\r\n";
-    response_stream << file_stream.rdbuf();
-
-    std::cout << response_stream.str() << std::endl;
-    std::string response = response_stream.str();
-    send(fd, response.c_str(), response.length(), 0);
-
-    std::cout << "handleError" << std::endl;
-    file_stream.close();
-//    send(fd, file_content.c_str(), file_content.length(), 0);
-
-}
-
-string Response::_getErrorPage(int code) const {
-    return "www/error_pages/" + std::to_string(code) + ".html";
 }
 
 

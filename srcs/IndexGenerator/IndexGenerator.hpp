@@ -11,11 +11,13 @@
 class IndexGenerator {
 
 public:
-    explicit IndexGenerator(const std::string& path);
+	explicit IndexGenerator(const std::string&, const std::string&);
 	std::string generate();
 
 private:
     std::string _path;
+	std::string _root;
+	std::string _uri;
 	std::string _tab;
 
     // List all regular files in a directory

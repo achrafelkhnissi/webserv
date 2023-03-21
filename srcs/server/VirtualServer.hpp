@@ -17,14 +17,11 @@
 #include <fstream>
 #include <sstream>
 
-//#include "SubServer.hpp"
 #include "typedefs.hpp"
 #include "Configuration.hpp"  // Configuration class
 
 
 #define BUFFER_SIZE 4096
-//#define BUFFER_SIZE 1024
-
 
 class VirtualServer {
 
@@ -40,11 +37,13 @@ public:
     ~VirtualServer();
 
     int     getServerFd() const;
+    hostPortPair_t getHostPort() const;
     int     getPort() const;
     void    addSubServer(ServerConfig &config);
     void    printData() const;
 
     const subServersIterator_t  matchSubServer(const string& host);
+
 };
 
 #endif //WEBSERV_VIRTUALSERVER_HPP

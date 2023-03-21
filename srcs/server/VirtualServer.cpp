@@ -15,7 +15,6 @@ VirtualServer::VirtualServer(ServerConfig serverConfig) {
 
 
 VirtualServer::~VirtualServer() {
-    // Close all open file descriptors
 }
 
 
@@ -47,6 +46,10 @@ void VirtualServer::printData() const {
 
 int VirtualServer::getPort() const {
     return _hostPort.second;
+}
+
+hostPortPair_t VirtualServer::getHostPort() const {
+    return _hostPort;
 }
 
 const subServersIterator_t VirtualServer::matchSubServer(const string& host) {

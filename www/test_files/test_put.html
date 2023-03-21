@@ -1,0 +1,38 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PUT Request Test</title>
+</head>
+<body>
+<form id="myForm">
+  <label for="input1">Input 1:</label>
+  <input type="text" id="input1" name="input1"><br><br>
+  <label for="input2">Input 2:</label>
+  <input type="text" id="input2" name="input2"><br><br>
+  <button type="button" onclick="sendPUTRequest()">Send PUT Request</button>
+</form>
+
+<script>
+  function sendPUTRequest() {
+    const input1Value = document.getElementById("input1").value;
+    const input2Value = document.getElementById("input2").value;
+    fetch("http://localhost:1336", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        input1: input1Value,
+        input2: input2Value
+      })
+    }).then(data => {
+      return data.text();
+    }).then(data => {
+      document.body.innerHTML = data;
+    });
+    // Get the values of the input fields
+  }
+</script>
+</body>
+</html>

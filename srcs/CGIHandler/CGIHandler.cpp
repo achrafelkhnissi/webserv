@@ -6,10 +6,9 @@
 #include <algorithm>
 
 
+CGIHandler::CGIHandler(const stringMap_t &env, const string &body, location_t* location): _envMap(env), _requestBody(body) {
 
-
-CGIHandler::CGIHandler(const stringMap_t &env, const string &body): _envMap(env), _requestBody(body) {
-
+	_cgiPath = location->cgi_path;
     _envSize = env.size();
     _env = new char*[_envSize + 1];
     _env[_envSize] = NULL; // NULL terminate the array is expected by execve
@@ -30,22 +29,20 @@ string CGIHandler::getCmd() {
 
     stringVectorIterator_t it = find(_cgiPath.begin(), _cgiPath.end(), scriptName_);
     if (it != _cgiPath.end()) {
-        cout << "Found file with" << extension_ << " extension: " << *it << endl;
-       return  cmd_ += *it;
+        return  cmd_ += *it;
     } else {
         std::size_t pos = path_.find_last_of('.');
         if (pos != std::string::npos) {
             extension_ = path_.substr(pos);
         }
 
-        for (stringVectorIterator_t it = _cgiPath.begin(); it != _cgiPath.end(); ++it) {
+        for (stringVectorIterator_t it = _cgiPath.begin(); it != _cgiPath.end(); ++it) { //
             if (it->size() >= extension_.length() && it->substr(it->size() - extension_.length()) == extension_) {
-                cout << "Found file with" << extension_ << " extension: " << *it << endl;
                return cmd_ += *it;
             }
         }
     }
-    cout << "Found file with" << extension_ << " extension: " << cmd_ + "helloCGI.py" << endl;
+
    return cmd_ += "helloCGI.py" ;
 }
 
@@ -90,11 +87,6 @@ string CGIHandler::CGIExecuter() {
 		close(fdForResponse[1]); // close the write end of the pipe
         int status;
         waitpid(pid, &status, 0);
-        if (WIFEXITED(status)) {
-            std::cerr << "Child exited with status " << WEXITSTATUS(status) << std::endl;
-        } else if (WIFSIGNALED(status)) {
-            std::cerr << "Child terminated by signal " << WTERMSIG(status) << std::endl;
-        }
 
 		char buffer_[1024];
 		int ret = 0;

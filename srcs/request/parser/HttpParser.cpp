@@ -34,7 +34,7 @@ void HttpParser::into_request() {
 }
 
 bool HttpParser::has_request() {
-	cerr << "has_request: " << requests.size() << endl;
+//	cerr << "has_request: " << requests.size() << endl;
 	return !requests.empty();
 }
 
