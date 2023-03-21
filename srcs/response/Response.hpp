@@ -7,16 +7,13 @@
 class Response {
 
 private:
+    int                     _statusCode;
+    string                  _protocol;
+    string                  _version;
+    string                  _body;
 
-    typedef std::map<string, string> stringMap_t;
-
-    int _statusCode;
-    string _protocol;
-    string _version;
-    string _body;
-
-    stringMap_t _headers;
-    std::map<int, string> _httpErrors;
+    stringMap_t             _headers;
+    errorPagesMap_t         _httpErrors;
 
 public:
     Response();
@@ -34,6 +31,9 @@ public:
     void setAcceptRanges(const string& acceptRanges);
     void setConnection(const string& connection);
     void setHeaders(const Request& request, std::map<string, string> &mimTypes, const string &path);
+    void setStatusCode(int statusCode);
+    void setContentLength(size_t size);
+    void setContentType(string type);
 
     int getStatusCode() const;
     const string& getProtocol() const;
@@ -43,19 +43,9 @@ public:
     size_t getContentLength() ;
     const string& getContentType();
     std::map<int, string> getHttpErrors() const;
-    void printData() const;
 
     bool is_regular_file(const char *path) const;
     string _extractExtension(const string &path) const ;
 
 
-    void setStatusCode(int statusCode);
-
-    void handleError(int fd, int statusCode);
-
-    string _getErrorPage(int code) const;
-
-    void setContentLength(size_t size);
-
-    void setContentType(string type);
 };

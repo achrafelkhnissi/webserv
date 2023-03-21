@@ -1,6 +1,3 @@
-//
-// Created by Achraf El khnissi on 2/18/23.
-//
 
 #ifndef WEBSERV_SUBSERVER_H
 #define WEBSERV_SUBSERVER_H
@@ -8,7 +5,7 @@
 #include <iostream>
 #include <vector>
 #include "CGIHandler.hpp"
-#include "Configuration.hpp"  // Configuration class
+#include "Configuration.hpp"
 #include "typedefs.hpp"
 
 struct location_s{
@@ -35,9 +32,8 @@ private:
 	stringVector_t      _index;
 	stringVector_t 		_errorPages;
 	string              _clientMaxBodySize;
-    stringVector_t     _allowedMethods;
+    stringVector_t      _allowedMethods;
     string              _uploadPath;
-    // TODO: add Cgi
 
 public:
     explicit SubServer(const ServerConfig& config);

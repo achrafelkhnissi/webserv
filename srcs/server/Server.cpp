@@ -123,7 +123,7 @@ Server::~Server() {
 
 void Server::_handleConnections(int sockfd) {
     struct timeval tv;
-    tv.tv_sec = 10; // 10 seconds
+    tv.tv_sec = 10;
     tv.tv_usec = 0;
 
 		struct sockaddr_in sockAddrIn_ = {};
@@ -226,8 +226,6 @@ void Server::_handleRequest(pollfdsVectorIterator_t it) {
             if (it->fd == -1)
                 break;
         }
-		// Match the port and host to the correct server
-
 	}
 
 }
@@ -556,7 +554,6 @@ void Server::_error(const std::string &msg, int err) const {
 	std::string errorMsg = msg + (!err ? "." : (std::string(" | ") + strerror(errno)));
     std::cout << errorMsg << std::endl;
     exit(1);
-//	throw std::runtime_error(errorMsg);
 }
 
 void Server::printData() const {

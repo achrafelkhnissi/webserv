@@ -1,6 +1,3 @@
-//
-// Created by Achraf El khnissi on 2/18/23.
-//
 
 #include "SubServer.hpp"
 #include "CGIHandler.hpp"
@@ -60,7 +57,6 @@ const locationVector_t& SubServer::getLocation() const {
 
 void SubServer::fillLocation(const  LocationConfig& locationConfig, location_t& location) {
 
-//    _location.allowedMethods = ft::split(locationConfig.methods, ' ');
     location.root = locationConfig.root;
     location.index = locationConfig.index;
     location.clientMaxBodySize = locationConfig.client_max_body_size;
