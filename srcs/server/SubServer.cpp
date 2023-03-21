@@ -81,7 +81,7 @@ void SubServer::printData() const {
     std::cout << std::endl;
     std::cout << "\t- root: " << _root << std::endl;
     std::cout << "\t- index: " << _index[0] << std::endl; // todo: print all index
-	for (int i = 1; i < _errorPages.size(); i++)
+	for (size_t i = 1; i < _errorPages.size(); i++)
     	std::cout << "\t- _errorPages: " << _errorPages[i] << std::endl;
     std::cout << "\t- _clientMaxBodySize: " << _clientMaxBodySize << std::endl;
 

@@ -332,7 +332,7 @@ void Server::_handleGET(pollfdsVectorIterator_t it, const subServersIterator_t &
 
     if (location_ != nullptr) {
         if (location_->prefix.find("cgi-bin") != std::string::npos) {
-            _handleCGI(it, subServersIterator, request, location_);
+            _handleCGI(it, request, location_);
             return;
         }
         root_ = location_->root;
@@ -379,10 +379,10 @@ void Server::_handleGET(pollfdsVectorIterator_t it, const subServersIterator_t &
         delete location_;
 }
 
-const string Server::handleFormData(  const Request& request, Response& response, stringVector_t errorPages){
+const string Server::handleFormData(  const Request& request, Response& response){
     int contentLength = std::stoi(request.getHeaders().find("Content-Length")->second);
     const std::string& requestBody = request.getBody();
-    std::string form_data = requestBody.substr(0, contentLength); // TODO: store form data
+    std::string form_data = requestBody.substr(0, contentLength);
     response.setStatusCode(200);
     response.setHeaders(request, _mimeTypes, "www/html/success.html");
     return "www/html/success.html";
@@ -478,7 +478,7 @@ void Server::_handlePOST(pollfdsVectorIterator_t it, const subServersIterator_t 
         } else if (request.getBody().size() > convertToBytes(clientMaxBodySize_)) {
             response_.setStatusCode(413);
         } else if (location_ != nullptr && location_->prefix.find("cgi-bin") != std::string::npos) {
-            _handleCGI(it, subServersIterator, request, location_);
+            _handleCGI(it, request, location_);
             return;
         } else if (!dirExists(uploadPath_)) {
             if (!createDir(uploadPath_)){
@@ -491,7 +491,7 @@ void Server::_handlePOST(pollfdsVectorIterator_t it, const subServersIterator_t 
         content_type = content_type.substr(0, content_type.find(';'));
 
         if (content_type == "application/x-www-form-urlencoded") {
-            resourcePath_ = handleFormData(request, response_, errorPages_);
+            resourcePath_ = handleFormData(request, response_);
         } else if (content_type == "multipart/form-data") {
             resourcePath_ = handleFileUploads(request, response_, uploadPath_, errorPages_);
         } else {
@@ -598,7 +598,7 @@ void Server::sendCGIResponse(pollfdsVectorIterator_t it, const Response& respons
     }
 }
 
-void Server::_handleCGI(pollfdsVectorIterator_t it, const subServersIterator_t &iter, const Request &request, location_t *location) {
+void Server::_handleCGI(pollfdsVectorIterator_t it, const Request &request, location_t *location) {
 
     Response response;
     _CGIEnv["SERVER_SOFTWARE"] = "webserv/1.0";
@@ -632,7 +632,6 @@ void Server::_handleCGI(pollfdsVectorIterator_t it, const subServersIterator_t &
 
     sendCGIResponse(it, response, response_body);
 }
-
 
 string Server::_getIndexPage(const string &path_, const stringVector_t &index_) const {
 

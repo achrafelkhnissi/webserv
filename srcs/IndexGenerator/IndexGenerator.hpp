@@ -1,7 +1,6 @@
 #ifndef WEBSERV_INDEXGENERATOR_HPP
 #define WEBSERV_INDEXGENERATOR_HPP
 
-
 #include <string>
 #include <vector>
 #include <iostream>

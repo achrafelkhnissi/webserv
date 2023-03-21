@@ -1,6 +1,8 @@
 
 #include "SessionManager.hpp"
 
+/* NOT USED */
+
 SessionManager::SessionManager() {
 	srand(time(NULL));
 }

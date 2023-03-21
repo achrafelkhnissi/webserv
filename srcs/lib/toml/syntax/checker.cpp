@@ -1,4 +1,4 @@
-#include "../parser/Parser.hpp"
+#include "Parser.hpp"
 
 bool is_key(TokenList::iterator& it, TokenList::iterator end) {
 	while (it != end) {
