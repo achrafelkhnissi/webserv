@@ -66,7 +66,6 @@ size_t convertToBytes(const std::string& str)
     {
         throw std::invalid_argument("Invalid size: " + str);
     }
-    std::cout << "str: " << str[str.length() - 1] << std::endl;
     char lastChar = tolower(str[str.length() - 1]); // convert the last character to lower case (to handle "K", "M", or "G"
 
     std::string kmg = "kmg";

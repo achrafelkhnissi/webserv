@@ -181,7 +181,6 @@ Configuration::e_error Configuration::post_validate() {
 	for (int i = 0; i < _servers.size(); i++) {
 		if (_servers[i].port < 0 || _servers[i].port > 65535 )
 			return Configuration::ERROR_INVALID_PORT;
-		cerr << "port: " << _servers[i].error_page.size() << endl;
 		if (_servers[i].error_page.size() < 2 && !_servers[i].error_page.empty())
 			return Configuration::ERROR_INVALID_ERROR_PAGE;
 		for (int j = 0; j < _servers[i].error_page.size() - 1; j++) {

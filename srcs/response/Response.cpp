@@ -183,8 +183,4 @@ const string &Response::getVersion() const {
     return _version;
 }
 
-string Response::_getErrorPage(int code) const {
-    return "www/error_pages/" + std::to_string(code) + ".html";
-}
-
 
