@@ -103,11 +103,11 @@ string CGIHandler::CGIExecuter() {
 }
 
 CGIHandler::~CGIHandler() {
-    for(int i = 0; i < _envSize; i++) {
+    for(size_t i = 0; i < _envSize; i++) {
         free(_env[i]);
     }
 
-    for (int i = 0; i < 2; i++) {
+    for (size_t i = 0; i < 2; i++) {
         free(_argv[i]);
     }
     delete[] _env;
