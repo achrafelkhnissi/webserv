@@ -178,12 +178,12 @@ Configuration::e_error Configuration::pre_validate(toml::table& config) {
 Configuration::e_error Configuration::post_validate() {
 	if (_servers.empty())
 		return Configuration::ERROR_INVALID_SERVER;
-	for (int i = 0; i < _servers.size(); i++) {
+	for (size_t i = 0; i < _servers.size(); i++) {
 		if (_servers[i].port < 0 || _servers[i].port > 65535 )
 			return Configuration::ERROR_INVALID_PORT;
 		if (_servers[i].error_page.size() < 2 && !_servers[i].error_page.empty())
 			return Configuration::ERROR_INVALID_ERROR_PAGE;
-		for (int j = 0; j < _servers[i].error_page.size() - 1; j++) {
+		for (size_t j = 0; j < _servers[i].error_page.size() - 1; j++) {
 			int code = atoi(_servers[i].error_page[j].c_str());
 			if (code < 100 || code > 599)
 				return Configuration::ERROR_INVALID_ERROR_PAGE;
@@ -222,7 +222,7 @@ const vector<ServerConfig> &Configuration::getServers() const {
 void Configuration::print() {
 	cout << "\n<==================== Configuration ====================>" << endl;
 
-	for (int i = 0; i < _servers.size(); i++)
+	for (size_t i = 0; i < _servers.size(); i++)
 		_servers[i].print();
 	
 	switch (error) {
