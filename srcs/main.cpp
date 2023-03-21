@@ -1,20 +1,18 @@
-#include "config/Configuration.hpp"
-#include "lib/toml/data/table.hpp"
-#include "lib/toml/toml.hpp"
-#include "request/Request.hpp"
-#include "request/parser/HttpParser.hpp"
+#include "Configuration.hpp"
+#include "table.hpp"
+#include "toml.hpp"
+#include "Request.hpp"
+#include "HttpParser.hpp"
 #include <iostream>
-#include <string>
 #include "Server.hpp"
+
+#include <string>
 
 using namespace std;
 
-
-
-
 int main(int ac, char** av) {
 
-    std::string config_file = "default.toml";
+    std::string config_file = "webserv_conf/default.toml";
 
     if (ac == 2) {
         config_file = av[1];
@@ -25,16 +23,13 @@ int main(int ac, char** av) {
 		std::cerr << "Error parsing file" << std::endl;
 		return 1;
 	}
-        Configuration config(*t);
+	Configuration config(*t);
 
-//		config.print();
+	Server server(config);
 
-		Server server(config);
-
-		server.start();
+	server.start();
 
     delete t;
-
     return 0;
 }
 
