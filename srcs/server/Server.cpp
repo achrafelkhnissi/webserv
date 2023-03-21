@@ -332,7 +332,7 @@ void Server::_handleGET(pollfdsVectorIterator_t it, const subServersIterator_t &
 
     if (location_ != nullptr) {
         if (location_->prefix.find("cgi-bin") != std::string::npos) {
-            _handleCGI(it, subServersIterator, request, location_);
+            _handleCGI(it, request, location_);
             return;
         }
         root_ = location_->root;
@@ -478,7 +478,7 @@ void Server::_handlePOST(pollfdsVectorIterator_t it, const subServersIterator_t 
         } else if (request.getBody().size() > convertToBytes(clientMaxBodySize_)) {
             response_.setStatusCode(413);
         } else if (location_ != nullptr && location_->prefix.find("cgi-bin") != std::string::npos) {
-            _handleCGI(it, subServersIterator, request, location_);
+            _handleCGI(it, request, location_);
             return;
         } else if (!dirExists(uploadPath_)) {
             if (!createDir(uploadPath_)){
@@ -491,7 +491,7 @@ void Server::_handlePOST(pollfdsVectorIterator_t it, const subServersIterator_t 
         content_type = content_type.substr(0, content_type.find(';'));
 
         if (content_type == "application/x-www-form-urlencoded") {
-            resourcePath_ = handleFormData(request, response_, errorPages_);
+            resourcePath_ = handleFormData(request, response_);
         } else if (content_type == "multipart/form-data") {
             resourcePath_ = handleFileUploads(request, response_, uploadPath_, errorPages_);
         } else {
