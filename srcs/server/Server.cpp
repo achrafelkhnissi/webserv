@@ -49,7 +49,7 @@ void Server::_setMimeTypes() {
     _mimeTypes[".webp"] = "image/webp";
     _mimeTypes[".mov"] = "video/quicktime";
     _mimeTypes[".xml"] = "application/xml";
-
+	_mimeTypes[".php"] = "application/x-httpd-php";
 }
 
 void Server::_setupVirtualServer(VirtualServer& vserver) {
@@ -590,7 +590,6 @@ void Server::sendCGIResponse(pollfdsVectorIterator_t it, const Response& respons
         response_stream << headerIter_->first  << ": " << headerIter_->second << "\r\n";
     }
     response_stream <<  "\r\n";
-
     const string& resp = response_stream.str() + body;
 
     int sent = send(it->fd, resp.c_str(), resp.size(), 0);
