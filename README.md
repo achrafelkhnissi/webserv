@@ -30,6 +30,7 @@
 - [Features](#features)
 - [Resources](#resources)
 - [Contact](#contact)
+- [Functions](#functions)
 
 
 # HTTP
@@ -91,3 +92,200 @@ HTTP allows sessions, and stored states are shared between the browser and serve
 | DELETE | Delete singleton resource-based or ID (you can’t delete a collection of resources) | 200 OK | 401 Unauthorized, 404 Not Found |
 | OPTION | Get the options available from this resource | 200 OK | - |
 | HEAD | Get just the response headers from the resource | 200 OK | 404 Not Found |
+
+
+# Functions
+
+<details>
+
+<summary><a href="">getaddrinfo()</a></summary>
+
+```c++
+int getaddrinfo(const char *node, const char *service, const struct addrinfo *hints, struct addrinfo **res);
+```
+
+- `node` : The hostname or IP address of the server.
+  - If `node` is `NULL`, the IP address of the local host is used.
+  - Can be a string representation of an IP address, or a hostname.
+    - "hostname"
+    - "127.0.0.1"
+- `service` : The port number of the server.
+  - If `service` is `NULL`, the default port number for the service requested in `hints` is used.
+  - Can be a string representation of a port number, or a service name.
+    - "80"
+    - "http"
+- `hints` : A pointer to a `struct addrinfo` that specifies criteria for selecting the socket address structures returned in the list pointed to by `res`.
+  - If `hints` is `NULL`, then the returned list includes socket addresses for all socket types, for all protocol families supported by the address family of the specified node, and for the address of the local host.
+  - The following fields of the `struct addrinfo` are used:
+    - `ai_family` : The address family. The following constants are defined for the `ai_family` field:
+      - `AF_INET` : IPv4 Internet protocols
+      - `AF_INET6` : IPv6 Internet protocols
+      - `AF_UNIX` : Local communication
+      - `AF_UNSPEC` : Unspecified
+    - `ai_socktype` : The socket type. The following constants are defined for the `ai_socktype` field:
+      - `SOCK_STREAM` : Provides sequenced, reliable, two-way, connection-based byte streams. An out-of-band data transmission mechanism may be supported.
+      - `SOCK_DGRAM` : Supports datagrams (connectionless, unreliable messages of a fixed maximum length).
+      - `SOCK_RAW` : Provides raw network protocol access.
+      - `SOCK_RDM` : Provides a reliable datagram layer that does not guarantee ordering.
+      - `SOCK_SEQPACKET` : Provides a sequenced packet layer that does not guarantee ordering.
+    - `ai_protocol` : The protocol for the socket. The following constants are defined for the `ai_protocol` field:
+      - `IPPROTO_TCP` : Transmission Control Protocol
+      - `IPPROTO_UDP` : User Datagram Protocol
+      - `IPPROTO_RAW` : Raw protocol interface
+      - `IPPROTO_IP` : Internet Protocol
+      - `IPPROTO_ICMP` : Internet Control Message Protocol
+      - `IPPROTO_IGMP` : Internet Group Management Protocol
+      - `IPPROTO_IPV4` : Internet Protocol version 4
+      - `IPPROTO_IPV6` : Internet Protocol version 6
+- `res` : A pointer to a linked list of one or more `struct addrinfo` structures that contains response information about the host.
+- Return value : On success, zero is returned. On error, -1 is returned, and `errno` is set appropriately.
+
+- `struct addrinfo` :
+
+```c++
+struct addrinfo {
+	int ai_flags;               // input flags        
+	int ai_family;              // socket protocol family        
+	int ai_socktype;            // socket type        
+	int ai_protocol;            // protocol for socket        
+	socklen_t   ai_addrlen;     // socket address length        
+	struct sockaddr *ai_addr;   // socket address        
+	char*   ai_canonname;       // service name        
+	struct addrinfo *ai_next;   // next item in the list    
+}; 
+```
+
+</details>
+
+---
+
+<details>
+
+<summary><a href="">socket()</a></summary>
+
+```c++
+int socket(int domain, int type, int protocol);
+```
+
+- `domain` : The communication domain, which specifies the communication semantics and the protocol family to be used. The following constants are defined for the `domain` argument:
+    - `AF_INET` : IPv4 Internet protocols
+    - `AF_INET6` : IPv6 Internet protocols
+    - `AF_UNIX` : Local communication
+    - `AF_UNSPEC` : Unspecified
+- `type` : The communication semantics. The following constants are defined for the `type` argument:
+    - `SOCK_STREAM` : Provides sequenced, reliable, two-way, connection-based byte streams. An out-of-band data transmission mechanism may be supported.
+    - `SOCK_DGRAM` : Supports datagrams (connectionless, unreliable messages of a fixed maximum length).
+    - `SOCK_RAW` : Provides raw network protocol access.
+    - `SOCK_RDM` : Provides a reliable datagram layer that does not guarantee ordering.
+    - `SOCK_SEQPACKET` : Provides a sequenced packet layer that does not guarantee ordering.
+- `protocol` : The protocol to be used with the socket. Normally only a single protocol exists to support a particular socket type within a given protocol family, in which case `protocol` can be specified as 0. The following constants are defined for the `protocol` argument:
+    - `IPPROTO_TCP` : Transmission Control Protocol
+    - `IPPROTO_UDP` : User Datagram Protocol
+    - `IPPROTO_SCTP` : Stream Control Transmission Protocol
+    - `IPPROTO_TIPC` : Transparent Inter-Process Communication
+    - `IPPROTO_RAW` : Raw IP packets
+    - '0' : Use default protocol
+- Return value : On success, a file descriptor for the new socket is returned. On error, -1 is returned, and `errno` is set appropriately.
+
+</details>
+
+---
+
+<details>
+
+
+<summary><a href="">bind()</a></summary>
+
+```c++
+int bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
+```
+
+- `sockfd` : The file descriptor of the socket to be bound.
+- `addr` : A pointer to a `sockaddr` structure containing the address to be bound to the socket. The length and format of the address depend on the address family of the socket.
+- `addrlen` : The size, in bytes, of the address structure pointed to by the `addr` argument.
+- Return value : On success, zero is returned. On error, -1 is returned, and `errno` is set appropriately.
+
+</details>
+
+---
+
+<details>
+
+<summary><a href="">listen()</a></summary>
+
+```c++
+int listen(int sockfd, int backlog);
+```
+
+- `sockfd` : The file descriptor of the socket to be listened.
+- `backlog` : The maximum length to which the queue of pending connections for `sockfd` may grow.
+- Return value : On success, zero is returned. On error, -1 is returned, and `errno` is set appropriately.
+
+</details>
+
+---
+
+<details>
+
+<summary><a href="">accept()</a></summary>
+
+```c++
+int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
+```
+
+- `sockfd` : The file descriptor of the socket to be accepted.
+- `addr` : A pointer to a `sockaddr` structure. This structure is filled in with the address of the peer socket, as known to the communications layer. The exact format of the address returned addr is determined by the socket's address family. When the returned address is too long to fit in the supplied `sockaddr` structure, the address is truncated.
+- `addrlen` : A pointer to a `socklen_t` object which on input specifies the length of the supplied `sockaddr` structure, and on output specifies the length of the stored address.
+- Return value : On success, these system calls return a non-negative integer that is a descriptor for the accepted socket. On error, -1 is returned, and `errno` is set appropriately.
+
+</details>
+
+---
+
+<details>
+
+<summary><a href="">recv()</a></summary>
+
+```c++
+ssize_t recv(int sockfd, void *buf, size_t len, int flags);
+```
+
+- `sockfd` : The file descriptor of the socket to be received.
+- `buf` : A pointer to a buffer where the message should be stored.
+- `len` : The length in bytes of the buffer pointed to by the `buf` argument.
+- `flags` : Specifies the type of message reception. The value is formed by logically OR'ing zero or more of the following values:
+    - `MSG_OOB` : Process out-of-band data.
+    - `MSG_PEEK` : Peek at incoming messages.
+    - `MSG_WAITALL` : Wait for a full request, unless the socket is nonblocking.
+    - `MSG_DONTWAIT` : Enables nonblocking operation; if the operation would block, the call fails with the error `EAGAIN` or `EWOULDBLOCK`.
+    - `MSG_NOSIGNAL` : Do not generate `SIGPIPE` when writing to a pipe with no one to read it.
+    - '0' : Use default flag
+- Return value : On success, these calls return the number of bytes received. If no messages are available to be received and the peer has performed an orderly shutdown, `recv()` returns 0. On error, -1 is returned, and `errno` is set appropriately.
+
+
+</details>
+
+---
+
+<details>
+
+<summary><a href="">send()</a></summary>
+
+```c++
+ssize_t send(int sockfd, const void *buf, size_t len, int flags);
+```
+
+- `sockfd` : The file descriptor of the socket to be sent.
+- `buf` : A pointer to a buffer containing the message to be sent.
+- `len` : The length in bytes of the message pointed to by the `buf` argument.
+- 'flags' : Specifies the type of message transmission. The value is formed by logically OR'ing zero or more of the following values:
+    - `MSG_OOB` : Process out-of-band data.
+    - `MSG_DONTROUTE` : Bypass routing, use direct interface.
+    - `MSG_DONTWAIT` : Enables nonblocking operation; if the operation would block, the call fails with the error `EAGAIN` or `EWOULDBLOCK`.
+    - `MSG_NOSIGNAL` : Do not generate `SIGPIPE` when writing to a pipe with no one to read it.
+    - '0' : Use default flag
+- Return value : On success, these calls return the number of bytes sent. On error, -1 is returned, and `errno` is set appropriately.
+
+</details>
+
+---
