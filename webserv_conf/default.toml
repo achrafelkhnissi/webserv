@@ -1,0 +1,56 @@
+
+[[server]]
+port = "1337"
+host = "10.0.0.1"
+root = "www"
+server_name = ["example.com", "example2.com", "example3.com"]
+upload_path = "www/upload"
+index = ["index.html", "index.htm"]
+error_page = ["404", "/404.html"]
+_clientMaxBodySize = "10m"
+
+	[[server.location]]
+	prefix = "/"
+	root = "www"
+	allowed_methods = ["GET" ,"POST", "DELETE"]
+	error_page = ["404", "www/error_pages/404.html"]
+	autoindex = "on"
+	_clientMaxBodySize = "100m"
+	upload_path = "www/upload"
+	redirect = ["old_about.html", "about.html"]
+
+	[[server.location]]
+	prefix = "/html"
+	root = "www"
+	index = ["index.html", "index.htm"]
+	allowed_methods = ["GET", "HEAD", "DELETE"]
+	error_page = ["404", "/404.html"]
+	autoindex = "on"
+	redirect = ["/html/success.html", "/html/success_delete.html"]
+	_clientMaxBodySize = "10m"
+
+	[[server.location]]
+	prefix = "/cgi-bin"
+	root = "www"
+	cgi_path = ["helloCGI.py", "cookies.py", "form-handler.py", "session_management.py"]
+	allowed_methods = ["GET", "POST"]
+	error_page = ["404", "www/error_pages/404.html"]
+	_clientMaxBodySize = "10m"
+
+[[server]]
+port = "1336"
+host = "10.0.0.1"
+root = "www"
+server_name = ["example1.com", "example22.com", "example3.com"]
+index = ["index.html", "index.htm"]
+error_page = ["404", "www/error_pages/404.html"]
+_clientMaxBodySize = "100m"
+upload_path = "www/upload"
+	[[server.location]]
+	prefix = "/html"
+	root = "www"
+	index = ["index.html",  "index.htm"]
+	allowed_methods = ["GET", "DELETE"]
+	error_page = ["404 /404.html"]
+	autoindex = "on"
+	_clientMaxBodySize = "10m"
