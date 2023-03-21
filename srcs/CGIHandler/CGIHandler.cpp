@@ -87,11 +87,6 @@ string CGIHandler::CGIExecuter() {
 		close(fdForResponse[1]); // close the write end of the pipe
         int status;
         waitpid(pid, &status, 0);
-//        if (WIFEXITED(status)) {
-//            std::cerr << "Child exited with status " << WEXITSTATUS(status) << std::endl;
-//        } else if (WIFSIGNALED(status)) {
-//            std::cerr << "Child terminated by signal " << WTERMSIG(status) << std::endl;
-//        }
 
 		char buffer_[1024];
 		int ret = 0;
