@@ -6,7 +6,8 @@
 #include <algorithm>
 
 
-CGIHandler::CGIHandler(const stringMap_t &env, const string &body, location_t* location): _envMap(env), _requestBody(body) {
+CGIHandler::CGIHandler(const stringMap_t &env, const string &body, location_t* location)
+	: _requestBody(body), _envMap(env) {
 
 	_cgiPath = location->cgi_path;
     _envSize = env.size();
