@@ -14,11 +14,19 @@ email = form.getvalue('email')
 message = form.getvalue('message')
 
 # Print out the form data
-print("<html>")
-print("<body>")
-print("<h1>Form Data</h1>")
-print("<p>Name: %s</p>" % name)
-print("<p>Email: %s</p>" % email)
-print("<p>Message: %s</p>" % message)
-print("</body>")
-print("</html>")
+
+body = """
+<html>
+<body>
+<h1>Form Data</h1>
+<p>Name: %s</p>
+<p>Email: %s</p>
+<p>Message: %s</p>
+</body>
+</html>
+""" % (name, email, message)
+
+print "Content-type: text/html\r"
+print "Content-Length: %d\r" % len(body)
+print "\r"
+print(body)
