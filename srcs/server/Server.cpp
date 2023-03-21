@@ -46,6 +46,9 @@ void Server::_setMimeTypes() {
 	_mimeTypes[".txt"] = "text/plain";
 	_mimeTypes[".weba"] = "audio/webm";
 	_mimeTypes[".webm"] = "video/webm";
+    _mimeTypes[".webp"] = "image/webp";
+    _mimeTypes[".mov"] = "video/quicktime";
+    _mimeTypes[".xml"] = "application/xml";
 
 }
 
