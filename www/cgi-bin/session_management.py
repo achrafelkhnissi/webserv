@@ -1,59 +1,44 @@
-#!/usr/bin/env python3
+#!/usr/bin/python
 
-import os
-import http.cookies as cookies
+# Import modules for CGI handling
+import cgi, cgitb
 
-# Set the content-type of the response to text/html
-print("Content-type: text/html\n")
-
-# Get the existing session cookie (if any)
-cookie_string = os.environ.get('HTTP_COOKIE', '')
-session_cookie = cookies.SimpleCookie(cookie_string).get('session')
-
-# Get the form data from the request
-import cgi
+# Create instance of FieldStorage
 form = cgi.FieldStorage()
 
-# Check if the user has submitted a login form
-if 'username' in form and 'password' in form:
-    username = form.getvalue('username')
-    password = form.getvalue('password')
+# Get data from fields
+first_name = form.getvalue('first_name')
+last_name  = form.getvalue('last_name')
 
-    # Validate the username and password (in a real-world scenario, this would be more secure)
-    if username == 'user' and password == 'password':
-        # Generate a new session ID if one doesn't exist in the cookie
-        if session_cookie is None:
-            import uuid
-            session_id = str(uuid.uuid4())
-            session_cookie = cookies.SimpleCookie()
-            session_cookie['session'] = session_id
+# get cookies
+import os
+import Cookie
+cookie = Cookie.SimpleCookie()
+cookie_string = os.environ.get('HTTP_COOKIE')
+cookie.load(cookie_string)
 
-        # Store the session ID in a session data store (e.g. a database or file)
-        # Here, we'll just print the session ID to the console
-        print(f"Session ID: {session_cookie.value}")
 
-        # Set the session cookie to expire in 1 hour
-        session_cookie['session']['expires'] = 60*60
+# Check if the cookie exists
 
-        # Send the session cookie in the response headers
-        print(session_cookie.output())
+if cookie.has_key('user') and cookie['user'].value == first_name + ' ' + last_name:
+    print "Content-type:text/html\r\n\r\n"
+    print "Cookie exists"
+    print cookie['user'].value
+    print "<h1>Welcome back %s</h1>" % cookie['user'].value
+    exit()
 
-        # Redirect the user to a protected page
-        print("Location: protected_page.html\n")
-        print()
-    else:
-        # Display an error message if the username or password is invalid
-        print("<p>Invalid username or password</p>")
+## store cookies
+cookie['user'] = first_name + ' ' + last_name
 
-# Display the login form if the user hasn't logged in yet
-else:
-    print("""
-    <form method="POST">
-        <label>Username:</label>
-        <input type="text" name="username"><br>
-        <label>Password:</label>
-        <input type="password" name="password"><br>
-        <input type="submit" value="Log in">
-    </form>
-    """)
+print "Set-Cookie: user=%s\r\n" % (first_name + ' ' + last_name)
 
+print "Content-type:text/html\r\n\r\n"
+
+print "\n<html>"
+print "<head>"
+print "<title>Hello - Second CGI Program</title>"
+print "</head>"
+print "<body>"
+print "<h2>Hello %s %s</h2>" % (first_name, last_name)
+print "</body>"
+print "</html>"
