@@ -1,8 +1,8 @@
 #ifndef CONFIGURATION_HPP
 #define CONFIGURATION_HPP
 
-#include "../lib/toml/data/table.hpp"
-#include "../lib/toml/toml.hpp"
+#include "table.hpp"
+#include "toml.hpp"
 #include "utils.hpp"
 #include <fstream>
 #include <iostream>

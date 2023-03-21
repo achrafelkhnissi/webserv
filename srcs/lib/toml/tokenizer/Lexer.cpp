@@ -1,5 +1,5 @@
 #include "Lexer.hpp"
-#include "token/Token.hpp"
+#include "Token.hpp"
 #include <_ctype.h>
 #include <cstddef>
 #include <cstdlib>

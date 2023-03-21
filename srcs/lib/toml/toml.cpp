@@ -1,9 +1,9 @@
 #include "toml.hpp"
-#include "data/table.hpp"
-#include "error/ParseError.hpp"
-#include "parser/Parser.hpp"
-#include "tokenizer/Lexer.hpp"
-#include "tokenizer/token/Token.hpp"
+#include "table.hpp"
+#include "ParseError.hpp"
+#include "Parser.hpp"
+#include "Lexer.hpp"
+#include "Token.hpp"
 #include "utils.hpp"
 #include <cstdio>
 #include <fstream>

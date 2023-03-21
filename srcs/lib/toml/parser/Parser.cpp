@@ -65,39 +65,6 @@ Parser::Parser(TokenList tks) {
 	}
 }
 
-// Parser::Parser(TokenList tks) {
-// 	TokenList::iterator cur = tks.begin();
-// 	TokenMap* lastmp = &mp;
-//
-// 	cur = tks.begin();
-// 	while (cur != tks.end()) {
-// 		if (cur->is(Token::KEY)) {
-// 			TokenList res = til_ignore(cur, Token::ASSIGN | Token::COMMENT, Token::DOT);
-// 			cur++;
-// 			if (cur->is(Token::OPENBRACKET)) {
-// 				cur++;
-// 				TokenList values = til_ignore(cur, Token::CLOSEBRACKET, Token::COMMA);
-// 			}
-// 			lastmp->push_back(TokenPair(
-// 				res,
-// 				std::accumulate(
-// 					cur, til(cur, Token::NEWLINE | Token::COMMENT), std::string(""), accum)));
-// 		} else if (cur->is(Token::OPENBRACKET)) {
-// 			cur++;
-// 			std::vector<TomlBlock>* tm = &this->tables;
-// 			TomlBlock::blockType type = TomlBlock::TABLE;
-// 			if (cur->is(Token::OPENBRACKET)) {
-// 				type = TomlBlock::ARRAY;
-// 				cur++;
-// 			}
-// 			TokenList res = til_ignore(cur, Token::CLOSEBRACKET | Token::COMMENT, Token::DOT);
-// 			tm->push_back(TomlBlock(res, TokenMap(), type));
-// 			lastmp = &tm->rbegin()->mp;
-// 		}
-// 		cur++;
-// 	}
-// }
-
 void _printKeyValue(TokenMap& mp) {
 	ITER_FOREACH(TokenMap, mp, m) {
 		ITER_FOREACH_CONST(TokenList, m->key, it) {

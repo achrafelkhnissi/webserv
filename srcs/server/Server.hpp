@@ -16,18 +16,6 @@
 
 #define MSG(msg) (std::string(getBasename((__FILE__)) + ":" + std::string(std::to_string(__LINE__)) + ": " + msg))
 
-
-
-/*
- * Server class - This class is responsible for creating a server object
- *
- * @var _virtualServer - vector of VirtualServer objects (one for each virtual server)
- * @var _config - Configuration object that contains all the information from the config file
- *
- * @method Server - constructor that takes a Configuration object as an argument
- * @method ~Server - destructor
- * @method start - method to start the server
- */
 class Server {
 
 private:

@@ -1,12 +1,11 @@
 
-
 #include "Request.hpp"
 #include "HttpParser.hpp"
 #include <string>
-#include <iostream> // TODO: remove this
+#include <iostream>
 
 Request::Request() {
-    host = "localhost"; // TODO: remove this
+    host = "localhost";
 	protocol = "HTTP";
 	version = "1.1";
 	method = "GET";

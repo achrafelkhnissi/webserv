@@ -20,8 +20,6 @@ enum e_error {
 
 using namespace std;
 
-
-
 class Request {
 public:
 	Request();

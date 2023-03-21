@@ -46,6 +46,4 @@ public:
 
     bool is_regular_file(const char *path) const;
     string _extractExtension(const string &path) const ;
-
-
 };

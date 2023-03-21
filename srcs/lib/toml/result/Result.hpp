@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <ostream>
+
 template <typename T, typename E>
 class Result {
 public:

@@ -633,7 +633,6 @@ void Server::_handleCGI(pollfdsVectorIterator_t it, const subServersIterator_t &
     sendCGIResponse(it, response, response_body);
 }
 
-
 string Server::_getIndexPage(const string &path_, const stringVector_t &index_) const {
 
 	stringVectorConstIterator_t it = index_.begin();

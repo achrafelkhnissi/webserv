@@ -1,5 +1,5 @@
 #pragma once
-#include "data/table.hpp"
+#include "table.hpp"
 using namespace std;
 
 namespace toml {
