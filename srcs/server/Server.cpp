@@ -145,7 +145,7 @@ void Server::_handleConnections(int sockfd) {
         exit(1);
     }
 
-    if (setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, (const char*)&tv, sizeof(tv)) < 0) {
+    if (setsockopt(clientFd_, SOL_SOCKET, SO_SNDTIMEO, (const char*)&tv, sizeof(tv)) < 0) {
         std::cerr << "Error setting timeout\n";
         exit(1);
     }
