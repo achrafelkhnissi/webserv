@@ -10,15 +10,13 @@
 #                                                                              #
 # **************************************************************************** #
 
-# todo: fix the makefile not compiling when editing a header file (tested with Server.hpp)
-
 NAME		= webserv
 
 CC			= c++ -g
-CXXFLAGS		= # -Wall -Wextra -Werror -std=c++98
+CXXFLAGS	= -Wall -Wextra -Werror -std=c++98
 RM			= rm -rf
 
-FSANITIZE	= -fsanitize=address
+FSANITIZE	= # -fsanitize=address
 
 CXXFLAGS    += ${FSANITIZE}
 
@@ -41,10 +39,10 @@ RED			=	\e[91;5;196m
 RESET		=	\e[0m
 
 # Symbols:
-SUCCESS		=	\e[92;5;118m[ ✔ ]\e[0m
-ERROR		=	\e[91;5;196m[ ✘ ]\e[0m
-WARNING		=	\e[93;5;226m[ ! ]\e[0m
-INFO		=	${PURPLE}[ I ]${RESET}
+SUCCESS		=	\e[92;5;118m[ SUCCESS ]\e[0m
+ERROR		=	\e[91;5;196m[ ERROR ]\e[0m
+WARNING		=	\e[93;5;226m[ WARNING ]\e[0m
+INFO		=	${PURPLE}[ INFO ]${RESET}
 
 # Styles:
 CURSIVE		=	\e[33;3m
@@ -68,15 +66,15 @@ $(NAME): $(OBJ) $(HEADERS)
 
 $(OBJDIR)/%.o: %.cpp $(HEADERS)
 	@mkdir -p $(dir $@)
-	@printf "${CURSIVE}${WHITE}	- Making object file: [ %-20s ] | from source file: [ %-20s ]${RESET}\r" $(notdir $@) $(notdir $<)
+	@printf "${CURSIVE}${GRAY}	- Making object file: ${BOLD}${GREEN}%s${RESET}\r" $(notdir $@)
 	@$(CC) $(INCLUDES) $(CXXFLAGS) $(OPTS) -c $< -o $@
 
 clean:
 	@$(RM) $(OBJDIR) $(OBJ)
-	@printf "\n${INFO}	- Object files ${BOLD}${UNDERLINE}${WHITE}removed${RESET}.\n"
+	@printf "\n${INFO} - Object files ${BOLD}${UNDERLINE}${WHITE}removed${RESET}.\n"
 
 fclean: clean
 	@$(RM) $(NAME)
-	@printf "${INFO}	- Executable [${BOLD}${UNDERLINE}${RED}${NAME}${RESET}] removed.$(RESET)\n\n"
+	@printf "${INFO} - Executable [${BOLD}${UNDERLINE}${RED}${NAME}${RESET}] removed.$(RESET)\n\n"
 
 re: fclean all
