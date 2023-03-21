@@ -25,8 +25,6 @@ int main(int ac, char** av) {
 		std::cerr << "Error parsing file" << std::endl;
 		return 1;
 	}
-
-    try {
         Configuration config(*t);
 
 //		config.print();
@@ -34,10 +32,6 @@ int main(int ac, char** av) {
 		Server server(config);
 
 		server.start();
-
-    } catch (const std::exception& e) {
-        std::cerr << "Exception: " << e.what() << "\n";
-    }
 
     delete t;
 
