@@ -209,6 +209,7 @@ TokenListResult Lexer::parse() {
 			last_token = t.type;
 			list.push_back(t);
 			if (last_token == Token::ASSIGN) {
+				// = [value]
 				TokenListResult res = parse_value(line);
 				if (!res.is_ok())
 					return res;

@@ -101,7 +101,6 @@ string CGIHandler::CGIExecuter() {
 	return _responseBody;
 }
 
-
 CGIHandler::~CGIHandler() {
     for(int i = 0; i < _envSize; i++) {
         free(_env[i]);
