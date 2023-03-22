@@ -288,7 +288,7 @@ ssize_t send(int sockfd, const void *buf, size_t len, int flags);
   - [HTTP Server: Everything You Need to Know](https://medium.com/from-the-scratch/http-server-what-do-you-need-to-know-to-build-a-simple-http-server-from-scratch-d1ef8945e4fa)
   - [SOCKETS - SERVER & CLIENT](https://bogotobogo.com/cplusplus/sockets_server_client.php)
   - [Socket Programming in C](https://www.geeksforgeeks.org/socket-programming-cc/)
-  - [Socket Programming in C](https://www.tutorialspoint.com/unix_sockets/socket_server_example.htm)
+  - [Unix Socket - Server Examples](https://www.tutorialspoint.com/unix_sockets/socket_server_example.htm)
   - [How to set a socket to non-blocking mode in C](https://jameshfisher.com/2017/04/05/set_socket_nonblocking/)
   - [Nginx Server and Location Block Selection Algorithm](https://www.cloudsigma.com/nginx-server-and-location-block-selection-algorithms-overview/)
   - [Understanding Nginx Server and Location Block Selection Algorithms](https://www.digitalocean.com/community/tutorials/understanding-nginx-server-and-location-block-selection-algorithms)
