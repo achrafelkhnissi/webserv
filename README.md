@@ -31,7 +31,7 @@
 - [Resources](#resources)
 - [Contact](#contact)
 - [Functions](#functions)
-
+- [Resources](#resources)
 
 # HTTP
 
@@ -289,3 +289,42 @@ ssize_t send(int sockfd, const void *buf, size_t len, int flags);
 </details>
 
 ---
+
+
+## Resources
+
+- General
+  - [Beej's Guide to Network Programming](https://beej.us/guide/bgnet/html/)
+  - [HTTP Server: Everything You Need to Know](https://medium.com/from-the-scratch/http-server-what-do-you-need-to-know-to-build-a-simple-http-server-from-scratch-d1ef8945e4fa)
+  - [SOCKETS - SERVER & CLIENT](https://bogotobogo.com/cplusplus/sockets_server_client.php)
+  - [Socket Programming in C](https://www.geeksforgeeks.org/socket-programming-cc/)
+  - [Socket Programming in C](https://www.tutorialspoint.com/unix_sockets/socket_server_example.htm)
+  - [How to set a socket to non-blocking mode in C](https://jameshfisher.com/2017/04/05/set_socket_nonblocking/)
+  - [Nginx Server and Location Block Selection Algorithm](https://www.cloudsigma.com/nginx-server-and-location-block-selection-algorithms-overview/)
+  - [Understanding Nginx Server and Location Block Selection Algorithms](https://www.digitalocean.com/community/tutorials/understanding-nginx-server-and-location-block-selection-algorithms)
+  - [Understanding the Nginx Configuration File Structure and Configuration Contexts](https://www.digitalocean.com/community/tutorials/understanding-the-nginx-configuration-file-structure-and-configuration-contexts)
+  - [An overview of HTTP](https://developer.mozilla.org/en-US/docs/Web/HTTP/Overview)
+
+- HTTP Request
+  - [HTTP Message](https://developer.mozilla.org/en-US/docs/Web/HTTP/Messages)
+  - [HTTP Request Methods](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods)
+  - [HTTP Request Parser in C](https://codereview.stackexchange.com/questions/188384/http-request-parser-in-c)
+  - [HTTP Requests](https://www.codecademy.com/article/http-requests)
+
+- HTTP Response
+  - [The HTTP Response Headers List](https://flaviocopes.com/http-response-headers/)
+  - [HTTP Response Status Codes](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status)
+
+- CGI
+  - [Getting Started with CGI Programming in C](https://jkorpela.fi/forms/cgic.html)
+  - [Query String](https://en.wikipedia.org/wiki/Query_string)
+  - [CGI Programming](https://www.ibm.com/docs/en/i/7.4?topic=programming-cgi)
+  - [Common Gateway Interface](https://en.wikipedia.org/wiki/Common_Gateway_Interface)
+  - [Getting Started with CGI Programming](https://www.mnuwer.dbasedeveloper.co.uk/dlearn/web/session01.htm)
+  - [HOW-TO Write a CGI Program in C/C++](https://www.purplepixie.org/cgi/howto.php)
+  - [CGI Programming 101](http://www.cgi101.com/book/ch1/text.html)
+  - [Environment Variables set by HTTP server](https://www.ibm.com/docs/en/i/7.4?topic=information-environment-variables)
+  - [Developing CGIs with C and C++](https://cmd.inp.nsk.su/old/cmd2/manuals/unix/UNIX_Unleashed/ch20.htm)
+  
+- Stress testing
+  - [Load Testing Web Servers with Siege](https://www.linode.com/docs/guides/load-testing-with-siege/)
