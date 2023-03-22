@@ -12,7 +12,7 @@ using namespace std;
 
 int main(int ac, char** av) {
 
-    std::string config_file = "webserv_conf/default.toml";
+    std::string config_file = "conf/default.toml";
 
     if (ac == 2) {
         config_file = av[1];
