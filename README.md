@@ -23,16 +23,6 @@
 
 ---
 
-## Table of Contents
-- [Introduction](#introduction)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Features](#features)
-- [Resources](#resources)
-- [Contact](#contact)
-- [Functions](#functions)
-- [Resources](#resources)
-
 # HTTP
 
 ## What is HTTP?
@@ -293,7 +283,7 @@ ssize_t send(int sockfd, const void *buf, size_t len, int flags);
 
 ## Resources
 
-- General
+- **General**
   - [Beej's Guide to Network Programming](https://beej.us/guide/bgnet/html/)
   - [HTTP Server: Everything You Need to Know](https://medium.com/from-the-scratch/http-server-what-do-you-need-to-know-to-build-a-simple-http-server-from-scratch-d1ef8945e4fa)
   - [SOCKETS - SERVER & CLIENT](https://bogotobogo.com/cplusplus/sockets_server_client.php)
@@ -307,17 +297,17 @@ ssize_t send(int sockfd, const void *buf, size_t len, int flags);
   - [Using HTTP cookies](https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies)
   - [How the web works: HTTP and CGI explained](https://www.garshol.priv.no/download/text/http-tut.html)
 
-- HTTP Request
+- **HTTP Request**
   - [HTTP Message](https://developer.mozilla.org/en-US/docs/Web/HTTP/Messages)
   - [HTTP Request Methods](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods)
   - [HTTP Request Parser in C](https://codereview.stackexchange.com/questions/188384/http-request-parser-in-c)
   - [HTTP Requests](https://www.codecademy.com/article/http-requests)
 
-- HTTP Response
+- **HTTP Response**
   - [The HTTP Response Headers List](https://flaviocopes.com/http-response-headers/)
   - [HTTP Response Status Codes](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status)
 
-- CGI
+- **CGI**
   - [Getting Started with CGI Programming in C](https://jkorpela.fi/forms/cgic.html)
   - [Query String](https://en.wikipedia.org/wiki/Query_string)
   - [CGI Programming](https://www.ibm.com/docs/en/i/7.4?topic=programming-cgi)
@@ -328,5 +318,5 @@ ssize_t send(int sockfd, const void *buf, size_t len, int flags);
   - [Environment Variables set by HTTP server](https://www.ibm.com/docs/en/i/7.4?topic=information-environment-variables)
   - [Developing CGIs with C and C++](https://cmd.inp.nsk.su/old/cmd2/manuals/unix/UNIX_Unleashed/ch20.htm)
   
-- Stress testing
+- **Stress testing**
   - [Load Testing Web Servers with Siege](https://www.linode.com/docs/guides/load-testing-with-siege/)
