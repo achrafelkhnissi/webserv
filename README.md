@@ -304,6 +304,8 @@ ssize_t send(int sockfd, const void *buf, size_t len, int flags);
   - [Understanding Nginx Server and Location Block Selection Algorithms](https://www.digitalocean.com/community/tutorials/understanding-nginx-server-and-location-block-selection-algorithms)
   - [Understanding the Nginx Configuration File Structure and Configuration Contexts](https://www.digitalocean.com/community/tutorials/understanding-the-nginx-configuration-file-structure-and-configuration-contexts)
   - [An overview of HTTP](https://developer.mozilla.org/en-US/docs/Web/HTTP/Overview)
+  - [Using HTTP cookies](https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies)
+  - [How the web works: HTTP and CGI explained](https://www.garshol.priv.no/download/text/http-tut.html)
 
 - HTTP Request
   - [HTTP Message](https://developer.mozilla.org/en-US/docs/Web/HTTP/Messages)
