@@ -7,7 +7,7 @@
 
 <p align="center">
 	<b><i>Project developed at <a href="https://www.1337.ma/">1337 Khouribga </a> coding school.</i></b><br>
-    <b><i>Authors: <a href="">@JamiaFathiya</a> & <a href="">@achrafelkhnissi</a> & <a href="">@abellaismail7</a></i></b>
+    <b><i>Authors: <a href="https://github.com/fathjami">@JamiaFathiya</a> & <a href="https://twitter.com/suprivada">@achrafelkhnissi</a> & <a href="https://github.com/abellaismail7">@abellaismail7</a></i></b>
 <!--
  <b><i>Grade: 125/100</i></b>
 -->
