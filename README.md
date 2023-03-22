@@ -86,6 +86,9 @@ HTTP allows sessions, and stored states are shared between the browser and serve
 
 # Functions
 
+This section includes the description of the necessary functions to create a web server.
+
+
 <details>
 
 <summary><a href="">getaddrinfo()</a></summary>
